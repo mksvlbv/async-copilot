@@ -1,0 +1,1782 @@
+<html lang="en" vid="0"><head vid="1">
+    <meta charset="UTF-8" vid="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
+    <title vid="4">Async Copilot - Live Triage Run</title>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web" vid="6"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" vid="7">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" vid="8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet" vid="9">
+    
+    <style vid="11">
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #E5E7EB;
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: #D1D5DB;
+        }
+
+        .bg-workspace {
+            background-color: #F9FAFB;
+            background-image: 
+                radial-gradient(#D1D5DB 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .stripe-bg {
+            background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+        }
+    </style>
+
+  <style type="text/css">
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}/*
+! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com
+*//*
+1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)
+2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)
+*/
+
+*,
+::before,
+::after {
+  box-sizing: border-box; /* 1 */
+  border-width: 0; /* 2 */
+  border-style: solid; /* 2 */
+  border-color: #E5E7EB; /* 2 */
+}
+
+::before,
+::after {
+  --tw-content: '';
+}
+
+/*
+1. Use a consistent sensible line-height in all browsers.
+2. Prevent adjustments of font size after orientation changes in iOS.
+3. Use a more readable tab size.
+4. Use the user's configured `sans` font-family by default.
+5. Use the user's configured `sans` font-feature-settings by default.
+6. Use the user's configured `sans` font-variation-settings by default.
+7. Disable tap highlights on iOS
+*/
+
+html,
+:host {
+  line-height: 1.5; /* 1 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+  -moz-tab-size: 4; /* 3 */
+  tab-size: 4; /* 3 */
+  font-family: Inter, sans-serif; /* 4 */
+  font-feature-settings: normal; /* 5 */
+  font-variation-settings: normal; /* 6 */
+  -webkit-tap-highlight-color: transparent; /* 7 */
+}
+
+/*
+1. Remove the margin in all browsers.
+2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.
+*/
+
+body {
+  margin: 0; /* 1 */
+  line-height: inherit; /* 2 */
+}
+
+/*
+1. Add the correct height in Firefox.
+2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)
+3. Ensure horizontal rules are visible by default.
+*/
+
+hr {
+  height: 0; /* 1 */
+  color: inherit; /* 2 */
+  border-top-width: 1px; /* 3 */
+}
+
+/*
+Add the correct text decoration in Chrome, Edge, and Safari.
+*/
+
+abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+/*
+Remove the default font size and weight for headings.
+*/
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/*
+Reset links to optimize for opt-in styling instead of opt-out.
+*/
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/*
+Add the correct font weight in Edge and Safari.
+*/
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+/*
+1. Use the user's configured `mono` font-family by default.
+2. Use the user's configured `mono` font-feature-settings by default.
+3. Use the user's configured `mono` font-variation-settings by default.
+4. Correct the odd `em` font sizing in all browsers.
+*/
+
+code,
+kbd,
+samp,
+pre {
+  font-family: JetBrains Mono, monospace; /* 1 */
+  font-feature-settings: normal; /* 2 */
+  font-variation-settings: normal; /* 3 */
+  font-size: 1em; /* 4 */
+}
+
+/*
+Add the correct font size in all browsers.
+*/
+
+small {
+  font-size: 80%;
+}
+
+/*
+Prevent `sub` and `sup` elements from affecting the line height in all browsers.
+*/
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/*
+1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)
+2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)
+3. Remove gaps between table borders by default.
+*/
+
+table {
+  text-indent: 0; /* 1 */
+  border-color: inherit; /* 2 */
+  border-collapse: collapse; /* 3 */
+}
+
+/*
+1. Change the font styles in all browsers.
+2. Remove the margin in Firefox and Safari.
+3. Remove default padding in all browsers.
+*/
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit; /* 1 */
+  font-feature-settings: inherit; /* 1 */
+  font-variation-settings: inherit; /* 1 */
+  font-size: 100%; /* 1 */
+  font-weight: inherit; /* 1 */
+  line-height: inherit; /* 1 */
+  letter-spacing: inherit; /* 1 */
+  color: inherit; /* 1 */
+  margin: 0; /* 2 */
+  padding: 0; /* 3 */
+}
+
+/*
+Remove the inheritance of text transform in Edge and Firefox.
+*/
+
+button,
+select {
+  text-transform: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Remove default button styles.
+*/
+
+button,
+input:where([type='button']),
+input:where([type='reset']),
+input:where([type='submit']) {
+  -webkit-appearance: button; /* 1 */
+  background-color: transparent; /* 2 */
+  background-image: none; /* 2 */
+}
+
+/*
+Use the modern Firefox focus style for all focusable elements.
+*/
+
+:-moz-focusring {
+  outline: auto;
+}
+
+/*
+Remove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)
+*/
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/*
+Add the correct vertical alignment in Chrome and Firefox.
+*/
+
+progress {
+  vertical-align: baseline;
+}
+
+/*
+Correct the cursor style of increment and decrement buttons in Safari.
+*/
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/*
+1. Correct the odd appearance in Chrome and Safari.
+2. Correct the outline style in Safari.
+*/
+
+[type='search'] {
+  -webkit-appearance: textfield; /* 1 */
+  outline-offset: -2px; /* 2 */
+}
+
+/*
+Remove the inner padding in Chrome and Safari on macOS.
+*/
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Change font properties to `inherit` in Safari.
+*/
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button; /* 1 */
+  font: inherit; /* 2 */
+}
+
+/*
+Add the correct display in Chrome and Safari.
+*/
+
+summary {
+  display: list-item;
+}
+
+/*
+Removes the default spacing and border for appropriate elements.
+*/
+
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+Reset default styling for dialogs.
+*/
+dialog {
+  padding: 0;
+}
+
+/*
+Prevent resizing textareas horizontally by default.
+*/
+
+textarea {
+  resize: vertical;
+}
+
+/*
+1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)
+2. Set the default placeholder color to the user's configured gray 400 color.
+*/
+
+input::placeholder,
+textarea::placeholder {
+  opacity: 1; /* 1 */
+  color: #9CA3AF; /* 2 */
+}
+
+/*
+Set the default cursor for buttons.
+*/
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+/*
+Make sure disabled buttons don't get the pointer cursor.
+*/
+:disabled {
+  cursor: default;
+}
+
+/*
+1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)
+2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)
+   This can trigger a poorly considered lint error in some tools but is included by design.
+*/
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block; /* 1 */
+  vertical-align: middle; /* 2 */
+}
+
+/*
+Constrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)
+*/
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Make elements with the HTML hidden attribute stay hidden by default */
+[hidden]:where(:not([hidden="until-found"])) {
+  display: none;
+}
+.pointer-events-none {
+  pointer-events: none;
+}
+.absolute {
+  position: absolute;
+}
+.relative {
+  position: relative;
+}
+.inset-0 {
+  inset: 0px;
+}
+.bottom-0 {
+  bottom: 0px;
+}
+.bottom-10 {
+  bottom: 2.5rem;
+}
+.left-0 {
+  left: 0px;
+}
+.left-\[15px\] {
+  left: 15px;
+}
+.right-0 {
+  right: 0px;
+}
+.top-0 {
+  top: 0px;
+}
+.top-1 {
+  top: 0.25rem;
+}
+.top-4 {
+  top: 1rem;
+}
+.-z-0 {
+  z-index: 0;
+}
+.z-0 {
+  z-index: 0;
+}
+.z-10 {
+  z-index: 10;
+}
+.z-20 {
+  z-index: 20;
+}
+.mx-1 {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+.mb-1\.5 {
+  margin-bottom: 0.375rem;
+}
+.mb-12 {
+  margin-bottom: 3rem;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.ml-2 {
+  margin-left: 0.5rem;
+}
+.mt-0\.5 {
+  margin-top: 0.125rem;
+}
+.mt-1 {
+  margin-top: 0.25rem;
+}
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mt-3 {
+  margin-top: 0.75rem;
+}
+.block {
+  display: block;
+}
+.inline-block {
+  display: inline-block;
+}
+.flex {
+  display: flex;
+}
+.inline-flex {
+  display: inline-flex;
+}
+.h-1 {
+  height: 0.25rem;
+}
+.h-1\.5 {
+  height: 0.375rem;
+}
+.h-12 {
+  height: 3rem;
+}
+.h-14 {
+  height: 3.5rem;
+}
+.h-16 {
+  height: 4rem;
+}
+.h-2 {
+  height: 0.5rem;
+}
+.h-3 {
+  height: 0.75rem;
+}
+.h-4 {
+  height: 1rem;
+}
+.h-7 {
+  height: 1.75rem;
+}
+.h-8 {
+  height: 2rem;
+}
+.h-\[60\%\] {
+  height: 60%;
+}
+.h-full {
+  height: 100%;
+}
+.h-screen {
+  height: 100vh;
+}
+.w-0\.5 {
+  width: 0.125rem;
+}
+.w-1 {
+  width: 0.25rem;
+}
+.w-1\.5 {
+  width: 0.375rem;
+}
+.w-16 {
+  width: 4rem;
+}
+.w-2 {
+  width: 0.5rem;
+}
+.w-24 {
+  width: 6rem;
+}
+.w-4 {
+  width: 1rem;
+}
+.w-48 {
+  width: 12rem;
+}
+.w-7 {
+  width: 1.75rem;
+}
+.w-8 {
+  width: 2rem;
+}
+.w-\[340px\] {
+  width: 340px;
+}
+.w-\[360px\] {
+  width: 360px;
+}
+.w-full {
+  width: 100%;
+}
+.w-px {
+  width: 1px;
+}
+.max-w-2xl {
+  max-width: 42rem;
+}
+.flex-1 {
+  flex: 1 1 0%;
+}
+.shrink-0 {
+  flex-shrink: 0;
+}
+.transform {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+@keyframes ping {
+
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes progress-stripes {
+
+  0% {
+    background-position: 1rem 0;
+  }
+
+  100% {
+    background-position: 0 0;
+  }
+}
+.animate-progress-stripes {
+  animation: progress-stripes 1s linear infinite;
+}
+@keyframes pulse {
+
+  50% {
+    opacity: .5;
+  }
+}
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+
+  50% {
+    opacity: .5;
+  }
+}
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes spin {
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.select-none {
+  user-select: none;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-start {
+  align-items: flex-start;
+}
+.items-center {
+  align-items: center;
+}
+.items-baseline {
+  align-items: baseline;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.gap-1 {
+  gap: 0.25rem;
+}
+.gap-1\.5 {
+  gap: 0.375rem;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.gap-2\.5 {
+  gap: 0.625rem;
+}
+.gap-3 {
+  gap: 0.75rem;
+}
+.gap-4 {
+  gap: 1rem;
+}
+.gap-5 {
+  gap: 1.25rem;
+}
+.gap-6 {
+  gap: 1.5rem;
+}
+.space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
+}
+.space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
+}
+.space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1.25rem * var(--tw-space-y-reverse));
+}
+.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+}
+.space-y-8 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(2rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(2rem * var(--tw-space-y-reverse));
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.overflow-y-auto {
+  overflow-y: auto;
+}
+.rounded {
+  border-radius: 0.25rem;
+}
+.rounded-\[3px\] {
+  border-radius: 3px;
+}
+.rounded-full {
+  border-radius: 9999px;
+}
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+.rounded-md {
+  border-radius: 0.375rem;
+}
+.rounded-sm {
+  border-radius: 0.125rem;
+}
+.rounded-bl-full {
+  border-bottom-left-radius: 9999px;
+}
+.border {
+  border-width: 1px;
+}
+.border-2 {
+  border-width: 2px;
+}
+.border-b {
+  border-bottom-width: 1px;
+}
+.border-l {
+  border-left-width: 1px;
+}
+.border-l-2 {
+  border-left-width: 2px;
+}
+.border-l-4 {
+  border-left-width: 4px;
+}
+.border-r {
+  border-right-width: 1px;
+}
+.border-t {
+  border-top-width: 1px;
+}
+.border-dashed {
+  border-style: dashed;
+}
+.border-blue-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(191 219 254 / var(--tw-border-opacity, 1));
+}
+.border-blue-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
+}
+.border-gray-100 {
+  --tw-border-opacity: 1;
+  border-color: rgb(243 244 246 / var(--tw-border-opacity, 1));
+}
+.border-gray-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
+}
+.border-gray-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
+}
+.border-gray-900 {
+  --tw-border-opacity: 1;
+  border-color: rgb(17 24 39 / var(--tw-border-opacity, 1));
+}
+.border-red-100 {
+  --tw-border-opacity: 1;
+  border-color: rgb(254 226 226 / var(--tw-border-opacity, 1));
+}
+.border-red-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(254 202 202 / var(--tw-border-opacity, 1));
+}
+.border-yellow-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(254 240 138 / var(--tw-border-opacity, 1));
+}
+.border-yellow-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(253 224 71 / var(--tw-border-opacity, 1));
+}
+.border-l-red-500 {
+  --tw-border-opacity: 1;
+  border-left-color: rgb(239 68 68 / var(--tw-border-opacity, 1));
+}
+.bg-black {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
+}
+.bg-blue-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(219 234 254 / var(--tw-bg-opacity, 1));
+}
+.bg-blue-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(96 165 250 / var(--tw-bg-opacity, 1));
+}
+.bg-blue-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 246 255 / var(--tw-bg-opacity, 1));
+}
+.bg-blue-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 213 219 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-50\/30 {
+  background-color: rgb(249 250 251 / 0.3);
+}
+.bg-gray-50\/50 {
+  background-color: rgb(249 250 251 / 0.5);
+}
+.bg-green-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(34 197 94 / var(--tw-bg-opacity, 1));
+}
+.bg-red-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
+}
+.bg-red-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(220 38 38 / var(--tw-bg-opacity, 1));
+}
+.bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+.bg-white\/40 {
+  background-color: rgb(255 255 255 / 0.4);
+}
+.bg-white\/90 {
+  background-color: rgb(255 255 255 / 0.9);
+}
+.bg-yellow-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 249 195 / var(--tw-bg-opacity, 1));
+}
+.bg-yellow-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 252 232 / var(--tw-bg-opacity, 1));
+}
+.bg-gradient-to-tr {
+  background-image: linear-gradient(to top right, var(--tw-gradient-stops));
+}
+.from-gray-200 {
+  --tw-gradient-from: #E5E7EB var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(229 231 235 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.to-gray-300 {
+  --tw-gradient-to: #D1D5DB var(--tw-gradient-to-position);
+}
+.p-2 {
+  padding: 0.5rem;
+}
+.p-3 {
+  padding: 0.75rem;
+}
+.p-4 {
+  padding: 1rem;
+}
+.p-5 {
+  padding: 1.25rem;
+}
+.px-0\.5 {
+  padding-left: 0.125rem;
+  padding-right: 0.125rem;
+}
+.px-1 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+.px-1\.5 {
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+}
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.px-2\.5 {
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+}
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+.py-0\.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.py-1\.5 {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+.py-10 {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.py-2\.5 {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+.pb-1 {
+  padding-bottom: 0.25rem;
+}
+.pb-12 {
+  padding-bottom: 3rem;
+}
+.pl-12 {
+  padding-left: 3rem;
+}
+.pl-3 {
+  padding-left: 0.75rem;
+}
+.pt-1 {
+  padding-top: 0.25rem;
+}
+.pt-1\.5 {
+  padding-top: 0.375rem;
+}
+.text-center {
+  text-align: center;
+}
+.font-mono {
+  font-family: JetBrains Mono, monospace;
+}
+.font-sans {
+  font-family: Inter, sans-serif;
+}
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+.text-\[10px\] {
+  font-size: 10px;
+}
+.text-\[11px\] {
+  font-size: 11px;
+}
+.text-\[12px\] {
+  font-size: 12px;
+}
+.text-\[13px\] {
+  font-size: 13px;
+}
+.text-\[9px\] {
+  font-size: 9px;
+}
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.font-bold {
+  font-weight: 700;
+}
+.font-medium {
+  font-weight: 500;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.uppercase {
+  text-transform: uppercase;
+}
+.leading-relaxed {
+  line-height: 1.625;
+}
+.leading-tight {
+  line-height: 1.25;
+}
+.tracking-normal {
+  letter-spacing: 0em;
+}
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
+.tracking-widest {
+  letter-spacing: 0.1em;
+}
+.text-blue-500 {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246 / var(--tw-text-opacity, 1));
+}
+.text-blue-600 {
+  --tw-text-opacity: 1;
+  color: rgb(37 99 235 / var(--tw-text-opacity, 1));
+}
+.text-blue-700 {
+  --tw-text-opacity: 1;
+  color: rgb(29 78 216 / var(--tw-text-opacity, 1));
+}
+.text-gray-400 {
+  --tw-text-opacity: 1;
+  color: rgb(156 163 175 / var(--tw-text-opacity, 1));
+}
+.text-gray-500 {
+  --tw-text-opacity: 1;
+  color: rgb(107 114 128 / var(--tw-text-opacity, 1));
+}
+.text-gray-600 {
+  --tw-text-opacity: 1;
+  color: rgb(75 85 99 / var(--tw-text-opacity, 1));
+}
+.text-gray-700 {
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity, 1));
+}
+.text-gray-800 {
+  --tw-text-opacity: 1;
+  color: rgb(31 41 55 / var(--tw-text-opacity, 1));
+}
+.text-gray-900 {
+  --tw-text-opacity: 1;
+  color: rgb(17 24 39 / var(--tw-text-opacity, 1));
+}
+.text-green-500 {
+  --tw-text-opacity: 1;
+  color: rgb(34 197 94 / var(--tw-text-opacity, 1));
+}
+.text-red-600 {
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
+.text-red-700 {
+  --tw-text-opacity: 1;
+  color: rgb(185 28 28 / var(--tw-text-opacity, 1));
+}
+.text-white {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.text-yellow-500 {
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity, 1));
+}
+.text-yellow-700 {
+  --tw-text-opacity: 1;
+  color: rgb(161 98 7 / var(--tw-text-opacity, 1));
+}
+.text-yellow-800 {
+  --tw-text-opacity: 1;
+  color: rgb(133 77 14 / var(--tw-text-opacity, 1));
+}
+.antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.opacity-0 {
+  opacity: 0;
+}
+.opacity-40 {
+  opacity: 0.4;
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-60 {
+  opacity: 0.6;
+}
+.opacity-75 {
+  opacity: 0.75;
+}
+.shadow-\[-8px_0_24px_rgba\(0\2c 0\2c 0\2c 0\.02\)\] {
+  --tw-shadow: -8px 0 24px rgba(0,0,0,0.02);
+  --tw-shadow-colored: -8px 0 24px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.shadow-\[0_-4px_12px_rgba\(0\2c 0\2c 0\2c 0\.02\)\] {
+  --tw-shadow: 0 -4px 12px rgba(0,0,0,0.02);
+  --tw-shadow-colored: 0 -4px 12px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.shadow-\[0_0_0_4px_rgba\(59\2c 130\2c 246\2c 0\.1\)\] {
+  --tw-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+  --tw-shadow-colored: 0 0 0 4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.shadow-lg {
+  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.shadow-sm {
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.shadow-xl {
+  --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.blur-\[0\.5px\] {
+  --tw-blur: blur(0.5px);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.grayscale {
+  --tw-grayscale: grayscale(100%);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.backdrop-blur-\[1px\] {
+  --tw-backdrop-blur: blur(1px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.selection\:bg-gray-200 *::selection {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+.selection\:text-black *::selection {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+}
+.selection\:bg-gray-200::selection {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+.selection\:text-black::selection {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+}
+.hover\:border-gray-300:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
+}
+.hover\:bg-gray-50:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-red-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(185 28 28 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-yellow-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 249 195 / var(--tw-bg-opacity, 1));
+}
+.hover\:text-black:hover {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+}
+.hover\:text-gray-600:hover {
+  --tw-text-opacity: 1;
+  color: rgb(75 85 99 / var(--tw-text-opacity, 1));
+}
+.hover\:text-gray-900:hover {
+  --tw-text-opacity: 1;
+  color: rgb(17 24 39 / var(--tw-text-opacity, 1));
+}
+.hover\:opacity-100:hover {
+  opacity: 1;
+}
+.focus\:ring-2:focus {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+.focus\:ring-gray-200:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(229 231 235 / var(--tw-ring-opacity, 1));
+}
+.focus\:ring-red-500:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(239 68 68 / var(--tw-ring-opacity, 1));
+}
+.focus\:ring-offset-1:focus {
+  --tw-ring-offset-width: 1px;
+}
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}* {
+      -ms-overflow-style: none !important;
+      scrollbar-width: none !important;
+    }
+
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+  </style></head>
+<body class="bg-white text-gray-900 font-sans h-screen flex flex-col overflow-hidden selection:bg-gray-200 selection:text-black" vid="12">
+
+    
+    <header class="h-14 border-b border-gray-200 bg-white flex items-center justify-between px-5 shrink-0 z-20" vid="13">
+        <div class="flex items-center gap-6" vid="14">
+            <div class="flex items-center gap-2.5" vid="15">
+                <div class="w-4 h-4 bg-black rounded-[3px] shadow-sm flex items-center justify-center" vid="16">
+                    <div class="w-1.5 h-1.5 bg-white rounded-sm" vid="17"></div>
+                </div>
+                <span class="font-semibold text-[13px] tracking-tight" vid="18">Async Copilot</span>
+            </div>
+            
+            <div class="h-4 w-px bg-gray-200" vid="19"></div>
+            
+            <nav class="flex items-center gap-5" vid="20">
+                <a href="#" class="text-[13px] font-medium text-gray-500 hover:text-black transition-colors flex items-center gap-1.5" vid="21">
+                    <i class="ph ph-arrow-left" vid="22"></i> All Cases
+                </a>
+                <div class="flex items-center gap-2 px-2 py-1 bg-gray-50 rounded-md border border-gray-200" vid="23">
+                    <span class="text-[11px] font-mono text-gray-500" vid="24">CASE-8924</span>
+                </div>
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-4" vid="25">
+            <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded px-2.5 py-1 text-xs text-blue-700 font-mono font-medium shadow-sm" vid="26">
+                <span class="relative flex h-1.5 w-1.5" vid="27">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" vid="28"></span>
+                  <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" vid="29"></span>
+                </span>
+                SYSTEM ACTIVE
+            </div>
+            <div class="h-4 w-px bg-gray-200 mx-1" vid="30"></div>
+            <button class="text-gray-400 hover:text-gray-900 transition-colors" vid="31">
+                <i class="ph ph-gear text-lg" vid="32"></i>
+            </button>
+            <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 border border-gray-200 flex items-center justify-center text-[10px] font-semibold text-gray-600 shadow-sm ml-2 cursor-pointer" vid="33">
+                OP
+            </div>
+        </div>
+    </header>
+
+    
+    <main class="flex-1 flex overflow-hidden" vid="34">
+        
+        
+        <aside class="w-[340px] shrink-0 border-r border-gray-200 bg-white flex flex-col z-10" vid="35">
+            <div class="h-12 border-b border-gray-100 flex items-center justify-between px-5 bg-gray-50/50 shrink-0" vid="36">
+                <span class="text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest" vid="37">Case Context</span>
+                <span class="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded font-mono border border-gray-200" vid="38">STATIC</span>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6" vid="39">
+                
+                <div vid="40">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3" vid="41">Customer Identity</h3>
+                    <div class="bg-gray-50 border border-gray-100 rounded-md p-3 space-y-2" vid="42">
+                        <div class="flex justify-between items-center" vid="43">
+                            <span class="text-[11px] text-gray-500" vid="44">Name</span>
+                            <span class="text-[12px] font-medium text-gray-900" vid="45">Jane Doe</span>
+                        </div>
+                        <div class="flex justify-between items-center" vid="46">
+                            <span class="text-[11px] text-gray-500" vid="47">Account</span>
+                            <span class="text-[12px] font-medium text-gray-900" vid="48">Acme Corp</span>
+                        </div>
+                        <div class="flex justify-between items-center" vid="49">
+                            <span class="text-[11px] text-gray-500" vid="50">Plan</span>
+                            <span class="text-[10px] font-mono bg-white border border-gray-200 px-1 rounded text-gray-600" vid="51">PRO ANNUAL</span>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div vid="52">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5" vid="53">
+                        <i class="ph-fill ph-magic-wand text-gray-400" vid="54"></i> Extracted Facts
+                    </h3>
+                    <div class="space-y-2" vid="55">
+                        <div class="flex flex-col gap-1 border-l-2 border-gray-200 pl-3" vid="56">
+                            <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider" vid="57">Core Issue</span>
+                            <span class="text-xs font-medium text-gray-800" vid="58">Duplicate Charge Detected</span>
+                        </div>
+                        <div class="flex flex-col gap-1 border-l-2 border-gray-200 pl-3" vid="59">
+                            <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider" vid="60">Amount Disputed</span>
+                            <span class="text-xs font-mono text-red-600 font-medium" vid="61">$1,200.00</span>
+                        </div>
+                        <div class="flex flex-col gap-1 border-l-2 border-gray-200 pl-3" vid="62">
+                            <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider" vid="63">Relevant Dates</span>
+                            <span class="text-xs font-mono text-gray-800" vid="64">Nov 12th (Renewal Date)</span>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div vid="65">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3" vid="66">Evidence Snippets</h3>
+                    <div class="space-y-3" vid="67">
+                        <div class="border border-gray-200 rounded-md overflow-hidden hover:border-gray-300 transition-colors cursor-pointer group" vid="68">
+                            <div class="bg-gray-50 border-b border-gray-100 px-2 py-1.5 flex justify-between items-center" vid="69">
+                                <span class="text-[10px] font-mono text-gray-500 flex items-center gap-1" vid="70"><i class="ph ph-envelope-simple" vid="71"></i> Source Email</span>
+                                <span class="text-[10px] text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" vid="72">Inspect <i class="ph ph-arrow-up-right" vid="73"></i></span>
+                            </div>
+                            <div class="p-3 text-[11px] text-gray-600 leading-relaxed font-sans relative" vid="74">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-100" vid="75"></div>
+                                "...Stripe definitely authorized <span class="bg-yellow-100 text-yellow-800 px-0.5 rounded font-medium" vid="76">$1,200 twice</span>. Can you please look into this immediately and reverse the duplicate charge?..."
+                            </div>
+                        </div>
+                        
+                        <div class="border border-gray-200 rounded-md overflow-hidden hover:border-gray-300 transition-colors cursor-pointer group" vid="77">
+                            <div class="bg-gray-50 border-b border-gray-100 px-2 py-1.5 flex justify-between items-center" vid="78">
+                                <span class="text-[10px] font-mono text-gray-500 flex items-center gap-1" vid="79"><i class="ph ph-database" vid="80"></i> Invoice System</span>
+                                <span class="text-[10px] text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" vid="81">Inspect <i class="ph ph-arrow-up-right" vid="82"></i></span>
+                            </div>
+                            <div class="p-3" vid="83">
+                                <div class="flex items-center gap-2 mb-1.5" vid="84">
+                                    <span class="text-[10px] font-mono bg-gray-100 px-1 rounded text-gray-600" vid="85">INV-9823</span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500" vid="86"></span>
+                                    <span class="text-[10px] text-gray-500" vid="87">PAID</span>
+                                </div>
+                                <div class="text-[11px] text-gray-600 font-mono" vid="88">Total: $1,200.00 (1 auth)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        
+        <section class="flex-1 bg-workspace overflow-y-auto custom-scroll relative flex flex-col items-center py-10 px-8" vid="89">
+            
+            
+            <div class="w-full max-w-2xl mb-12 text-center" vid="90">
+                <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-white border border-gray-200 rounded-full shadow-sm mb-4" vid="91">
+                    <span class="relative flex h-2 w-2" vid="92">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" vid="93"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500" vid="94"></span>
+                    </span>
+                    <span class="text-[11px] font-mono font-medium text-gray-700 tracking-wide uppercase" vid="95">Triage In Progress</span>
+                </div>
+                <h1 class="text-2xl font-semibold tracking-tight text-gray-900" vid="96">Payments dispute — duplicate charge / delayed refund</h1>
+                <p class="text-sm text-gray-500 mt-2 font-mono" vid="97">Running execution pipeline for CASE-8924</p>
+            </div>
+
+            
+            <div class="w-full max-w-2xl relative" vid="98">
+                
+                <div class="absolute left-[15px] top-4 bottom-10 w-0.5 bg-gray-200 z-0" vid="99"></div>
+                
+                <div class="absolute left-[15px] top-4 h-[60%] w-0.5 bg-blue-500 z-0" vid="100"></div>
+
+                <div class="space-y-8 relative z-10 pb-12" vid="101">
+                    
+                    
+                    <div class="relative pl-12 opacity-60 hover:opacity-100 transition-opacity" vid="102">
+                        <div class="absolute left-0 top-1 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center z-10 shadow-sm" vid="103">
+                            <i class="ph-fill ph-check-circle text-gray-400 text-lg" vid="104"></i>
+                        </div>
+                        <h4 class="text-sm font-mono font-medium text-gray-500 uppercase tracking-widest mb-1 pt-1" vid="105">01 Ingest Case</h4>
+                        <div class="text-xs text-gray-400 flex items-center gap-2" vid="106">
+                            Parsed raw email string. Extracted attachments. <span class="font-mono" vid="107">14ms</span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="relative pl-12 opacity-60 hover:opacity-100 transition-opacity" vid="108">
+                        <div class="absolute left-0 top-1 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center z-10 shadow-sm" vid="109">
+                            <i class="ph-fill ph-check-circle text-gray-400 text-lg" vid="110"></i>
+                        </div>
+                        <h4 class="text-sm font-mono font-medium text-gray-500 uppercase tracking-widest mb-1 pt-1" vid="111">02 Normalize Facts</h4>
+                        <div class="text-xs text-gray-400 flex items-center gap-2" vid="112">
+                            Mapped entities to internal graph. Resolved customer ID. <span class="font-mono" vid="113">42ms</span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="relative pl-12 opacity-60 hover:opacity-100 transition-opacity" vid="114">
+                        <div class="absolute left-0 top-1 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center z-10 shadow-sm" vid="115">
+                            <i class="ph-fill ph-check-circle text-gray-400 text-lg" vid="116"></i>
+                        </div>
+                        <h4 class="text-sm font-mono font-medium text-gray-500 uppercase tracking-widest mb-1 pt-1" vid="117">03 Classify Issue &amp; Urgency</h4>
+                        <div class="text-xs text-gray-400 flex items-center gap-2" vid="118">
+                            Intent: Billing_Dispute. Urgency set to HIGH based on keyword 'immediately'. <span class="font-mono" vid="119">128ms</span>
+                        </div>
+                    </div>
+
+                    
+                    <div class="relative pl-12" vid="120">
+                        
+                        <div class="absolute left-0 top-1 w-8 h-8 bg-white border-2 border-blue-500 rounded-full flex items-center justify-center z-10 shadow-[0_0_0_4px_rgba(59,130,246,0.1)]" vid="121">
+                            <i class="ph-bold ph-spinner text-blue-500 animate-spin" vid="122"></i>
+                        </div>
+                        
+                        <div class="flex items-center justify-between mb-2 pt-1.5" vid="123">
+                            <h4 class="text-sm font-mono font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2" vid="124">
+                                04 Build Triage Assessment
+                                <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[9px] rounded-sm font-sans tracking-normal border border-blue-200 animate-pulse-slow" vid="125">PROCESSING</span>
+                            </h4>
+                            <button class="text-[10px] font-mono text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1 border border-gray-200 rounded px-1.5 py-0.5 bg-white" vid="126">
+                                <i class="ph ph-arrows-in-line-vertical" vid="127"></i> Collapse
+                            </button>
+                        </div>
+
+                        
+                        <div class="bg-white border-2 border-gray-900 rounded-lg shadow-xl overflow-hidden mt-3 relative transform transition-all" vid="128">
+                            
+                            <div class="h-1 w-full bg-blue-100 overflow-hidden" vid="129">
+                                <div class="h-full bg-blue-500 w-full stripe-bg animate-progress-stripes" vid="130"></div>
+                            </div>
+                            
+                            <div class="p-5 space-y-5" vid="131">
+                                
+                                <div vid="132">
+                                    <div class="text-[10px] font-mono text-gray-500 mb-2 uppercase tracking-wider border-b border-gray-100 pb-1" vid="133">System Logic</div>
+                                    <ul class="space-y-2 text-xs font-mono" vid="134">
+                                        <li class="flex items-start gap-2 text-gray-600" vid="135">
+                                            <i class="ph-bold ph-check text-green-500 mt-0.5" vid="136"></i> Querying Stripe API for recent auths on card ending 4242... <span class="text-gray-400" vid="137">[Found 2 auths: ch_1Nx... &amp; ch_1Ny...]</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-600" vid="138">
+                                            <i class="ph-bold ph-check text-green-500 mt-0.5" vid="139"></i> Querying internal Invoice DB for acme.asynccopilot.com... <span class="text-gray-400" vid="140">[Found 1 invoice: INV-9823]</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-blue-600 font-medium" vid="141">
+                                            <i class="ph-bold ph-arrow-right mt-0.5" vid="142"></i> Reconciling ledger state...
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                
+                                <div class="bg-gray-50 border border-gray-200 rounded p-2 flex items-start gap-2" vid="143">
+                                     <i class="ph-fill ph-info text-gray-400 mt-0.5" vid="144"></i>
+                                     <div class="text-[11px] text-gray-500 leading-tight" vid="145">
+                                        <span class="font-semibold text-gray-700" vid="146">Audit Log Delay:</span> System initially failed to fetch audit log <span class="font-mono bg-white px-1 border border-gray-200 rounded" vid="147">log_seq_882</span> (timeout). Successfully recovered on retry 1/3.
+                                     </div>
+                                </div>
+
+                                
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 shadow-sm relative overflow-hidden" vid="148">
+                                    <div class="absolute right-0 top-0 w-16 h-16 bg-yellow-100 rounded-bl-full opacity-50 -z-0" vid="149"></div>
+                                    <div class="relative z-10 flex gap-3" vid="150">
+                                        <div class="mt-0.5" vid="151">
+                                            <i class="ph-fill ph-warning-circle text-yellow-500 text-xl" vid="152"></i>
+                                        </div>
+                                        <div vid="153">
+                                            <h5 class="text-sm font-semibold text-yellow-800 mb-1" vid="154">State Mismatch Detected</h5>
+                                            <p class="text-xs text-yellow-700 leading-relaxed mb-3" vid="155">
+                                                Conflicting evidence found. Stripe API confirms two separate authorizations of $1,200.00 exist, but internal ledger only records one valid invoice. Deterministic resolution impossible without financial operations override.
+                                            </p>
+                                            <div class="flex gap-2" vid="156">
+                                                <button class="bg-white border border-yellow-300 text-yellow-800 text-[11px] font-medium px-2.5 py-1 rounded shadow-sm hover:bg-yellow-100 transition-colors" vid="157">
+                                                    Inspect Stripe JSON
+                                                </button>
+                                                <button class="bg-white border border-yellow-300 text-yellow-800 text-[11px] font-medium px-2.5 py-1 rounded shadow-sm hover:bg-yellow-100 transition-colors" vid="158">
+                                                    Inspect DB Ledger
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="relative pl-12 opacity-40" vid="159">
+                        <div class="absolute left-0 top-1 w-8 h-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center z-10" vid="160">
+                            <div class="w-1.5 h-1.5 bg-gray-300 rounded-full" vid="161"></div>
+                        </div>
+                        <h4 class="text-sm font-mono font-medium text-gray-500 uppercase tracking-widest mb-1 pt-1" vid="162">05 Generate Response Pack</h4>
+                        <div class="text-xs text-gray-400" vid="163">
+                            Awaiting triage assessment completion...
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+        </section>
+
+        
+        <aside class="w-[360px] shrink-0 border-l border-gray-200 bg-white flex flex-col z-10 shadow-[-8px_0_24px_rgba(0,0,0,0.02)]" vid="164">
+            <div class="h-12 border-b border-gray-100 flex items-center justify-between px-5 bg-gray-50/50 shrink-0" vid="165">
+                <span class="text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1.5" vid="166">
+                    <i class="ph ph-package" vid="167"></i> Response Pack
+                </span>
+                <span class="flex items-center gap-1.5" vid="168">
+                    <i class="ph ph-spinner animate-spin text-gray-400" vid="169"></i>
+                    <span class="text-[10px] font-mono text-gray-400" vid="170">BUILDING</span>
+                </span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll p-5 flex flex-col gap-5 bg-gray-50/30" vid="171">
+                
+                
+                <div class="border border-red-200 bg-white rounded-lg shadow-sm overflow-hidden border-l-4 border-l-red-500" vid="172">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-start" vid="173">
+                        <div vid="174">
+                            <div class="text-[10px] font-mono text-gray-500 uppercase mb-1" vid="175">System Confidence</div>
+                            <div class="text-2xl font-bold text-gray-900 font-mono tracking-tight flex items-baseline gap-1" vid="176">
+                                34<span class="text-sm text-gray-400" vid="177">%</span>
+                            </div>
+                        </div>
+                        <div class="bg-red-50 text-red-700 text-[10px] font-mono px-2 py-0.5 rounded border border-red-100 font-medium" vid="178">
+                            ESCALATION REQUIRED
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-3 text-xs text-gray-600 leading-relaxed border-t border-gray-100 font-sans" vid="179">
+                        <strong class="text-gray-900 block mb-1" vid="180">Recommendation:</strong> 
+                        Route to <span class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px]" vid="181">Tier-2-Finance</span> queue. Do not auto-reply until ledger mismatch is resolved by human operator.
+                    </div>
+                </div>
+
+                
+                <div class="border border-gray-200 bg-white rounded-lg shadow-sm overflow-hidden" vid="182">
+                    <div class="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between" vid="183">
+                        <span class="text-[10px] font-mono uppercase text-gray-600 font-semibold" vid="184">Internal Triage Note</span>
+                        <i class="ph-fill ph-check-circle text-green-500" vid="185"></i>
+                    </div>
+                    <div class="p-3 text-xs text-gray-800 leading-relaxed bg-white" vid="186">
+                        Customer reporting duplicate $1,200 charge on Pro Annual renewal (Nov 12). Confirmed via Stripe API that two authorizations exist. However, internal DB only shows one invoice (INV-9823). This requires manual refund and sync.
+                    </div>
+                </div>
+
+                
+                <div class="border border-gray-200 bg-white rounded-lg shadow-sm overflow-hidden flex-1 flex flex-col relative group" vid="187">
+                    <div class="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center pointer-events-none" vid="188">
+                         <div class="bg-white/90 border border-gray-200 shadow-lg rounded-md px-3 py-2 flex items-center gap-2" vid="189">
+                             <i class="ph-bold ph-spinner text-blue-500 animate-spin" vid="190"></i>
+                             <span class="text-xs font-medium text-gray-700" vid="191">Drafting based on guidelines...</span>
+                         </div>
+                    </div>
+
+                    <div class="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between" vid="192">
+                        <div class="flex items-center gap-1.5" vid="193">
+                            <span class="text-[10px] font-mono uppercase text-gray-600 font-semibold" vid="194">Draft Reply</span>
+                        </div>
+                    </div>
+                    <div class="p-4 text-sm text-gray-400 font-sans leading-relaxed flex-1 select-none opacity-50 blur-[0.5px]" vid="195">
+                        Hi Jane,<br vid="196"><br vid="197">
+                        Thanks for reaching out about the renewal charge. I'm sorry for the confusion here.<br vid="198"><br vid="199">
+                        I've looked into your account and I can confirm that...<br vid="200"><br vid="201">
+                        <span class="inline-block w-24 h-3 bg-gray-200 rounded animate-pulse" vid="202"></span><br vid="203">
+                        <span class="inline-block w-48 h-3 bg-gray-200 rounded animate-pulse mt-1" vid="204"></span>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="p-4 bg-white border-t border-gray-200 shrink-0 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] z-20" vid="205">
+                <div class="flex flex-col gap-2" vid="206">
+                    <div class="flex gap-2" vid="207">
+                        <button class="flex-1 bg-white border border-gray-300 text-gray-700 text-sm font-medium py-2 rounded-md shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 focus:ring-2 focus:ring-offset-1 focus:ring-gray-200" vid="208">
+                            <i class="ph ph-pause" vid="209"></i> Pause Run
+                        </button>
+                        <button class="px-3 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md shadow-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-offset-1 focus:ring-gray-200" title="Retry Current Stage" vid="210">
+                            <i class="ph ph-arrows-clockwise text-lg" vid="211"></i>
+                        </button>
+                    </div>
+                    
+                    
+                    <button class="w-full bg-red-600 text-white text-sm font-medium py-2.5 rounded-md shadow-sm hover:bg-red-700 transition-colors flex items-center justify-center gap-2 group focus:ring-2 focus:ring-offset-1 focus:ring-red-500" vid="212">
+                        <i class="ph ph-share-network" vid="213"></i> Approve &amp; Escalate to Tier 2
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+
+</body></html>

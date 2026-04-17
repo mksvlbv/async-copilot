@@ -1,0 +1,96 @@
+# Variant.com Design Exports — Async Copilot
+
+Six fully designed screens generated in Variant.com with Style Dropper consistency lock. All share the same design DNA: premium operations console, monochrome base with black accents, editorial typography rhythm, no AI clichés.
+
+## Tech stack detected in all 6 files
+
+| Dependency | Usage |
+|---|---|
+| Tailwind CSS | via CDN script tag, all styling via utility classes |
+| Inter font | Google Fonts, weights 400/500/600/700 |
+| JetBrains Mono | Google Fonts, weights 400/500 (used for IDs, metadata, section labels) |
+| Phosphor Icons | via `unpkg.com/@phosphor-icons/web` |
+
+Custom CSS per file: ~1 KB only (grid backgrounds, scrollbar styling). Everything else is Tailwind utilities.
+
+**Verdict**: trivial to migrate to Next.js + Tailwind. No foreign CSS-in-JS, no unknown component libraries, no image assets beyond icon fonts.
+
+## File inventory
+
+| Folder | Screen | HTML size | Shared URL UUID |
+|---|---|---|---|
+| `01-landing/` | Landing page (workflow-first marketing) | 63 KB | `91aaa791-a36e-4a62-9d01-7577b202f61e` |
+| `02-new-case/` | Case intake form + sample picker | 47 KB | `2daa6438-4c9d-47cb-96b5-059f7acc4f1d` |
+| `03-live-triage-run/` | **Signature screen** — left-center-right lockup, timeline in progress with low-confidence conflict | 57 KB | `5f5e98ff-63df-4233-9d03-fc339fe18e9d` |
+| `04-completed-run/` | Resolved run with full response pack | 50 KB | `f76a10c9-167c-4fc0-8969-0b40691d55cd` |
+| `05-runs-list/` | Recent runs table with filters | 53 KB | `f9cfb0b8-35a2-4593-89bb-fca0c07e148c` |
+| `06-samples/` | Featured golden-path card + scenario library | 47 KB | `082c76bf-079d-428f-bea0-a6a344f7fe2b` |
+
+Each folder contains:
+- `index.html` — standalone downloaded design from Variant
+- `screenshot.png` — full-page reference screenshot
+- `source-url.txt` — original Variant shared URL + download timestamp
+
+## Priority order for implementation
+
+1. **01-landing** — use as **design system anchor**. Extract tokens here first.
+2. **03-live-triage-run** — signature screen, product hero. Build with highest care.
+3. **04-completed-run** — mirrors signature layout, resolved state.
+4. **02-new-case** — intake form, ties into app-shell.
+5. **06-samples** — secondary surface, reuses card patterns.
+6. **05-runs-list** — secondary surface, reuses table patterns.
+
+## Plan-mandated fixes to apply during implementation
+
+These were identified during Variant QA review. Apply while building, do not regenerate designs:
+
+**Landing (`01-landing`)**:
+- Hero subhead: `Messy content in` → `Messy case in`
+- Remove or soften `Integrates seamlessly with Zendesk, Intercom, and Jira` line (conflicts with R21 no-integrations scope)
+- CTA: `Start Workspace Trial` → `Open Demo`
+- CTA: `Talk to Sales` → `Contact`
+
+**New Case (`02-new-case`)**:
+- Remove `Knowledge Base` nav item (not in spec, R21 cuts broad surfaces)
+
+**Completed Run (`04-completed-run`)**:
+- Primary CTA: `Approve Pack & Execute Actions` → `Approve Pack & Queue Actions` (R21 prohibits autonomous action) OR add explicit confirmation modal for action execution
+
+**Runs List (`05-runs-list`)**:
+- Remove `Today's Digest` right rail OR reduce to a single `Avg Confidence` heartbeat indicator (R21 cuts analytics dashboards)
+
+**All screens**:
+- Unify urgency color palette: pick one (red OR amber) for `High` urgency, apply consistently
+- Preserve `System Idle / System Active` status chip in app-shell header
+
+## How to use this folder when building in Cascade
+
+1. Start by reading `01-landing/index.html` and extract design tokens into `docs/design/design-system.md`:
+   - Color palette (all unique hex values used)
+   - Typography scale (font sizes, weights, line heights, letter spacing)
+   - Spacing scale (from Tailwind classes in use)
+   - Border radius, shadow, transition conventions
+   - Component atoms: button, input, chip, badge, card
+
+2. Cross-check tokens against other 5 files — reject any token that drifts.
+
+3. Build Next.js 15 App Router scaffold (Unit 1 of plan), wire Inter + JetBrains Mono, install Phosphor React (`@phosphor-icons/react`) and Tailwind.
+
+4. For each screen, port HTML structure into React components, replacing:
+   - `<script src="tailwindcss.com">` → Tailwind config in project
+   - `<script src="phosphor-icons">` → `@phosphor-icons/react` components
+   - Google Fonts CDN → Next.js `next/font/google` loader
+   - Static `vid="..."` debug attributes → remove
+   - Hardcoded content → props + server-fetched data per plan
+
+5. Apply copy/scope fixes from the list above on the fly.
+
+## Visual DNA summary (from landing analysis)
+
+- **Palette**: white `#fff` base, gray-50 `#f9fafb` app bg, black `#000` primary, amber/orange accent for warnings, green for success, red for critical/escalation
+- **Grid background**: `linear-gradient` 1px grid on `#f3f4f6` at 40px intervals (gives the editorial-console feel)
+- **Typography**: Inter for UI, JetBrains Mono for section labels and identifiers (e.g., `CASE-8924`, `01 INGEST CASE`, `MANUAL INTAKE`) — this mono treatment is a signature of the design
+- **Scrollbars**: thin 4px styled scrollbars — `#E5E7EB` thumb
+- **Border style**: hairline `border-gray-200` on all cards and containers
+- **Backdrop blur**: sticky header uses `bg-white/90 backdrop-blur-sm`
+- **Radii**: subtle — `rounded-sm`, `rounded-md`, occasional `rounded-lg`

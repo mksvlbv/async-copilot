@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { generateText } from "ai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   buildFallbackResponsePack,
   finalStateFor,
   syntheticOutputFor,
 } from "@/lib/triage/run-model";
+import { triageModel, isAIEnabled } from "@/lib/ai/client";
+import { getStagePrompt } from "@/lib/ai/prompts";
+import type { StageContext } from "@/lib/ai/prompts";
 import type { Sample } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
@@ -77,13 +81,35 @@ export async function POST(
   }
 
   // Output: prefer pre-seeded golden output (if completed stage has data),
-  // else synthetic generation.
+  // else LLM inference via Groq, else synthetic (regex) fallback.
   let output: Record<string, unknown> = stageRow.output ?? {};
+  let usedAI = false;
   if (!output || Object.keys(output).length === 0) {
-    output = syntheticOutputFor(stageRow.stage_key, {
-      caseTitle: caseRow?.title ?? "",
-      caseBody: caseRow?.body ?? "",
-    });
+    const stageCtx: StageContext = {
+      title: caseRow?.title ?? "",
+      body: caseRow?.body ?? "",
+      customerName: caseRow?.customer_name ?? null,
+      customerAccount: caseRow?.customer_account ?? null,
+      customerPlan: caseRow?.customer_plan ?? null,
+    };
+
+    if (isAIEnabled()) {
+      try {
+        output = await generateStageOutput(stageRow.stage_key, stageCtx);
+        usedAI = true;
+      } catch (err) {
+        console.warn(`[advance] LLM failed for stage ${stageRow.stage_key}, falling back to synthetic`, err);
+        output = syntheticOutputFor(stageRow.stage_key, {
+          caseTitle: stageCtx.title,
+          caseBody: stageCtx.body,
+        });
+      }
+    } else {
+      output = syntheticOutputFor(stageRow.stage_key, {
+        caseTitle: stageCtx.title,
+        caseBody: stageCtx.body,
+      });
+    }
   }
 
   // Mark stage completed
@@ -155,7 +181,40 @@ export async function POST(
     advanced: true,
     terminal: isTerminal,
     stage_completed: stageRow.stage_key,
+    ai: usedAI,
   });
+}
+
+/**
+ * Call Groq LLM (Llama 3.3 70B) to generate stage output.
+ * Returns parsed JSON object matching the stage's expected schema.
+ */
+async function generateStageOutput(
+  stageKey: string,
+  ctx: StageContext,
+): Promise<Record<string, unknown>> {
+  const prompt = getStagePrompt(stageKey);
+  if (!prompt) return {};
+
+  const { text } = await generateText({
+    model: triageModel,
+    system: prompt.system,
+    prompt: prompt.user(ctx),
+    maxOutputTokens: 400,
+    temperature: 0.3,
+  });
+
+  // Parse JSON from LLM response — strip markdown fences if model wraps output
+  const cleaned = text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  try {
+    return JSON.parse(cleaned) as Record<string, unknown>;
+  } catch {
+    // If JSON parse fails, return the raw text as a fallback field
+    return { raw_output: text, parse_error: true };
+  }
 }
 
 /** Quick deterministic baseline for intake (no sample). */

@@ -4,12 +4,15 @@
  * Live Triage Run — signature screen.
  * 3-column lockup: Case Context | Visible Triage | Response Pack.
  *
- * Polling:
- *   - If run is in 'pending' or 'running' state → POST /advance every ~800ms
- *   - After each advance, fetch fresh detail; stop on terminal state.
+ * Streaming (preferred):
+ *   - SSE via GET /api/runs/[id]/stream — real Llama 3.3 tokens in real-time.
+ *   - Each stage streams token-by-token like ChatGPT.
+ *
+ * Polling (fallback):
+ *   - If SSE returns 501 (no GROQ_API_KEY) → falls back to POST /advance polling.
  *   - Refreshing the page re-reads server state (no client-only run memory).
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import {
@@ -38,11 +41,18 @@ const POLL_MS = 800;
 
 type Props = { initialRun: RunWithDetails };
 
+/** Per-stage streaming tokens buffer. */
+type StreamingTokens = Record<string, string>;
+
 export function LiveRunView({ initialRun }: Props) {
   const [run, setRun] = useState<RunWithDetails>(initialRun);
   const [polling, setPolling] = useState(false);
   const [pollError, setPollError] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
+  const [streamingTokens, setStreamingTokens] = useState<StreamingTokens>({});
+  const [activeStreamStage, setActiveStreamStage] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [aiMode, setAiMode] = useState<"streaming" | "polling" | null>(null);
   const aborted = useRef(false);
 
   const isTerminal =
@@ -50,8 +60,115 @@ export function LiveRunView({ initialRun }: Props) {
     run.state === "escalated" ||
     run.state === "failed";
 
-  // Polling loop
+  // Refresh run detail from server
+  const refreshRun = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/runs/${run.id}`, { cache: "no-store" });
+      if (!r.ok) return;
+      const data = (await r.json()) as { run: RunWithDetails };
+      if (!aborted.current) setRun(data.run);
+    } catch { /* ignore */ }
+  }, [run.id]);
+
+  // SSE streaming mode
   useEffect(() => {
+    if (isTerminal || paused || aiMode === "polling") return;
+    if (aiMode === "streaming") return; // already connected
+
+    aborted.current = false;
+
+    async function tryStream() {
+      if (aborted.current) return;
+
+      try {
+        const res = await fetch(`/api/runs/${run.id}/stream`);
+
+        // Not available → fall back to polling
+        if (res.status === 501 || res.status === 409) {
+          setAiMode("polling");
+          return;
+        }
+        if (!res.ok || !res.body) {
+          setAiMode("polling");
+          return;
+        }
+
+        setAiMode("streaming");
+        setIsStreaming(true);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          if (aborted.current) break;
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          let eventType = "";
+          for (const line of lines) {
+            if (line.startsWith("event: ")) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith("data: ")) {
+              const raw = line.slice(6);
+              try {
+                const data = JSON.parse(raw);
+                handleSSEEvent(eventType, data);
+              } catch { /* skip malformed */ }
+            }
+          }
+        }
+      } catch {
+        if (!aborted.current) setAiMode("polling");
+      } finally {
+        setIsStreaming(false);
+        setActiveStreamStage(null);
+        // Final refresh to get the completed state
+        if (!aborted.current) refreshRun();
+      }
+    }
+
+    function handleSSEEvent(event: string, data: Record<string, unknown>) {
+      switch (event) {
+        case "stage-start":
+          setActiveStreamStage(data.stageKey as string);
+          setStreamingTokens((prev) => ({ ...prev, [data.stageKey as string]: "" }));
+          break;
+        case "stage-token":
+          setStreamingTokens((prev) => ({
+            ...prev,
+            [data.stageKey as string]: (prev[data.stageKey as string] ?? "") + (data.token as string),
+          }));
+          break;
+        case "stage-done":
+          setActiveStreamStage(null);
+          // Refresh run to pick up DB updates
+          refreshRun();
+          break;
+        case "run-done":
+          refreshRun();
+          break;
+        case "error":
+          setPollError(data.message as string);
+          break;
+      }
+    }
+
+    tryStream();
+
+    return () => {
+      aborted.current = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run.id, isTerminal, paused]);
+
+  // Polling fallback loop (only when aiMode === "polling")
+  useEffect(() => {
+    if (aiMode !== "polling") return;
     aborted.current = false;
 
     async function step() {
@@ -85,7 +202,7 @@ export function LiveRunView({ initialRun }: Props) {
       clearTimeout(handle);
       aborted.current = true;
     };
-  }, [run.id, run.state, run.advance_cursor, paused]);
+  }, [aiMode, run.id, run.state, run.advance_cursor, paused]);
 
   return (
     <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
@@ -94,7 +211,14 @@ export function LiveRunView({ initialRun }: Props) {
         Case Context &amp; Response Pack are best viewed on desktop.
       </div>
       <CaseContextPanel run={run} />
-      <TimelinePanel run={run} polling={polling} pollError={pollError} />
+      <TimelinePanel
+        run={run}
+        polling={polling || isStreaming}
+        pollError={pollError}
+        streamingTokens={streamingTokens}
+        activeStreamStage={activeStreamStage}
+        aiMode={aiMode}
+      />
       <ResponsePackPanel
         run={run}
         isTerminal={isTerminal}
@@ -261,10 +385,16 @@ function TimelinePanel({
   run,
   polling,
   pollError,
+  streamingTokens,
+  activeStreamStage,
+  aiMode,
 }: {
   run: RunWithDetails;
   polling: boolean;
   pollError: string | null;
+  streamingTokens?: StreamingTokens;
+  activeStreamStage?: string | null;
+  aiMode?: "streaming" | "polling" | null;
 }) {
   const stages = [...run.stages].sort((a, b) => a.stage_order - b.stage_order);
   const currentOrder = run.advance_cursor + 1;
@@ -300,6 +430,16 @@ function TimelinePanel({
           </span>
           {polling && (
             <Spinner size={12} className="animate-spin text-gray-400 ml-1" />
+          )}
+          {aiMode === "streaming" && (
+            <span className="ml-2 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-mono font-semibold rounded border border-emerald-200 uppercase tracking-widest">
+              Llama 3.3 · Live
+            </span>
+          )}
+          {aiMode === "polling" && (
+            <span className="ml-2 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[9px] font-mono font-semibold rounded border border-gray-200 uppercase tracking-widest">
+              Synthetic
+            </span>
           )}
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
@@ -366,6 +506,8 @@ function TimelinePanel({
                     completed={completed}
                     running={running}
                     pending={pending}
+                    streamingText={streamingTokens?.[s.stage_key]}
+                    isActiveStream={activeStreamStage === s.stage_key}
                   />
                 </li>
               );
@@ -382,22 +524,36 @@ function StageBody({
   completed,
   running,
   pending,
+  streamingText,
+  isActiveStream,
 }: {
   stage: RunWithDetails["stages"][number];
   completed: boolean;
   running: boolean;
   pending: boolean;
+  streamingText?: string;
+  isActiveStream?: boolean;
 }) {
   if (pending) {
     return (
       <div className="text-xs text-gray-400">Awaiting previous stage…</div>
     );
   }
-  if (running) {
+  if (running || isActiveStream) {
     return (
-      <div className="text-xs text-gray-500 flex items-center gap-2">
-        <Spinner size={14} className="animate-spin text-gray-400" />
-        Running…
+      <div className="mt-1 space-y-2">
+        <div className="text-xs text-gray-500 flex items-center gap-2">
+          <Spinner size={14} className="animate-spin text-gray-400" />
+          {isActiveStream ? "Streaming from Llama 3.3…" : "Running…"}
+        </div>
+        {streamingText && (
+          <div className="bg-gray-950 rounded-md p-3 shadow-sm overflow-x-auto">
+            <pre className="text-[11px] text-emerald-400 font-mono leading-relaxed whitespace-pre-wrap break-words">
+              {streamingText}
+              <span className="animate-pulse text-emerald-300">▌</span>
+            </pre>
+          </div>
+        )}
       </div>
     );
   }

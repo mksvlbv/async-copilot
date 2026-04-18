@@ -11,6 +11,8 @@
     "db:init": "node scripts/db-init.mjs all",
     "db:migrate": "node scripts/db-init.mjs migrate",
     "db:seed": "node scripts/db-init.mjs seed",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:local": "cross-env BASE_URL=http://localhost:3000 playwright test",
     "audit:perf": "lhci autorun --config=./lighthouserc.cjs",
@@ -20,22 +22,24 @@
     "audit:links": "linkinator https://async-copilot.vercel.app --config=./.linkinatorrc.json",
     "audit:visual": "lost-pixel",
     "audit:visual:update": "lost-pixel update",
-    "audit:ai": "tsx scripts/site-audit.ts",
     "audit": "npm run audit:links && npm run audit:a11y && npm run audit:perf && npm run audit:visual"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^3.0.35",
     "@phosphor-icons/react": "^2.1.7",
+    "@sentry/nextjs": "^10.49.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
+    "ai": "^6.0.168",
     "clsx": "^2.1.1",
     "geist": "^1.7.0",
     "next": "^15.5.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@axe-core/cli": "^4.11.2",
-    "@browserbasehq/stagehand": "^2.5.8",
     "@eslint/eslintrc": "^3.2.0",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.49.1",
@@ -43,6 +47,7 @@
     "@types/pg": "^8.11.10",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "dotenv": "^17.4.2",
@@ -55,6 +60,7 @@
     "postcss": "^8.5.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.21.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.4"
   }
 }

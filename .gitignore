@@ -13,6 +13,8 @@ node_modules/
 out/
 dist/
 build/
+next-env.d.ts.bak
+*.tsbuildinfo
 
 # Environment files
 .env

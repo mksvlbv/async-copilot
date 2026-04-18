@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Semantic tokens from design-system.md */
+    --color-surface: 249 250 251;         /* gray-50 */
+    --color-surface-elevated: 255 255 255; /* white */
+    --color-border-subtle: 229 231 235;    /* gray-200 */
+    --color-text-primary: 17 24 39;        /* gray-900 */
+    --color-text-strong: 3 7 18;           /* gray-950 */
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *::selection {
+    @apply bg-gray-200 text-black;
+  }
+}
+
+@layer utilities {
+  /* Grid background — hero sections */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, #f3f4f6 1px, transparent 1px),
+      linear-gradient(to bottom, #f3f4f6 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Slim scrollbar in mockups */
+  .mockup-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .mockup-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .mockup-scroll::-webkit-scrollbar-thumb {
+    background-color: #e5e7eb;
+    border-radius: 20px;
+  }
+}

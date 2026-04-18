@@ -4,7 +4,7 @@
 
 Live demo: **https://async-copilot.vercel.app**
 
-A full-stack portfolio demo that shows a support-triage pipeline end-to-end: landing page → case intake → live-run signature screen → completed response pack. Built with Next.js 15 App Router, Supabase (Postgres), and Tailwind.
+A full-stack portfolio demo that shows a support-triage pipeline end-to-end: landing page → case intake → live-run signature screen → completed response pack. Built with Next.js 15 App Router, Supabase (Postgres), Tailwind, and **real AI inference** via Llama 3.3 70B (Groq).
 
 ---
 
@@ -33,18 +33,27 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 | `/api/health` | Machine-readable env + schema + row-count snapshot |
 | `/api/samples` · `/api/cases` · `/api/runs` · `/api/runs/[id]` | REST endpoints |
 | `/api/runs/[id]/advance` · `/approve` · `/export` | Run lifecycle mutations + export |
+| `/api/runs/[id]/stream` | **SSE streaming** — real-time LLM tokens (Llama 3.3 70B) |
+| `/api/cron/cleanup-stale` · `/api/cron/daily-stats` | Self-healing cron jobs (Vercel Cron) |
 
 ---
 
 ## Stack
 
 - **Framework**: Next.js 15 (App Router, TypeScript, typedRoutes, `next/font/google`)
+- **AI Inference**: Groq (Llama 3.3 70B) via Vercel AI SDK 6 — real streaming, JSON output
 - **Styling**: Tailwind CSS 3.4 with design tokens extracted from Variant exports
 - **Icons**: `@phosphor-icons/react` (server-side rendered SVG)
 - **Database**: Supabase Postgres 17 (`eu-west-1` / Ireland)
 - **Auth client**: `@supabase/ssr` (browser + server), `@supabase/supabase-js` (admin)
+- **Observability**: Sentry (error tracking, 5k events/mo free tier)
 - **Hosting**: Vercel (Stockholm edge, auto-deploy on every push to `main`)
-- **E2E**: Playwright (`tests/golden-path.spec.ts`)
+- **Unit Tests**: Vitest (36 tests) · **E2E**: Playwright
+- **CI/CD**: GitHub Actions (typecheck + lint + unit tests on every PR)
+- **Rate Limiting**: In-memory sliding window (20 req/min/IP)
+- **Cron**: Vercel Cron (hourly stale-run cleanup, daily stats snapshot)
+
+**Total monthly cost: $0** (all services on free tiers)
 
 ---
 
@@ -70,11 +79,10 @@ Seeds: `supabase/seeds/001_samples.sql` + `002_golden_run.sql`
 npm install
 
 # 2. Fill .env.local (copy .env.example)
-#    Three Supabase env vars required:
-#      NEXT_PUBLIC_SUPABASE_URL
-#      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-#      SUPABASE_SECRET_KEY
-#      SUPABASE_DB_URL   (for migrations only — server-side)
+cp .env.example .env.local
+#    Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+#              SUPABASE_SECRET_KEY, SUPABASE_DB_URL
+#    Optional: GROQ_API_KEY (enables real AI), NEXT_PUBLIC_SENTRY_DSN
 
 # 3. One-shot migrate + seed
 npm run db:init
@@ -83,23 +91,29 @@ npm run db:init
 npm run dev
 # → http://localhost:3000
 
-# 5. Run E2E against prod (or BASE_URL=... for preview/local)
-npm run test:e2e
+# 5. Run tests
+npm test             # 36 unit tests (Vitest)
+npm run test:e2e     # Playwright E2E
 ```
 
 Useful scripts:
 
 - `npm run typecheck` — strict TypeScript
-- `npm run build` — production build (all 14 routes)
+- `npm run build` — production build
 - `npm run lint`
+- `npm test` — Vitest unit tests
+- `npm run test:watch` — Vitest in watch mode
 - `npm run db:migrate` · `npm run db:seed` — split init
 
 ---
 
 ## Key design decisions
 
-- **Server-owned run progression** — every `/advance` call is authoritative on the server. Client polls, client never mutates state directly.
-- **Polling over realtime** — `800ms` cadence; stops on terminal state. Simpler than websockets, good enough for a demo.
+- **Server-owned run progression** — every `/advance` call is authoritative on the server. Client never mutates state directly.
+- **SSE streaming with polling fallback** — When `GROQ_API_KEY` is set, the client connects via SSE and streams real LLM tokens. Without it, falls back to `800ms` polling with synthetic (regex) output. Zero-config degradation.
+- **Real AI, graceful fallback** — Llama 3.3 70B via Groq generates structured JSON for each stage. If the LLM fails or key is missing, regex-based inference kicks in seamlessly.
+- **Rate limiting** — In-memory sliding window (20 req/min/IP) on write endpoints. Upgradeable to Upstash Redis.
+- **Self-healing** — Vercel Cron runs hourly to clean up zombie runs stuck in "running" state.
 - **R21 scope boundary** — no auth, no real integrations, no autonomous action. Staged actions stay `queued` until a human clicks Approve.
 - **Idempotent schema + seeds** — `npm run db:init` is safe to re-run. Demo environment can be reset cheaply.
 - **One source of design truth** — `docs/design/design-system.md` holds all tokens; every screen pulls from there.
@@ -137,13 +151,19 @@ src/
       runs/[runId]/export/route.ts     # GET — markdown/text/json
       health/route.ts                  # GET — env + schema + counts
   lib/
+    ai/client.ts                         # Groq provider (Vercel AI SDK)
+    ai/prompts.ts                        # 6 stage system prompts
     supabase/{client,server,admin,types}.ts
-    triage/run-model.ts                # stage defs + fallback pack builder
+    triage/run-model.ts                  # state machine + synthetic fallback
+    rate-limit.ts                        # in-memory rate limiter
 supabase/
-  migrations/001_initial_schema.sql
+  migrations/001-003                     # Postgres schema
   seeds/{001_samples,002_golden_run}.sql
-scripts/db-init.mjs                    # pg-based migrator (no Supabase CLI)
-tests/golden-path.spec.ts              # Playwright E2E
+scripts/db-init.mjs                      # pg-based migrator (no Supabase CLI)
+tests/
+  unit/run-model.test.ts                 # 32 unit tests
+  unit/rate-limit.test.ts                # 4 unit tests
+  golden-path.spec.ts                    # Playwright E2E
 docs/
   ideation/        brainstorms/        plans/
   design/
@@ -173,8 +193,7 @@ friction). Run locally or via GitHub Actions `workflow_dispatch`.
 | `npm run audit:a11y` | **pa11y-ci + axe-core** — WCAG 2 AA scan across public routes. |
 | `npm run audit:perf` | **Lighthouse CI** — perf / a11y / SEO / best-practices with enforced budgets (`lighthouserc.cjs`). |
 | `npm run audit:visual` | **Lost Pixel** — screenshots 4 routes × 3 breakpoints, diffs against `.lostpixel/baseline/`. |
-| `npm run audit:ai` | **Stagehand + Claude** — AI agent navigates the site and reports friction points. Requires `ANTHROPIC_API_KEY`. Costs API credits. |
-| `npm run audit` | Chains links → a11y → perf → visual (skips AI). Full non-AI pass. |
+| `npm run audit` | Chains links → a11y → perf → visual. Full non-AI pass. |
 
 GitHub Actions:
 
@@ -189,8 +208,7 @@ reports stay accessible without polluting the repo.
 ### Running a full audit locally
 
 ```bash
-npm run audit         # links + a11y + perf + visual (no AI)
-npm run audit:ai      # AI exploratory pass (opt-in, uses API credits)
+npm run audit         # links + a11y + perf + visual
 ```
 
 Artifacts are written to `.lighthouseci/`, `.lostpixel/`, and
@@ -212,3 +230,4 @@ fixed findings.
 - `docs/plans/2026-04-18-001-feat-async-copilot-demo-plan.md` — 9-unit build plan (what was delivered, unit-by-unit)
 - `docs/design/design-system.md` — canonical tokens
 - `docs/IMPLEMENTATION_HANDOFF.md` — original entry-point doc for the implementing agent
+- `ARCHITECTURE.md` — system architecture, data model, design decisions

@@ -1,19 +1,19 @@
 "use client";
 
 /**
- * New Case — intake form + pre-configured samples picker.
+ * New Case вЂ” intake form + pre-configured samples picker.
  * Unit 5 port of docs/design/variant-exports/02-new-case
  *
  * Flow:
- *   1. Operator pastes context OR clicks a sample card → form fills in.
- *   2. On Start Triage: POST /api/cases → POST /api/runs → push to /app/runs/[id].
+ *   1. Operator pastes context OR clicks a sample card в†’ form fills in.
+ *   2. On Start Triage: POST /api/cases в†’ POST /api/runs в†’ push to /app/runs/[id].
  *
  * Plan-mandated fixes:
- *   - Integration-branded channels ("Zendesk Ticket", "Intercom Chat") → generic names (R21)
+ *   - Integration-branded channels ("Zendesk Ticket", "Intercom Chat") в†’ generic names (R21)
  *   - "Create Custom Sample" button removed (not in MVP scope)
  */
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Buildings,
   EnvelopeSimple,
@@ -31,7 +31,18 @@ import type { Sample, UrgencyLevel } from "@/lib/supabase/types";
 type Channel = "Email" | "Live Chat" | "In-App Widget" | "Customer Portal";
 
 export default function NewCasePage() {
+  // useSearchParams() triggers a CSR bailout in Next 15; wrap in Suspense.
+  return (
+    <Suspense fallback={null}>
+      <NewCasePageInner />
+    </Suspense>
+  );
+}
+
+function NewCasePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedSampleSlug = searchParams?.get("sample") ?? null;
 
   // Form state
   const [customer, setCustomer] = useState("");
@@ -74,6 +85,16 @@ export default function NewCasePage() {
     setUrgency(s.urgency);
     setCustomer(""); // operator fills in if needed; samples don't carry a customer name
   }, []);
+
+  // Deep-link from /app/samples: auto-load the sample indicated by ?sample=slug
+  // once the samples list has been fetched. Runs only once per slug change.
+  useEffect(() => {
+    if (!requestedSampleSlug || !samples) return;
+    const match = samples.find((s) => s.slug === requestedSampleSlug);
+    if (match && loadedSampleId !== match.id) {
+      loadSample(match);
+    }
+  }, [requestedSampleSlug, samples, loadedSampleId, loadSample]);
 
   const reset = () => {
     setCustomer("");
@@ -138,9 +159,9 @@ export default function NewCasePage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-8 py-8 flex gap-8 items-start">
+    <div className="max-w-[1280px] mx-auto px-8 py-8 flex flex-col lg:flex-row gap-8 items-start">
       {/* Left: intake form */}
-      <form onSubmit={startTriage} className="flex-1 flex flex-col max-w-[800px]">
+      <form onSubmit={startTriage} className="w-full flex-1 flex flex-col lg:max-w-[800px]">
         {/* Header row */}
         <div className="mb-6 flex justify-between items-end">
           <div>
@@ -290,12 +311,12 @@ export default function NewCasePage() {
                   "px-6 py-2.5 text-sm font-medium rounded-md shadow-sm transition-all flex items-center justify-center gap-2 group focus:ring-2 focus:ring-offset-2 focus:ring-gray-900",
                   submitting || !lengthOk
                     ? "bg-gray-300 text-white cursor-not-allowed"
-                    : "bg-black text-white hover:bg-gray-800",
+                    : "bg-gray-950 text-white hover:bg-gray-900",
                 )}
               >
                 {submitting ? (
                   <>
-                    <CircleNotch size={14} className="animate-spin" /> Starting…
+                    <CircleNotch size={14} className="animate-spin" /> StartingвЂ¦
                   </>
                 ) : (
                   <>
@@ -309,8 +330,8 @@ export default function NewCasePage() {
         </div>
       </form>
 
-      {/* Right: sample picker */}
-      <aside className="w-[320px] shrink-0 flex flex-col gap-5 pt-1">
+      {/* Right: sample picker — full-width on mobile, fixed 320px on lg+ */}
+      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-5 pt-1">
         <div>
           <h2 className="text-[11px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-1">
             Pre-configured Scenarios
@@ -391,7 +412,7 @@ function SampleCard({
       )}
     >
       {loaded && (
-        <div className="absolute -left-[5px] top-4 w-2.5 h-2.5 bg-black rounded-full shadow-sm" aria-hidden />
+        <div className="absolute -left-[5px] top-4 w-2.5 h-2.5 bg-gray-950 rounded-full shadow-sm" aria-hidden />
       )}
       <div className={clsx("flex justify-between items-start mb-1", loaded && "pl-2")}>
         <div className="flex gap-1.5">
@@ -404,7 +425,7 @@ function SampleCard({
             {urgencyBadge.label}
           </span>
           {sample.is_golden && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium bg-black text-white border border-black">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium bg-gray-950 text-white border border-black">
               GOLDEN
             </span>
           )}

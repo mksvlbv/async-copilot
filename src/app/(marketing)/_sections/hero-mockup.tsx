@@ -1,5 +1,5 @@
 /**
- * Hero workspace mockup — 3-column lockup (Case Context / Visible Triage / Response Pack).
+ * Hero workspace mockup вЂ” 3-column lockup (Case Context / Visible Triage / Response Pack).
  * Static visual element; mirrors the signature screen at smaller scale.
  */
 import {
@@ -43,7 +43,7 @@ export function HeroMockup() {
                 <h3 className="text-sm font-semibold text-gray-900">API Timeout on /v2/orders</h3>
                 <div className="flex gap-2 mt-1">
                   <span className="text-[11px] text-gray-500">Acme Corp</span>
-                  <span className="text-[11px] text-gray-300">•</span>
+                  <span className="text-[11px] text-gray-300">вЂў</span>
                   <span className="text-[11px] text-gray-500">2 mins ago</span>
                 </div>
               </div>
@@ -78,8 +78,8 @@ export function HeroMockup() {
               <span className="text-[11px] font-mono font-medium text-gray-500 uppercase tracking-widest">Visible Triage</span>
               <div className="flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-20" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-black" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-950 opacity-20" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-950" />
                 </span>
                 <span className="text-[10px] font-mono text-gray-900">PROCESSING</span>
               </div>
@@ -119,7 +119,7 @@ export function HeroMockup() {
                 </div>
                 {/* Stage 3 (active) */}
                 <div className="relative pl-6">
-                  <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-black ring-4 ring-gray-50" />
+                  <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-gray-950 ring-4 ring-gray-50" />
                   <div className="text-xs font-mono font-medium text-gray-900 mb-1">Formulate Strategy</div>
                   <div className="text-[11px] text-gray-500 leading-relaxed">
                     Drafting acknowledgment of known incident. Linking to status page. Setting expectation for updates.
@@ -181,7 +181,7 @@ Support Team`}</div>
 
               {/* Actions */}
               <div className="flex gap-2">
-                <button className="flex-1 bg-black text-white text-xs font-medium py-2 rounded shadow-sm hover:bg-gray-800 transition-colors">
+                <button className="flex-1 bg-gray-950 text-white text-xs font-medium py-2 rounded shadow-sm hover:bg-gray-900 transition-colors">
                   Send &amp; Pending
                 </button>
                 <button className="px-3 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded shadow-sm hover:bg-gray-50 transition-colors">

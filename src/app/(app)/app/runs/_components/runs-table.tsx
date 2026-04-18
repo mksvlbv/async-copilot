@@ -82,7 +82,7 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search runs by ID, case, or customer…"
+            placeholder="Search runs by ID, case, or customerвЂ¦"
             className="w-full pl-9 pr-3 py-1.5 text-sm bg-white border border-gray-200 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-black focus:border-black transition-all placeholder-gray-400 text-gray-900"
           />
         </div>
@@ -95,7 +95,7 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
               className={clsx(
                 "px-2.5 py-1 text-xs rounded-md border transition-colors font-medium flex items-center gap-1.5",
                 filter === f.key
-                  ? "bg-black border-black text-white"
+                  ? "bg-gray-950 border-black text-white"
                   : "bg-white border-gray-200 text-gray-700 hover:border-gray-400",
               )}
             >
@@ -134,11 +134,11 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
                 <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors group">
                   <td className="px-4 py-3">
                     <Link href={`/app/runs/${r.id}` as never} className="block">
-                      <div className="text-gray-900 font-medium truncate">{c?.title ?? "—"}</div>
+                      <div className="text-gray-900 font-medium truncate">{c?.title ?? "вЂ”"}</div>
                       <div className="text-[11px] text-gray-500 font-mono">{c?.case_ref ?? r.id.slice(0, 8)}</div>
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-700 text-sm">{c?.customer_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-gray-700 text-sm">{c?.customer_name ?? "вЂ”"}</td>
                   <td className="px-4 py-3">
                     <StateBadge state={r.state} />
                   </td>
@@ -146,7 +146,7 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
                     {r.advance_cursor} / {r.total_stages}
                   </td>
                   <td className="px-4 py-3 text-gray-700 font-mono text-xs">
-                    {r.confidence != null ? `${r.confidence}%` : "—"}
+                    {r.confidence != null ? `${r.confidence}%` : "вЂ”"}
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap font-mono" suppressHydrationWarning>
                     {formatCreatedAt(r.created_at)}
@@ -192,7 +192,7 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
 }
 
 /**
- * Stable UTC-based timestamp format — avoids hydration mismatches caused by
+ * Stable UTC-based timestamp format вЂ” avoids hydration mismatches caused by
  * server/client locale or timezone differences. Produces e.g. "Apr 18 06:04".
  */
 function formatCreatedAt(iso: string): string {

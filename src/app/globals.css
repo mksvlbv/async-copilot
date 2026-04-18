@@ -21,6 +21,19 @@
   *::selection {
     @apply bg-gray-200 text-black;
   }
+
+  /* Global keyboard-only focus ring — a11y without mouse visual noise. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid rgb(3 7 18);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 @layer utilities {

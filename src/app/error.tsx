@@ -19,7 +19,7 @@ export default function GlobalError({
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <div className="max-w-md w-full bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center">
         <div className="inline-flex items-center gap-2 mb-4">
-          <div className="w-5 h-5 bg-black rounded-sm" aria-hidden />
+          <div className="w-5 h-5 bg-gray-950 rounded-sm" aria-hidden />
           <span className="font-bold tracking-tight text-lg">Async Copilot</span>
         </div>
         <h1 className="text-xl font-semibold text-gray-900 mb-2">Something broke.</h1>
@@ -33,7 +33,7 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-black rounded-md shadow-sm hover:bg-gray-800 transition-colors"
+            className="px-5 py-2.5 text-sm font-medium text-white bg-gray-950 rounded-md shadow-sm hover:bg-gray-900 transition-colors"
           >
             Try again
           </button>

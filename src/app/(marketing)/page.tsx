@@ -1,12 +1,12 @@
 /**
- * Landing page — Unit 4 port of docs/design/variant-exports/01-landing
+ * Landing page вЂ” Unit 4 port of docs/design/variant-exports/01-landing
  * Plan-mandated fixes applied:
- *  - "Messy context in" → "Messy case in"
+ *  - "Messy context in" в†’ "Messy case in"
  *  - Removed "Integrates seamlessly with Zendesk, Intercom, and Jira" (R21)
- *  - "Start Workspace Trial" → "Open Demo"
- *  - "Talk to Sales" → "Contact"
+ *  - "Start Workspace Trial" в†’ "Open Demo"
+ *  - "Talk to Sales" в†’ "Contact"
  *  - Removed `Sign In` link from header (R21, no auth)
- *  - Year 2024 → 2026
+ *  - Year 2024 в†’ 2026
  */
 import Link from "next/link";
 import {
@@ -42,7 +42,7 @@ function LandingHeader() {
     <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-sm border-b border-gray-200 transition-all duration-200">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-black rounded-sm" aria-hidden />
+          <div className="w-5 h-5 bg-gray-950 rounded-sm" aria-hidden />
           <span className="font-bold tracking-tight text-lg">Async Copilot</span>
         </Link>
 
@@ -61,7 +61,7 @@ function LandingHeader() {
         <div className="flex items-center gap-4">
           <Link
             href="/app"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-black rounded hover:bg-gray-800 transition-colors shadow-sm"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gray-950 rounded hover:bg-gray-900 transition-colors shadow-sm"
           >
             Open App
           </Link>
@@ -86,7 +86,7 @@ function LandingHero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/app"
-            className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-white bg-black rounded shadow-sm hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-white bg-gray-950 rounded shadow-sm hover:bg-gray-900 transition-all flex items-center justify-center gap-2"
           >
             Open App <ArrowRight size={14} weight="bold" />
           </Link>
@@ -134,7 +134,7 @@ function Step({ n, dark, icon, title, copy }: { n: string; dark: boolean; icon: 
       <div
         className={
           dark
-            ? "w-12 h-12 bg-black rounded-full flex items-center justify-center font-mono text-sm font-medium text-white mb-6 shadow-md"
+            ? "w-12 h-12 bg-gray-950 rounded-full flex items-center justify-center font-mono text-sm font-medium text-white mb-6 shadow-md"
             : "w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center font-mono text-sm font-medium text-gray-900 mb-6 shadow-sm group-hover:border-black transition-colors"
         }
       >
@@ -191,7 +191,7 @@ function SystemTrust() {
                     When issues exceed Tier 1 scope, the system automatically packages the context and suggests the correct engineering queue.
                   </p>
                 </div>
-                <div className="shrink-0 bg-black/50 border border-white/10 rounded p-3 font-mono text-[10px] text-gray-300">
+                <div className="shrink-0 bg-gray-950/50 border border-white/10 rounded p-3 font-mono text-[10px] text-gray-300">
                   <div className="text-red-400 mb-1">STATUS: OUT_OF_SCOPE</div>
                   <div>ACTION: ESCALATE_TIER_2</div>
                   <div>QUEUE: /eng/payments</div>
@@ -309,12 +309,12 @@ function ClosingCta() {
           Stop managing chaos. Start managing outcomes.
         </h2>
         <p className="text-lg text-gray-500 mb-10">
-          A focused demo — open the workspace, pick a scenario, and watch the triage work.
+          A focused demo вЂ” open the workspace, pick a scenario, and watch the triage work.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Link
             href="/app"
-            className="px-8 py-4 text-sm font-medium text-white bg-black rounded shadow-md hover:bg-gray-800 transition-transform hover:-translate-y-0.5"
+            className="px-8 py-4 text-sm font-medium text-white bg-gray-950 rounded shadow-md hover:bg-gray-900 transition-transform hover:-translate-y-0.5"
           >
             Open Demo
           </Link>
@@ -344,7 +344,7 @@ function LandingFooter() {
           <a href="#" className="hover:text-gray-900 transition-colors">Terms</a>
           <a href="#" className="hover:text-gray-900 transition-colors">Documentation</a>
         </div>
-        <div className="text-sm text-gray-400">© 2026 Async Copilot Inc.</div>
+        <div className="text-sm text-gray-400">В© 2026 Async Copilot Inc.</div>
       </div>
     </footer>
   );

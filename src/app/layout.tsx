@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-sans",
-  display: "swap",
-});
+// Geist Sans — distinctive workspace sans-serif (avoids Inter overuse).
+// Re-exported directly with its own variable class.
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -65,7 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${jetbrainsMono.variable}`}>
       <body>{children}</body>
     </html>
   );

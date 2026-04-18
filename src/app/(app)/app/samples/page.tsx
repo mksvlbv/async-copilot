@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Samples library (Unit 8) — browsable scenario cards with body preview.
+ * Samples library (Unit 8) вЂ” browsable scenario cards with body preview.
  * Each card links back to /app where the intake form can load the sample.
  */
 export default async function SamplesLibraryPage() {
@@ -85,7 +85,7 @@ function SampleCard({ sample: s, featured = false }: { sample: Sample; featured?
         ? "bg-amber-50 text-amber-700 border-amber-100"
         : "bg-gray-100 text-gray-600 border-gray-200";
 
-  const bodyPreview = s.body.length > 260 ? s.body.slice(0, 260) + "…" : s.body;
+  const bodyPreview = s.body.length > 260 ? s.body.slice(0, 260) + "вЂ¦" : s.body;
 
   return (
     <div
@@ -101,7 +101,7 @@ function SampleCard({ sample: s, featured = false }: { sample: Sample; featured?
               {s.urgency.toUpperCase()}
             </span>
             {s.is_golden && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium bg-black text-white border border-black">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium bg-gray-950 text-white border border-black">
                 GOLDEN
               </span>
             )}
@@ -145,8 +145,8 @@ function SampleCard({ sample: s, featured = false }: { sample: Sample; featured?
       <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/30 flex items-center justify-between">
         <span className="font-mono text-[10px] text-gray-400 tracking-wider">slug: {s.slug}</span>
         <Link
-          href={"/app" as never}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 hover:text-black transition-colors"
+          href={`/app?sample=${s.slug}` as never}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 hover:text-gray-950 transition-colors"
         >
           Load in New Case <ArrowRight size={12} weight="bold" />
         </Link>

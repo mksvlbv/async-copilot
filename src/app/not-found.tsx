@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-gray-50 bg-grid flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center">
         <div className="inline-flex items-center gap-2 mb-6">
-          <div className="w-5 h-5 bg-black rounded-sm" aria-hidden />
+          <div className="w-5 h-5 bg-gray-950 rounded-sm" aria-hidden />
           <span className="font-bold tracking-tight text-lg">Async Copilot</span>
         </div>
         <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-3">
@@ -21,7 +21,7 @@ export default function NotFound() {
         <div className="flex items-center justify-center gap-3">
           <Link
             href={"/app" as never}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-black rounded-md shadow-sm hover:bg-gray-800 transition-colors"
+            className="px-5 py-2.5 text-sm font-medium text-white bg-gray-950 rounded-md shadow-sm hover:bg-gray-900 transition-colors"
           >
             Open workspace
           </Link>

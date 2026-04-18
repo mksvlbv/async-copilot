@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * Shared app-shell header — used by all (app) routes.
+ * Shared app-shell header вЂ” used by all (app) routes.
  * Reads pathname to highlight the active nav link.
  *
- * Plan-mandated fix: 'Knowledge Base' nav item removed (R21 — out of scope).
+ * Plan-mandated fix: 'Knowledge Base' nav item removed (R21 вЂ” out of scope).
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,7 +20,7 @@ const NAV: NavItem[] = [
 ];
 
 type Props = {
-  /** Whether a run is actively progressing — controls the status pill. */
+  /** Whether a run is actively progressing вЂ” controls the status pill. */
   active?: boolean;
 };
 
@@ -37,7 +37,7 @@ export function AppHeader({ active = false }: Props) {
       <div className="flex items-center gap-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-4 h-4 bg-black rounded-[3px] shadow-sm" aria-hidden />
+          <div className="w-4 h-4 bg-gray-950 rounded-[3px] shadow-sm" aria-hidden />
           <span className="font-semibold text-[13px] tracking-tight">Async Copilot</span>
         </Link>
 
@@ -58,7 +58,7 @@ export function AppHeader({ active = false }: Props) {
               >
                 {item.label}
                 {activeItem && (
-                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-black rounded-t" aria-hidden />
+                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-950 rounded-t" aria-hidden />
                 )}
               </Link>
             );

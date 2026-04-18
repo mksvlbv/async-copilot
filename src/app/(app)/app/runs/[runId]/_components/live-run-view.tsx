@@ -88,7 +88,11 @@ export function LiveRunView({ initialRun }: Props) {
   }, [run.id, run.state, run.advance_cursor, paused]);
 
   return (
-    <div className="flex-1 flex overflow-hidden min-h-0">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+      {/* Mobile-only notice: left/right panels hidden < lg */}
+      <div className="lg:hidden px-5 py-2 bg-amber-50 border-b border-amber-100 text-[11px] font-mono text-amber-800 tracking-wide shrink-0">
+        Case Context &amp; Response Pack are best viewed on desktop.
+      </div>
       <CaseContextPanel run={run} />
       <TimelinePanel run={run} polling={polling} pollError={pollError} />
       <ResponsePackPanel
@@ -111,7 +115,7 @@ function CaseContextPanel({ run }: { run: RunWithDetails }) {
   const queryStage = run.stages.find((s) => s.stage_key === "query");
 
   return (
-    <aside className="w-[340px] shrink-0 border-r border-gray-200 bg-white flex flex-col z-10">
+    <aside className="hidden lg:flex w-[340px] shrink-0 border-r border-gray-200 bg-white flex-col z-10">
       <div className="h-12 border-b border-gray-100 flex items-center justify-between px-5 bg-gray-50/50 shrink-0">
         <span className="text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest">
           Case Context
@@ -330,7 +334,7 @@ function TimelinePanel({
                   {/* Marker */}
                   <div className="absolute left-0 top-1 z-10">
                     {completed ? (
-                      <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white shadow-sm">
+                      <div className="w-8 h-8 bg-gray-950 rounded-full flex items-center justify-center text-white shadow-sm">
                         <CheckCircle size={16} weight="fill" />
                       </div>
                     ) : running ? (
@@ -495,7 +499,7 @@ function ResponsePackPanel({
   }
 
   return (
-    <aside className="w-[360px] shrink-0 border-l border-gray-200 bg-white flex flex-col z-10 shadow-[-8px_0_24px_rgba(0,0,0,0.02)]">
+    <aside className="hidden lg:flex w-[360px] shrink-0 border-l border-gray-200 bg-white flex-col z-10 shadow-[-8px_0_24px_rgba(0,0,0,0.02)]">
       <div className="h-12 border-b border-gray-100 flex items-center justify-between px-5 bg-gray-50/50 shrink-0">
         <span className="text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
           <Package size={12} /> Response Pack
@@ -633,7 +637,7 @@ function ResponsePackPanel({
                     className={clsx(
                       "w-4 h-4 rounded border flex items-center justify-center shrink-0",
                       approved
-                        ? "bg-black border-black"
+                        ? "bg-gray-950 border-gray-950"
                         : "bg-white border-gray-300",
                     )}
                     aria-hidden
@@ -672,7 +676,7 @@ function ResponsePackPanel({
                 ? "bg-green-600 text-white"
                 : escalation
                   ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-black hover:bg-gray-900 text-white",
+                  : "bg-gray-950 hover:bg-gray-900 text-white",
           )}
         >
           {approving ? (

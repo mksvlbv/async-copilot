@@ -113,7 +113,7 @@ export function HeroMockup() {
                       <span className="flex items-center gap-1">
                         <WarningCircle size={12} /> INC-1042 Active
                       </span>
-                      <a href="#" className="underline">View Status</a>
+                      <span className="underline opacity-70">View Status</span>
                     </div>
                   </div>
                 </div>

@@ -318,12 +318,12 @@ function ClosingCta() {
           >
             Open Demo
           </Link>
-          <a
-            href="mailto:hello@example.com"
+          <Link
+            href={"/app/samples" as never}
             className="px-8 py-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 transition-colors"
           >
-            Contact
-          </a>
+            Browse Scenarios
+          </Link>
         </div>
       </div>
     </section>
@@ -331,20 +331,37 @@ function ClosingCta() {
 }
 
 function LandingFooter() {
+  // Honest-minimalism footer: only real, reachable destinations.
+  // Portfolio demo — no Security/Terms/Documentation pages exist, so we
+  // don't pretend they do. Single `/legal` link covers the one expected
+  // legal surface.
   return (
     <footer className="bg-gray-50 py-12 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-gray-400 rounded-sm" aria-hidden />
           <span className="font-semibold text-sm text-gray-600">Async Copilot</span>
+          <span className="ml-2 px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 rounded">
+            Portfolio demo
+          </span>
         </div>
         <div className="flex gap-6 text-sm text-gray-500">
-          <a href="#" className="hover:text-gray-900 transition-colors">Security</a>
-          <a href="#" className="hover:text-gray-900 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-gray-900 transition-colors">Terms</a>
-          <a href="#" className="hover:text-gray-900 transition-colors">Documentation</a>
+          <Link
+            href={"/legal/privacy" as never}
+            className="hover:text-gray-900 transition-colors"
+          >
+            Privacy
+          </Link>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gray-900 transition-colors inline-flex items-center gap-1"
+          >
+            GitHub <span aria-hidden>↗</span>
+          </a>
         </div>
-        <div className="text-sm text-gray-400">В© 2026 Async Copilot Inc.</div>
+        <div className="text-sm text-gray-400">© 2026 Async Copilot</div>
       </div>
     </footer>
   );

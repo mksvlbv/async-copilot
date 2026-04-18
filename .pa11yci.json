@@ -1,0 +1,19 @@
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "timeout": 30000,
+    "wait": 1500,
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-dev-shm-usage"]
+    },
+    "ignore": [
+      "notice"
+    ]
+  },
+  "urls": [
+    "https://async-copilot.vercel.app/",
+    "https://async-copilot.vercel.app/app",
+    "https://async-copilot.vercel.app/app/samples",
+    "https://async-copilot.vercel.app/app/runs"
+  ]
+}

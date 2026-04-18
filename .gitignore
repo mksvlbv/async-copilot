@@ -42,3 +42,10 @@ supabase/.temp
 
 # Vercel CLI link metadata
 .vercel
+
+# Audit artifacts — keep configs in git, outputs local/ephemeral
+.lighthouseci/
+.lostpixel/current/
+.lostpixel/difference/
+lychee-report.md
+audit-links.json

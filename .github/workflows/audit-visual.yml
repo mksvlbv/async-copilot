@@ -1,0 +1,34 @@
+name: Audit — Visual Regression (Lost Pixel)
+
+on:
+  workflow_dispatch:
+  # NOTE: explicitly NOT on pull_request — baselines are committed to the
+  # main branch, and diffs must be reviewed manually during final-polish
+  # phase. When we want this to PR-gate, add pull_request here and commit
+  # a fresh baseline.
+
+permissions:
+  contents: read
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+      - name: Lost Pixel (generate-only mode)
+        run: npm run audit:visual
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lost-pixel-output
+          path: .lostpixel/
+          retention-days: 14

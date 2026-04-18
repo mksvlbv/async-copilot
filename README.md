@@ -161,6 +161,50 @@ docs/
 
 ---
 
+## Audit tooling
+
+Five tools are wired up for continuous quality checks. All are **opt-in**
+— they do not run on every PR by default (kept advisory to avoid merge
+friction). Run locally or via GitHub Actions `workflow_dispatch`.
+
+| Script | What it does |
+|---|---|
+| `npm run audit:links` | **linkinator** — scans the live site for broken links, `href="#"` dead anchors, 404s. |
+| `npm run audit:a11y` | **pa11y-ci + axe-core** — WCAG 2 AA scan across public routes. |
+| `npm run audit:perf` | **Lighthouse CI** — perf / a11y / SEO / best-practices with enforced budgets (`lighthouserc.cjs`). |
+| `npm run audit:visual` | **Lost Pixel** — screenshots 4 routes × 3 breakpoints, diffs against `.lostpixel/baseline/`. |
+| `npm run audit:ai` | **Stagehand + Claude** — AI agent navigates the site and reports friction points. Requires `ANTHROPIC_API_KEY`. Costs API credits. |
+| `npm run audit` | Chains links → a11y → perf → visual (skips AI). Full non-AI pass. |
+
+GitHub Actions:
+
+- `.github/workflows/audit-lighthouse.yml` — weekly Monday cron + manual trigger
+- `.github/workflows/audit-a11y.yml` — weekly Monday cron + manual trigger
+- `.github/workflows/audit-linkcheck.yml` — **lychee** on push to `main` + weekly cron
+- `.github/workflows/audit-visual.yml` — manual trigger only (baselines are committed)
+
+Each workflow uploads its output as an artifact (14-day retention) so
+reports stay accessible without polluting the repo.
+
+### Running a full audit locally
+
+```bash
+npm run audit         # links + a11y + perf + visual (no AI)
+npm run audit:ai      # AI exploratory pass (opt-in, uses API credits)
+```
+
+Artifacts are written to `.lighthouseci/`, `.lostpixel/`, and
+`docs/audit/ai-<date>.md` respectively. Baselines for Lost Pixel live in
+`.lostpixel/baseline/` and **should be committed** after a visual change
+is approved.
+
+### Last audit report
+
+See `docs/audit/2026-04-18.md` for the current baseline scorecard and
+fixed findings.
+
+---
+
 ## Documents for reviewers
 
 - `docs/ideation/2026-04-17-async-copilot-ideation.md` — product concept

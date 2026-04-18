@@ -1,0 +1,29 @@
+name: Audit — Accessibility (pa11y + axe)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  a11y:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browsers (axe-core driver)
+        run: npx playwright install chromium --with-deps
+      - name: pa11y-ci (WCAG2AA)
+        run: npm run audit:a11y:pa11y
+        continue-on-error: true
+      - name: axe-core CLI
+        run: npm run audit:a11y:axe
+        continue-on-error: true

@@ -1,0 +1,44 @@
+name: Audit — Broken Links (lychee)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "29 4 * * 1"
+  # Also triggers on push to main so the first run captures current state.
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - ".github/workflows/audit-linkcheck.yml"
+
+permissions:
+  contents: read
+  issues: write # lychee-action can open a tracking issue
+
+jobs:
+  linkcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >
+            --verbose
+            --no-progress
+            --exclude-mail
+            --exclude "^https?://localhost"
+            https://async-copilot.vercel.app
+            https://async-copilot.vercel.app/app
+            https://async-copilot.vercel.app/app/samples
+            https://async-copilot.vercel.app/app/runs
+          format: markdown
+          output: ./lychee-report.md
+          fail: false # don't fail the workflow — advisory
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lychee-report
+          path: lychee-report.md
+          retention-days: 14

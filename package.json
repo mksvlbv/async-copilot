@@ -12,7 +12,16 @@
     "db:migrate": "node scripts/db-init.mjs migrate",
     "db:seed": "node scripts/db-init.mjs seed",
     "test:e2e": "playwright test",
-    "test:e2e:local": "cross-env BASE_URL=http://localhost:3000 playwright test"
+    "test:e2e:local": "cross-env BASE_URL=http://localhost:3000 playwright test",
+    "audit:perf": "lhci autorun --config=./lighthouserc.cjs",
+    "audit:a11y:pa11y": "pa11y-ci",
+    "audit:a11y:axe": "axe https://async-copilot.vercel.app/ https://async-copilot.vercel.app/app https://async-copilot.vercel.app/app/samples https://async-copilot.vercel.app/app/runs --tags wcag2a,wcag2aa",
+    "audit:a11y": "npm run audit:a11y:pa11y && npm run audit:a11y:axe",
+    "audit:links": "linkinator https://async-copilot.vercel.app --config=./.linkinatorrc.json",
+    "audit:visual": "lost-pixel",
+    "audit:visual:update": "lost-pixel update",
+    "audit:ai": "tsx scripts/site-audit.ts",
+    "audit": "npm run audit:links && npm run audit:a11y && npm run audit:perf && npm run audit:visual"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.7",
@@ -25,7 +34,10 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@axe-core/cli": "^4.11.2",
+    "@browserbasehq/stagehand": "^2.5.8",
     "@eslint/eslintrc": "^3.2.0",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.10",
@@ -33,11 +45,16 @@
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
+    "dotenv": "^17.4.2",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.5.0",
+    "linkinator": "^6.3.0",
+    "lost-pixel": "^3.22.0",
+    "pa11y-ci": "^3.1.0",
     "pg": "^8.13.1",
     "postcss": "^8.5.0",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.0"
   }
 }

@@ -39,6 +39,18 @@ Do **not** introduce additional UI libraries (shadcn, Radix, Headless UI) unless
 
 ## 3. Design system extraction — first task
 
+The Variant exports are **fully audited and self-contained**:
+- Each `index.html` contains compiled Tailwind CSS inline (24-30 KB `<style>` block)
+- No JavaScript — designs are static markup
+- All external assets (Inter + JetBrains Mono fonts, Phosphor Icons) mirrored in `docs/design/variant-exports/_vendor/`
+- Each folder has both `index.html` (with CDN references) and `index.offline.html` (fully local, verified working with 0 console errors)
+
+To view any screen offline during implementation:
+```
+python -m http.server 8765 --directory docs/design/variant-exports
+# then open http://localhost:8765/01-landing/index.offline.html
+```
+
 Before scaffolding, Cascade should:
 
 1. Open `docs/design/variant-exports/01-landing/index.html`

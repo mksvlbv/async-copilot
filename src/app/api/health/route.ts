@@ -21,17 +21,43 @@ export async function GET() {
     },
     supabase: "unknown" as "unknown" | "connected" | "error",
     supabaseError: null as string | null,
+    schema: "unknown" as "unknown" | "ready" | "missing",
+    counts: {
+      samples: 0,
+      cases: 0,
+      runs: 0,
+      run_stages: 0,
+      response_packs: 0,
+    },
   };
 
   try {
     const admin = createAdminClient();
-    const { error } = await admin.auth.admin.listUsers({ perPage: 1 });
-    if (error) {
+
+    // Connection + auth check
+    const { error: authErr } = await admin.auth.admin.listUsers({ perPage: 1 });
+    if (authErr) {
       checks.supabase = "error";
-      checks.supabaseError = error.message;
+      checks.supabaseError = authErr.message;
     } else {
       checks.supabase = "connected";
     }
+
+    // Schema check : count rows in each table
+    const tables = ["samples", "cases", "runs", "run_stages", "response_packs"] as const;
+    let schemaReady = true;
+    for (const t of tables) {
+      const { count, error } = await admin
+        .from(t)
+        .select("*", { count: "exact", head: true });
+      if (error) {
+        schemaReady = false;
+        checks.supabaseError = `${t}: ${error.message}`;
+        break;
+      }
+      checks.counts[t] = count ?? 0;
+    }
+    checks.schema = schemaReady ? "ready" : "missing";
   } catch (e) {
     checks.supabase = "error";
     checks.supabaseError = e instanceof Error ? e.message : String(e);
@@ -42,7 +68,8 @@ export async function GET() {
     checks.env.url &&
     checks.env.publishable &&
     checks.env.secret &&
-    checks.supabase === "connected";
+    checks.supabase === "connected" &&
+    checks.schema === "ready";
 
   return NextResponse.json(
     {

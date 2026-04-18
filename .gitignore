@@ -16,6 +16,11 @@ build/
 next-env.d.ts.bak
 *.tsbuildinfo
 
+# Playwright
+test-results/
+playwright-report/
+.playwright-mcp/
+
 # Environment files
 .env
 .env.local

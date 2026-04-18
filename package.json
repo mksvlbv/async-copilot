@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "db:init": "node scripts/db-init.mjs all",
     "db:migrate": "node scripts/db-init.mjs migrate",
-    "db:seed": "node scripts/db-init.mjs seed"
+    "db:seed": "node scripts/db-init.mjs seed",
+    "test:e2e": "playwright test",
+    "test:e2e:local": "cross-env BASE_URL=http://localhost:3000 playwright test"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.7",
@@ -26,8 +28,10 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@eslint/eslintrc": "^3.2.0",
+    "@playwright/test": "^1.49.1",
     "@types/pg": "^8.11.10",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
     "pg": "^8.13.1",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.5.0",

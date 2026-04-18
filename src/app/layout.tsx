@@ -17,8 +17,41 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Async Copilot — Support Triage",
-  description: "Visible staged triage for support teams under pressure. Messy case in, structured response pack out.",
+  metadataBase: new URL("https://async-copilot.vercel.app"),
+  title: {
+    default: "Async Copilot — Support Triage",
+    template: "%s · Async Copilot",
+  },
+  description:
+    "Visible staged triage for support teams under pressure. Messy case in, structured response pack out.",
+  keywords: [
+    "support triage",
+    "customer support",
+    "ai copilot",
+    "response pack",
+    "help desk",
+    "async workflow",
+  ],
+  authors: [{ name: "Async Copilot" }],
+  openGraph: {
+    type: "website",
+    siteName: "Async Copilot",
+    title: "Async Copilot — Support Triage",
+    description:
+      "Visible staged triage for support teams under pressure. Messy case in, structured response pack out.",
+    url: "https://async-copilot.vercel.app",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Async Copilot — Support Triage",
+    description:
+      "Visible staged triage for support teams under pressure. Messy case in, structured response pack out.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

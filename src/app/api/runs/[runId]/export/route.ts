@@ -40,6 +40,22 @@ export async function GET(
     ? data.response_pack[0]
     : data.response_pack;
   if (!pack) {
+    // Return error in the content-type the caller asked for so browsers
+    // downloading as text/markdown don't get a mislabeled JSON file.
+    if (format === "text" || format === "markdown") {
+      return new NextResponse(
+        "Response pack not available — run has not completed yet.",
+        {
+          status: 409,
+          headers: {
+            "Content-Type":
+              format === "text"
+                ? "text/plain; charset=utf-8"
+                : "text/markdown; charset=utf-8",
+          },
+        },
+      );
+    }
     return NextResponse.json(
       { error: "No response pack — run not completed" },
       { status: 409 },

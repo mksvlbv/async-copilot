@@ -146,7 +146,7 @@ function CaseContextPanel({ run }: { run: RunWithDetails }) {
             )}
             <Fact
               label="Urgency"
-              value={(run.urgency ?? c.customer_plan ?? "—").toString()}
+              value={run.urgency ?? "analyzing…"}
               accent={run.urgency === "high" ? "red" : run.urgency === "medium" ? "amber" : undefined}
             />
             <Fact

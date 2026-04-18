@@ -54,16 +54,15 @@ values (
     { "key": "draft",     "label": "Draft Response Pack",   "duration_ms": 198 }
   ]'::jsonb,
   array['api', 'outage', 'infra', 'p1']
-);
-
--- Idempotent upsert for Alt 1
-update public.samples set
-  name = 'API Timeout on /v2/orders',
-  summary = 'Persistent 504 gateway timeouts on checkout endpoint during active DB migration incident.',
-  urgency = 'high',
-  expected_confidence = 92,
-  tags = array['api', 'outage', 'infra', 'p1']
-where slug = 'api-timeout-v2-orders';
+)
+on conflict (slug) do update set
+  name = excluded.name,
+  summary = excluded.summary,
+  body = excluded.body,
+  urgency = excluded.urgency,
+  expected_confidence = excluded.expected_confidence,
+  expected_stages = excluded.expected_stages,
+  tags = excluded.tags;
 
 -- =====================================================================
 -- Alt 2 : Feature Request — low urgency, long-tail

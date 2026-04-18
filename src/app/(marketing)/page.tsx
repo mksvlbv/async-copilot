@@ -91,7 +91,7 @@ function LandingHero() {
             Open App <ArrowRight size={14} weight="bold" />
           </Link>
           <Link
-            href="/app"
+            href="/app/samples"
             className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all"
           >
             View Demo Case

@@ -16,8 +16,13 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+  "https://async-copilot.vercel.app";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://async-copilot.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Async Copilot — Support Triage",
     template: "%s · Async Copilot",
@@ -39,7 +44,7 @@ export const metadata: Metadata = {
     title: "Async Copilot — Support Triage",
     description:
       "Visible staged triage for support teams under pressure. Messy case in, structured response pack out.",
-    url: "https://async-copilot.vercel.app",
+    url: SITE_URL,
     locale: "en_US",
   },
   twitter: {

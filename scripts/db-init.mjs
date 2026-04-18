@@ -99,7 +99,12 @@ async function main() {
     process.exit(1);
   }
 
-  const client = new Client({ connectionString: url });
+  const client = new Client({
+    connectionString: url,
+    // Supabase requires SSL; pooler may negotiate transparently, but this
+    // is defensive for direct-connection URIs.
+    ssl: { rejectUnauthorized: false },
+  });
   console.log("Connecting to Supabase Postgres…");
   await client.connect();
   const { rows: v } = await client.query("select version() as v");

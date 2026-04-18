@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stagesForSample } from "@/lib/triage/run-model";
+import { apiRateLimiter, getClientIP } from "@/lib/rate-limit";
 import type { Sample } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
@@ -45,6 +46,15 @@ export async function GET(request: Request) {
  * all stages (pending state). Advance endpoint will run them one by one.
  */
 export async function POST(request: Request) {
+  const ip = getClientIP(request);
+  const rl = apiRateLimiter.check(ip);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { apiRateLimiter, getClientIP } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,6 +32,15 @@ export async function GET(request: Request) {
  * Creates a new case (source: intake unless sample_id provided).
  */
 export async function POST(request: Request) {
+  const ip = getClientIP(request);
+  const rl = apiRateLimiter.check(ip);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

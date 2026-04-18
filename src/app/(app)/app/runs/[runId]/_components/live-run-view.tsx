@@ -28,6 +28,9 @@ import {
   WarningCircle,
   CaretRight,
   Info,
+  Lightning,
+  Export,
+  CopySimple,
 } from "@phosphor-icons/react/dist/ssr";
 import type { RunWithDetails } from "@/lib/supabase/types";
 
@@ -443,6 +446,7 @@ function ResponsePackPanel({
   const [approving, setApproving] = useState(false);
   const [approved, setApproved] = useState(run.response_pack?.approved ?? false);
   const [copyOk, setCopyOk] = useState(false);
+  const [copyAllOk, setCopyAllOk] = useState(false);
 
   const pack = run.response_pack;
   const building = !isTerminal || !pack;
@@ -464,6 +468,29 @@ function ResponsePackPanel({
     navigator.clipboard.writeText(pack.draft_reply).then(() => {
       setCopyOk(true);
       setTimeout(() => setCopyOk(false), 1500);
+    });
+  }
+
+  function copyAll() {
+    if (!pack) return;
+    const text = [
+      `# Response Pack — ${run.case.case_ref}`,
+      `Case: ${run.case.title}`,
+      `State: ${run.state} · Confidence: ${pack.confidence}% · Urgency: ${run.urgency ?? "—"}`,
+      "",
+      pack.recommendation ? `Recommendation: ${pack.recommendation}` : "",
+      "",
+      "Internal summary:",
+      pack.internal_summary,
+      "",
+      "Draft reply:",
+      pack.draft_reply,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      setCopyAllOk(true);
+      setTimeout(() => setCopyAllOk(false), 1500);
     });
   }
 
@@ -587,62 +614,52 @@ function ResponsePackPanel({
 
         {/* Staged actions */}
         {pack && pack.staged_actions.length > 0 && (
-          <div className="border border-gray-200 rounded-md bg-white p-3">
-            <div className="text-[10px] font-mono uppercase text-gray-500 mb-2 tracking-widest">
-              Staged Actions (queued — operator triggers each)
+          <div className="border border-gray-200 rounded-md bg-white overflow-hidden">
+            <div className="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold flex items-center gap-1.5">
+                <Lightning size={12} className="text-gray-400" /> Staged Actions
+              </span>
+              <span className="text-[10px] font-mono text-gray-400">
+                {approved ? "queued for execution" : "awaiting approval"}
+              </span>
             </div>
-            <ul className="space-y-2 text-[11px] text-gray-700">
+            <div className="p-3 space-y-2">
               {pack.staged_actions.map((a, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <WarningCircle size={12} className="text-amber-500 shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-medium text-gray-900">{a.label}</div>
-                    <div className="text-[10px] font-mono text-gray-500">{a.intent} · {a.status}</div>
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-2 border border-gray-200 rounded-md bg-gray-50/50 cursor-default"
+                >
+                  <span
+                    className={clsx(
+                      "w-4 h-4 rounded border flex items-center justify-center shrink-0",
+                      approved
+                        ? "bg-black border-black"
+                        : "bg-white border-gray-300",
+                    )}
+                    aria-hidden
+                  >
+                    {approved && (
+                      <CheckCircle size={10} weight="fill" className="text-white" />
+                    )}
+                  </span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-semibold text-gray-900 truncate">
+                      {a.label}
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-mono truncate">
+                      {a.intent} · {a.status}
+                    </span>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
       </div>
 
       {/* Footer actions */}
-      <div className="p-4 border-t border-gray-200 bg-white shrink-0 flex flex-col gap-2">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setPaused((p) => !p)}
-            disabled={isTerminal}
-            className={clsx(
-              "flex-1 border text-sm font-medium py-2 rounded-md shadow-sm transition-colors flex items-center justify-center gap-1.5",
-              isTerminal
-                ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50",
-            )}
-          >
-            {paused ? (
-              <>
-                <ArrowsClockwise size={14} /> Resume Run
-              </>
-            ) : (
-              <>
-                <Pause size={14} /> Pause Run
-              </>
-            )}
-          </button>
-          <a
-            href={`/api/runs/${run.id}/export?format=markdown`}
-            className={clsx(
-              "px-3 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center",
-              !pack && "pointer-events-none opacity-40",
-            )}
-            title="Download markdown"
-          >
-            <ArrowsClockwise size={16} className="hidden" />
-            <span className="text-[11px] font-mono">.md</span>
-          </a>
-        </div>
-
+      <div className="p-4 border-t border-gray-200 bg-white shrink-0 flex flex-col gap-2.5 shadow-[0_-12px_24px_-8px_rgba(0,0,0,0.05)]">
+        {/* Primary CTA (dynamic label) */}
         <button
           type="button"
           onClick={approve}
@@ -655,7 +672,7 @@ function ResponsePackPanel({
                 ? "bg-green-600 text-white"
                 : escalation
                   ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-black hover:bg-gray-800 text-white",
+                  : "bg-black hover:bg-gray-900 text-white",
           )}
         >
           {approving ? (
@@ -677,12 +694,66 @@ function ResponsePackPanel({
           )}
         </button>
 
-        <Link
-          href={"/app/runs" as never}
-          className="text-center text-[11px] font-mono text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          ← back to runs
-        </Link>
+        {/* Secondary row: Export / Copy All */}
+        <div className="flex gap-2">
+          <a
+            href={`/api/runs/${run.id}/export?format=markdown`}
+            className={clsx(
+              "flex-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium py-2 rounded-md shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5",
+              !pack && "pointer-events-none opacity-40",
+            )}
+            title="Download response pack as markdown"
+          >
+            <Export size={14} /> Export Pack
+          </a>
+          <button
+            type="button"
+            onClick={copyAll}
+            disabled={!pack}
+            className="flex-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium py-2 rounded-md shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {copyAllOk ? (
+              <>
+                <CheckCircle size={14} weight="fill" className="text-green-600" /> Copied
+              </>
+            ) : (
+              <>
+                <CopySimple size={14} /> Copy All
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Tertiary row: Pause + back */}
+        <div className="flex items-center justify-between pt-1">
+          {!isTerminal ? (
+            <button
+              type="button"
+              onClick={() => setPaused((p) => !p)}
+              className="text-[11px] font-mono text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1.5"
+            >
+              {paused ? (
+                <>
+                  <ArrowsClockwise size={12} /> Resume Run
+                </>
+              ) : (
+                <>
+                  <Pause size={12} /> Pause Run
+                </>
+              )}
+            </button>
+          ) : (
+            <span className="text-[10px] font-mono text-gray-400 tracking-wide">
+              Generated from staged triage run
+            </span>
+          )}
+          <Link
+            href={"/app/runs" as never}
+            className="text-[11px] font-mono text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            ← back to runs
+          </Link>
+        </div>
       </div>
     </aside>
   );

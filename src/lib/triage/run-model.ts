@@ -85,7 +85,7 @@ export function syntheticOutputFor(
   }
 }
 
-function inferEntities(body: string): string[] {
+export function inferEntities(body: string): string[] {
   const out: string[] = [];
   if (/\$[\d,]+/.test(body)) out.push("amount");
   if (/INV-\d+|invoice/i.test(body)) out.push("invoice");
@@ -95,7 +95,7 @@ function inferEntities(body: string): string[] {
   return out.length > 0 ? out : ["generic"];
 }
 
-function inferIntent(title: string, body: string): string {
+export function inferIntent(title: string, body: string): string {
   const combined = `${title} ${body}`.toLowerCase();
   if (/refund|charge|payment|invoice/.test(combined)) return "payments_issue";
   if (/timeout|500|504|down|api/.test(combined)) return "api_issue";
@@ -105,7 +105,7 @@ function inferIntent(title: string, body: string): string {
   return "general_inquiry";
 }
 
-function inferUrgency(body: string): UrgencyLevel {
+export function inferUrgency(body: string): UrgencyLevel {
   if (/urgent|immediately|today|production|down|outage|security/i.test(body))
     return "high";
   if (/soon|asap|this week/i.test(body)) return "medium";

@@ -148,13 +148,8 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
                   <td className="px-4 py-3 text-gray-700 font-mono text-xs">
                     {r.confidence != null ? `${r.confidence}%` : "—"}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
-                    {new Date(r.created_at).toLocaleString("en", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                  <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap font-mono" suppressHydrationWarning>
+                    {formatCreatedAt(r.created_at)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
@@ -194,6 +189,17 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Stable UTC-based timestamp format — avoids hydration mismatches caused by
+ * server/client locale or timezone differences. Produces e.g. "Apr 18 06:04".
+ */
+function formatCreatedAt(iso: string): string {
+  const d = new Date(iso);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${months[d.getUTCMonth()]} ${d.getUTCDate()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
 function StateBadge({ state }: { state: RunState }) {

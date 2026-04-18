@@ -12,5 +12,11 @@ create table if not exists daily_stats (
 -- RLS: read-only public, write via service role only
 alter table daily_stats enable row level security;
 
-create policy "daily_stats_read" on daily_stats
-  for select using (true);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where policyname = 'daily_stats_read' and tablename = 'daily_stats'
+  ) then
+    create policy "daily_stats_read" on daily_stats for select using (true);
+  end if;
+end $$;

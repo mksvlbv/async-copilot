@@ -302,6 +302,9 @@ function CaseContextPanel({ run }: { run: RunWithDetails }) {
             />
           </div>
         </div>
+
+        {/* Similar Cases (RAG) */}
+        <SimilarCasesSection caseId={c.id} />
       </div>
     </aside>
   );
@@ -373,6 +376,87 @@ function EvidenceCard({
       <p className={clsx("p-3 text-[11px] text-gray-700 leading-relaxed whitespace-pre-line", mono && "font-mono")}>
         {body}
       </p>
+    </div>
+  );
+}
+
+/* =============================================================
+ *  Similar Cases (RAG panel)
+ * ============================================================= */
+
+type SimilarCase = {
+  id: string;
+  case_ref: string;
+  title: string;
+  body: string;
+  similarity: number;
+};
+
+function SimilarCasesSection({ caseId }: { caseId: string }) {
+  const [cases, setCases] = useState<SimilarCase[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const r = await fetch(`/api/cases/${caseId}/similar?limit=3`);
+        if (!r.ok) throw new Error();
+        const data = (await r.json()) as { similar: SimilarCase[] };
+        if (!cancelled) setCases(data.similar);
+      } catch {
+        // Silently fail — similar cases is non-critical
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [caseId]);
+
+  if (loading) {
+    return (
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
+          <ShareNetwork size={14} weight="fill" className="text-gray-400" /> Similar Cases
+        </h3>
+        <div className="animate-pulse space-y-2">
+          <div className="h-14 bg-gray-100 rounded-md" />
+          <div className="h-14 bg-gray-100 rounded-md" />
+        </div>
+      </div>
+    );
+  }
+
+  if (cases.length === 0) return null;
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
+        <ShareNetwork size={14} weight="fill" className="text-gray-400" /> Similar Cases
+        <span className="text-[9px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-widest ml-auto">
+          pgvector + trgm
+        </span>
+      </h3>
+      <div className="space-y-2">
+        {cases.map((sc) => (
+          <Link
+            key={sc.id}
+            href={`/app/runs` as never}
+            className="block border border-gray-200 rounded-md p-2.5 hover:border-blue-300 hover:bg-blue-50/30 transition-colors group"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-mono text-gray-500">{sc.case_ref}</span>
+              <span className="text-[9px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                {Math.round(sc.similarity * 100)}% match
+              </span>
+            </div>
+            <p className="text-[11px] font-medium text-gray-800 leading-snug line-clamp-2">
+              {sc.title}
+            </p>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

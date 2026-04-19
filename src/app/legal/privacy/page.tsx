@@ -71,12 +71,21 @@ export default function PrivacyPage() {
             </ul>
           </Section>
 
-          <Section title="Third parties">
+          <Section title="Third parties and processors">
             <p>
-              To produce the triage output the demo sends case text to
-              Anthropic&apos;s API. Anthropic acts as a processor under their
-              published terms. No other third-party service receives your
-              inputs.
+              Case and run data are stored in a Supabase project controlled by
+              the author so the demo can render saved runs, samples, and
+              response packs.
+            </p>
+            <p>
+              When real AI inference is enabled, the demo sends case text to
+              Groq&apos;s API to generate staged triage output. If no valid
+              `GROQ_API_KEY` is configured, the demo falls back to synthetic
+              stage output and no model provider receives your input.
+            </p>
+            <p>
+              No advertising networks, analytics vendors, or marketing pixels
+              receive your inputs.
             </p>
           </Section>
 

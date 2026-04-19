@@ -4,7 +4,14 @@
 
 Live demo: **https://async-copilot.vercel.app**
 
-A full-stack portfolio demo that shows a support-triage pipeline end-to-end: landing page → case intake → live-run signature screen → completed response pack. Built with Next.js 15 App Router, Supabase (Postgres), Tailwind, and **real AI inference** via Llama 3.3 70B (Groq).
+A full-stack implementation case study that shows a support-triage pipeline end-to-end: landing page -> case intake -> live-run signature screen -> completed response pack. Built with Next.js 15 App Router, Supabase (Postgres), Tailwind, and **real AI inference** via Llama 3.3 70B (Groq).
+
+## What this demonstrates
+
+- **6-stage support workflow** with visible progression, approval gates, and exportable response packs.
+- **Real AI inference plus graceful fallback**: Groq streaming when configured, synthetic stage output when it is not.
+- **Production-style delivery discipline**: 5-table data model, 36 unit tests, Playwright E2E, GitHub Actions CI, health checks, and cron cleanup.
+- **Free-tier systems thinking**: deployable on Vercel + Supabase + Groq without paid infrastructure.
 
 ---
 
@@ -54,6 +61,15 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 - **Cron**: Vercel Cron (hourly stale-run cleanup, daily stats snapshot)
 
 **Total monthly cost: $0** (all services on free tiers)
+
+---
+
+## Honest scope boundaries
+
+- No auth or multi-tenant data separation in this release.
+- No real CRM, email, or ticketing integrations; queued actions stay queued until a human approves.
+- No production SLA claims or security guarantees beyond what is documented here.
+- This is a portfolio implementation, not a live support product.
 
 ---
 

@@ -104,7 +104,8 @@ begin
     '[
       {"label":"Issue Stripe Refund ($1,200)","intent":"stripe.refund","status":"queued","requires_approval":true},
       {"label":"Reconcile ledger (INV-9823)","intent":"internal.ledger.reconcile","status":"queued","requires_approval":true},
-      {"label":"Notify Jane with follow-up SLA","intent":"email.send","status":"queued","requires_approval":true}
+      {"label":"Notify Jane with follow-up SLA","intent":"email.send","status":"queued","requires_approval":true},
+      {"label":"Send escalation summary to Slack","intent":"slack.notify","status":"queued","requires_approval":true,"detail":"Dispatch a Tier-2 summary to Slack after human approval.","target":"Slack webhook","last_attempt_at":null}
     ]'::jsonb,
     'Tier-2-Finance'
   );

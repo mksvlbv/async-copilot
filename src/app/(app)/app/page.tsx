@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * New Case вЂ” intake form + pre-configured samples picker.
+ * New Case - intake form + pre-configured samples picker.
  * Unit 5 port of docs/design/variant-exports/02-new-case
  *
  * Flow:
- *   1. Operator pastes context OR clicks a sample card в†’ form fills in.
- *   2. On Start Triage: POST /api/cases в†’ POST /api/runs в†’ push to /app/runs/[id].
+ *   1. Operator pastes context OR clicks a sample card -> form fills in.
+ *   2. On Start Triage: POST /api/cases -> POST /api/runs -> push to /app/runs/[id].
  *
  * Plan-mandated fixes:
- *   - Integration-branded channels ("Zendesk Ticket", "Intercom Chat") в†’ generic names (R21)
+ *   - Integration-branded channels ("Zendesk Ticket", "Intercom Chat") -> generic names (R21)
  *   - "Create Custom Sample" button removed (not in MVP scope)
  */
 import { useEffect, useState, useCallback, Suspense } from "react";
@@ -29,6 +29,11 @@ import clsx from "clsx";
 import type { Sample, UrgencyLevel } from "@/lib/supabase/types";
 
 type Channel = "Email" | "Live Chat" | "In-App Widget" | "Customer Portal";
+
+const SAMPLE_LOAD_ERROR = "Sample scenarios are temporarily unavailable. Refresh and try again.";
+const CASE_CREATE_ERROR = "We couldn't create a case from that input. Try again in a few seconds.";
+const RUN_CREATE_ERROR = "The case was saved, but the triage run could not start. Try again.";
+const RUN_START_ERROR = "We couldn't start the triage run right now. Please try again.";
 
 export default function NewCasePage() {
   // useSearchParams() triggers a CSR bailout in Next 15; wrap in Suspense.
@@ -66,11 +71,13 @@ function NewCasePageInner() {
     (async () => {
       try {
         const r = await fetch("/api/samples", { cache: "no-store" });
-        if (!r.ok) throw new Error(`samples ${r.status}`);
+        if (!r.ok) throw new Error(SAMPLE_LOAD_ERROR);
         const data = (await r.json()) as { samples: Sample[] };
         if (!cancelled) setSamples(data.samples);
       } catch (e) {
-        if (!cancelled) setLoadErr(e instanceof Error ? e.message : String(e));
+        if (!cancelled) {
+          setLoadErr(e instanceof Error ? e.message : SAMPLE_LOAD_ERROR);
+        }
       }
     })();
     return () => {
@@ -138,7 +145,7 @@ function NewCasePageInner() {
           sample_id: loadedSampleId,
         }),
       });
-      if (!caseRes.ok) throw new Error(`case create ${caseRes.status}`);
+      if (!caseRes.ok) throw new Error(CASE_CREATE_ERROR);
       const { case: newCase } = (await caseRes.json()) as { case: { id: string } };
 
       // 2. Create the run
@@ -147,13 +154,13 @@ function NewCasePageInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ case_id: newCase.id }),
       });
-      if (!runRes.ok) throw new Error(`run create ${runRes.status}`);
+      if (!runRes.ok) throw new Error(RUN_CREATE_ERROR);
       const { run } = (await runRes.json()) as { run: { id: string } };
 
       // 3. Navigate to the run detail (Unit 6 will render it)
       router.push(`/app/runs/${run.id}` as never);
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : String(e));
+      setSubmitError(e instanceof Error ? e.message : RUN_START_ERROR);
       setSubmitting(false);
     }
   }
@@ -259,14 +266,12 @@ function NewCasePageInner() {
                   REQUIRED
                 </span>
               </label>
-              <button
-                type="button"
-                disabled
-                className="text-xs text-gray-400 flex items-center gap-1.5 font-medium cursor-not-allowed"
-                title="Not in MVP scope"
+              <div
+                className="text-xs text-gray-400 flex items-center gap-1.5 font-medium"
+                aria-label="Attachments are intentionally out of scope for this MVP"
               >
                 <Paperclip size={12} /> Add Attachments
-              </button>
+              </div>
             </div>
 
             <textarea
@@ -316,7 +321,7 @@ function NewCasePageInner() {
               >
                 {submitting ? (
                   <>
-                    <CircleNotch size={14} className="animate-spin" /> StartingвЂ¦
+                    <CircleNotch size={14} className="animate-spin" /> Starting...
                   </>
                 ) : (
                   <>
@@ -340,7 +345,7 @@ function NewCasePageInner() {
         </div>
 
         <div className="space-y-3">
-          {loadErr && <div className="text-xs text-red-600">Failed to load: {loadErr}</div>}
+          {loadErr && <div className="text-xs text-red-600">{loadErr}</div>}
           {!samples && !loadErr && (
             <>
               <SampleSkeleton />

@@ -17,6 +17,7 @@ import type {
   Sample,
   UrgencyLevel,
 } from "@/lib/supabase/types";
+import { ensureSlackDispatchAction } from "@/lib/integrations/slack";
 
 /** Stages used when a case has no sample template (pure intake). */
 export const DEFAULT_STAGE_DEFS: StageDefinition[] = [
@@ -161,7 +162,7 @@ export function buildFallbackResponsePack(args: {
     internal_summary,
     draft_reply,
     citations,
-    staged_actions,
+    staged_actions: ensureSlackDispatchAction(staged_actions, escalate ? "Tier-2-General" : null),
     escalation_queue: escalate ? "Tier-2-General" : null,
     approved: false,
     approved_at: null,

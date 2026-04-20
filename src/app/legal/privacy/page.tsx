@@ -16,6 +16,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   const updated = "April 18, 2026";
+  const repoIssuesUrl = "https://github.com/mksvlbv/async-copilot/issues/new";
+
   return (
     <main className="min-h-screen bg-gray-50 bg-grid">
       <div className="max-w-3xl mx-auto px-6 py-16">
@@ -84,6 +86,11 @@ export default function PrivacyPage() {
               stage output and no model provider receives your input.
             </p>
             <p>
+              When a Slack webhook is configured, approving a response pack can
+              send a short run summary to Slack. In dry-run mode, that
+              dispatch is simulated and no Slack message is sent.
+            </p>
+            <p>
               No advertising networks, analytics vendors, or marketing pixels
               receive your inputs.
             </p>
@@ -92,8 +99,16 @@ export default function PrivacyPage() {
           <Section title="Data retention & deletion">
             <p>
               Runs and cases are retained indefinitely for demo continuity.
-              If you want a record removed, open an issue on the project&apos;s
-              GitHub repository with the run ID.
+              If you want a record removed, open an issue on the project&apos;s{" "}
+              <a
+                href={repoIssuesUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-900 underline underline-offset-4 hover:text-gray-700"
+              >
+                GitHub issue tracker
+              </a>{" "}
+              and include the run ID.
             </p>
           </Section>
 

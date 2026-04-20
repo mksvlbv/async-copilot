@@ -88,8 +88,11 @@ export type Citation = {
 export type StagedAction = {
   label: string;
   intent: string;
-  status: "queued" | "executed" | "cancelled";
+  status: "queued" | "executed" | "cancelled" | "dry_run" | "failed";
   requires_approval: boolean;
+  detail?: string | null;
+  target?: string | null;
+  last_attempt_at?: string | null;
 };
 
 export type ResponsePack = {

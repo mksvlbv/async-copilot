@@ -353,7 +353,7 @@ function LandingFooter() {
             Privacy
           </Link>
           <a
-            href="https://github.com"
+            href="https://github.com/mksvlbv/async-copilot"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-gray-900 transition-colors inline-flex items-center gap-1"

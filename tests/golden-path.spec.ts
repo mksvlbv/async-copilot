@@ -16,12 +16,13 @@
  *   npx playwright test                 # default: https://async-copilot.vercel.app
  *   BASE_URL=http://localhost:3000 npx playwright test
  */
+import { readFile } from "node:fs/promises";
 import { test, expect } from "@playwright/test";
 
 const BASE = process.env.BASE_URL ?? "https://async-copilot.vercel.app";
 
 test.describe("golden path", () => {
-  test("landing → intake → run → terminal → approve → runs list", async ({ page }) => {
+  test("landing → intake → run → export → approve → runs list", async ({ page }) => {
     /* 1. Landing */
     await page.goto(`${BASE}/`);
     await expect(page).toHaveTitle(/Async Copilot/);
@@ -34,8 +35,8 @@ test.describe("golden path", () => {
     const textarea = page.locator("textarea");
     await expect(textarea).toBeVisible();
 
-    // Wait for samples to load (aside > button cards)
-    await expect(page.locator("aside button").first()).toBeVisible({ timeout: 10_000 });
+    // Wait for sample cards to hydrate in the sidebar.
+    await expect(page.getByRole("button", { name: /Payments Dispute/i })).toBeVisible({ timeout: 20_000 });
     const sampleCount = await page.locator("aside button").count();
     expect(sampleCount).toBeGreaterThanOrEqual(4);
 
@@ -47,7 +48,7 @@ test.describe("golden path", () => {
 
     /* 4. Start Triage → navigate */
     await page.getByRole("button", { name: /Start Triage/i }).click();
-    await page.waitForURL(/\/app\/runs\/[0-9a-f-]{36}/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/app\/runs\/[0-9a-f-]{36}/, { timeout: 15_000 });
 
     /* 5. Wait for stages to progress (poll until terminal) */
     // Look for the terminal pill (COMPLETED or ESCALATED text)
@@ -66,14 +67,27 @@ test.describe("golden path", () => {
     /* 6. Response pack renders */
     await expect(page.getByText(/System Confidence/i)).toBeVisible();
     await expect(page.getByText(/Recommendation:/i)).toBeVisible();
+    await expect(page.getByText(/ESCALATION REQUIRED/i)).toBeVisible();
 
     /* 7. Approve button is enabled + clickable */
-    const approve = page.getByRole("button", { name: /Approve/i });
+    const approve = page.getByRole("button", { name: /Approve .*Escalate|Approve Pack/i });
     await expect(approve).toBeEnabled({ timeout: 10_000 });
     await approve.click();
-    await expect(page.getByText(/Approved/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: /Approved .*Slack|Approved .*queued/i })).toBeVisible({ timeout: 10_000 });
 
-    /* 8. Runs list surfaces the run */
+    /* 8. Export downloads a markdown pack */
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("link", { name: /Export Pack/i }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.md$/);
+    const exportPath = await download.path();
+    expect(exportPath).toBeTruthy();
+    const exportBody = await readFile(exportPath!, "utf8");
+    expect(exportBody).toContain("# Response Pack");
+    expect(exportBody).toContain("## Draft reply");
+    expect(exportBody).toContain("**Approved:** yes");
+
+    /* 9. Runs list surfaces the run */
     await page.goto(`${BASE}/app/runs`);
     await expect(page.getByRole("heading", { name: "Runs" })).toBeVisible();
     // Filter chips with counts

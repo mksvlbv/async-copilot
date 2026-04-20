@@ -25,10 +25,8 @@ import {
   ArrowsClockwise,
   ShareNetwork,
   Copy,
-  PencilSimple,
   CheckCircle,
   Clock,
-  WarningCircle,
   CaretRight,
   Info,
   Lightning,
@@ -36,8 +34,10 @@ import {
   CopySimple,
 } from "@phosphor-icons/react/dist/ssr";
 import type { RunWithDetails } from "@/lib/supabase/types";
+import { SLACK_ACTION_INTENT } from "@/lib/integrations/slack";
 
 const POLL_MS = 800;
+const LIVE_UPDATE_ERROR = "Live updates paused. Refresh the page to resume this run.";
 
 type Props = { initialRun: RunWithDetails };
 
@@ -153,7 +153,7 @@ export function LiveRunView({ initialRun }: Props) {
           refreshRun();
           break;
         case "error":
-          setPollError(data.message as string);
+          setPollError(LIVE_UPDATE_ERROR);
           break;
       }
     }
@@ -187,13 +187,15 @@ export function LiveRunView({ initialRun }: Props) {
       try {
         await fetch(`/api/runs/${run.id}/advance`, { method: "POST" });
         const r = await fetch(`/api/runs/${run.id}`, { cache: "no-store" });
-        if (!r.ok) throw new Error(`detail ${r.status}`);
+        if (!r.ok) throw new Error(LIVE_UPDATE_ERROR);
         const data = (await r.json()) as { run: RunWithDetails };
         if (aborted.current) return;
         setRun(data.run);
         setPollError(null);
       } catch (e) {
-        if (!aborted.current) setPollError(e instanceof Error ? e.message : String(e));
+        if (!aborted.current) {
+          setPollError(e instanceof Error ? e.message : LIVE_UPDATE_ERROR);
+        }
       }
     }
 
@@ -532,9 +534,7 @@ function TimelinePanel({
         <p className="text-sm text-gray-500 mt-2 font-mono">
           Running execution pipeline for {run.case.case_ref}
         </p>
-        {pollError && (
-          <div className="mt-3 text-[11px] text-red-600 font-mono">Error: {pollError}</div>
-        )}
+        {pollError && <div className="mt-3 text-[11px] text-red-600 font-medium">{pollError}</div>}
       </div>
 
       {/* Timeline */}
@@ -587,7 +587,6 @@ function TimelinePanel({
 
                   <StageBody
                     stage={s}
-                    completed={completed}
                     running={running}
                     pending={pending}
                     streamingText={streamingTokens?.[s.stage_key]}
@@ -605,14 +604,12 @@ function TimelinePanel({
 
 function StageBody({
   stage,
-  completed,
   running,
   pending,
   streamingText,
   isActiveStream,
 }: {
   stage: RunWithDetails["stages"][number];
-  completed: boolean;
   running: boolean;
   pending: boolean;
   streamingText?: string;
@@ -688,20 +685,29 @@ function ResponsePackPanel({
   setPaused: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [approving, setApproving] = useState(false);
-  const [approved, setApproved] = useState(run.response_pack?.approved ?? false);
+  const [packState, setPackState] = useState(run.response_pack);
   const [copyOk, setCopyOk] = useState(false);
   const [copyAllOk, setCopyAllOk] = useState(false);
 
-  const pack = run.response_pack;
+  useEffect(() => {
+    setPackState(run.response_pack);
+  }, [run.response_pack]);
+
+  const pack = packState;
+  const approved = pack?.approved ?? false;
   const building = !isTerminal || !pack;
   const escalation = pack ? pack.confidence < 70 : run.confidence != null && run.confidence < 70;
+  const slackAction = pack?.staged_actions.find((action) => action.intent === SLACK_ACTION_INTENT) ?? null;
 
   async function approve() {
     if (approving || approved) return;
     setApproving(true);
     try {
       const r = await fetch(`/api/runs/${run.id}/approve`, { method: "POST" });
-      if (r.ok) setApproved(true);
+      if (r.ok) {
+        const data = (await r.json()) as { response_pack?: RunWithDetails["response_pack"] };
+        if (data.response_pack) setPackState(data.response_pack);
+      }
     } finally {
       setApproving(false);
     }
@@ -821,14 +827,9 @@ function ResponsePackPanel({
               >
                 {copyOk ? <CheckCircle size={12} weight="fill" className="text-green-600" /> : <Copy size={12} />}
               </button>
-              <button
-                type="button"
-                disabled
-                className="p-1 rounded text-gray-300"
-                aria-label="Edit"
-              >
-                <PencilSimple size={12} />
-              </button>
+              <span className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                Read-only
+              </span>
             </div>
           </div>
           <div className={clsx("p-3 text-xs text-gray-700 leading-relaxed whitespace-pre-line bg-white min-h-[140px]", building && "blur-[2px] select-none")}>
@@ -864,7 +865,7 @@ function ResponsePackPanel({
                 <Lightning size={12} className="text-gray-400" /> Staged Actions
               </span>
               <span className="text-[10px] font-mono text-gray-400">
-                {approved ? "queued for execution" : "awaiting approval"}
+                {approved ? stagedActionsStatusLabel(slackAction) : "awaiting approval"}
               </span>
             </div>
             <div className="p-3 space-y-2">
@@ -876,23 +877,43 @@ function ResponsePackPanel({
                   <span
                     className={clsx(
                       "w-4 h-4 rounded border flex items-center justify-center shrink-0",
-                      approved
-                        ? "bg-gray-950 border-gray-950"
-                        : "bg-white border-gray-300",
+                      actionStatusTone(a.status).check,
                     )}
                     aria-hidden
                   >
-                    {approved && (
+                    {a.status !== "queued" && a.status !== "failed" && (
                       <CheckCircle size={10} weight="fill" className="text-white" />
                     )}
+                    {a.status === "failed" && <span className="w-1.5 h-1.5 rounded-full bg-red-500" />}
                   </span>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-semibold text-gray-900 truncate">
-                      {a.label}
-                    </span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs font-semibold text-gray-900 truncate">
+                        {a.label}
+                      </span>
+                      <span
+                        className={clsx(
+                          "shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest",
+                          actionStatusTone(a.status).badge,
+                        )}
+                      >
+                        {a.status.replace("_", " ")}
+                      </span>
+                    </div>
                     <span className="text-[10px] text-gray-500 font-mono truncate">
-                      {a.intent} · {a.status}
+                      {a.intent}
+                      {a.target ? ` · ${a.target}` : ""}
                     </span>
+                    {a.detail && (
+                      <span className="text-[10px] text-gray-500 leading-relaxed mt-1">
+                        {a.detail}
+                      </span>
+                    )}
+                    {a.last_attempt_at && (
+                      <span className="text-[10px] text-gray-400 font-mono mt-1">
+                        Last attempt {formatAttempt(a.last_attempt_at)}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -925,7 +946,7 @@ function ResponsePackPanel({
             </>
           ) : approved ? (
             <>
-              <CheckCircle size={14} weight="fill" /> Approved — actions queued
+              <CheckCircle size={14} weight="fill" /> {approvedCtaLabel(slackAction)}
             </>
           ) : escalation ? (
             <>
@@ -1023,4 +1044,84 @@ function renderValue(v: unknown): string {
   if (typeof v === "boolean") return v ? "yes" : "no";
   if (typeof v === "object") return JSON.stringify(v).slice(0, 60);
   return String(v);
+}
+
+function actionStatusTone(status: string) {
+  switch (status) {
+    case "executed":
+      return {
+        check: "bg-green-600 border-green-600",
+        badge: "border-green-200 bg-green-50 text-green-700",
+      };
+    case "dry_run":
+      return {
+        check: "bg-amber-500 border-amber-500",
+        badge: "border-amber-200 bg-amber-50 text-amber-700",
+      };
+    case "failed":
+      return {
+        check: "bg-red-50 border-red-200",
+        badge: "border-red-200 bg-red-50 text-red-700",
+      };
+    case "cancelled":
+      return {
+        check: "bg-gray-200 border-gray-300",
+        badge: "border-gray-200 bg-gray-100 text-gray-500",
+      };
+    default:
+      return {
+        check: "bg-white border-gray-300",
+        badge: "border-gray-200 bg-white text-gray-500",
+      };
+  }
+}
+
+function stagedActionsStatusLabel(
+  slackAction: RunWithDetails["response_pack"] extends infer T
+    ? T extends { staged_actions: infer A }
+      ? A extends Array<infer Item>
+        ? Item | null
+        : never
+      : never
+    : never,
+) {
+  if (!slackAction) return "queued for execution";
+  switch (slackAction.status) {
+    case "executed":
+      return "Slack dispatched";
+    case "dry_run":
+      return "Slack dry-run";
+    case "failed":
+      return "Slack dispatch failed";
+    default:
+      return "queued for execution";
+  }
+}
+
+function approvedCtaLabel(
+  slackAction: RunWithDetails["response_pack"] extends infer T
+    ? T extends { staged_actions: infer A }
+      ? A extends Array<infer Item>
+        ? Item | null
+        : never
+      : never
+    : never,
+) {
+  if (!slackAction) return "Approved — actions queued";
+  switch (slackAction.status) {
+    case "executed":
+      return "Approved — Slack sent";
+    case "dry_run":
+      return "Approved — Slack dry-run";
+    case "failed":
+      return "Approved — Slack failed";
+    default:
+      return "Approved — actions queued";
+  }
+}
+
+function formatAttempt(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
 }

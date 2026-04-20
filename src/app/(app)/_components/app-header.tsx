@@ -1,14 +1,13 @@
 "use client";
 
 /**
- * Shared app-shell header вЂ” used by all (app) routes.
+ * Shared app-shell header - used by all (app) routes.
  * Reads pathname to highlight the active nav link.
  *
- * Plan-mandated fix: 'Knowledge Base' nav item removed (R21 вЂ” out of scope).
+ * Plan-mandated fix: 'Knowledge Base' nav item removed (R21 - out of scope).
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gear, Bell } from "@phosphor-icons/react/dist/ssr";
 import clsx from "clsx";
 
 type NavItem = { href: string; label: string };
@@ -20,7 +19,7 @@ const NAV: NavItem[] = [
 ];
 
 type Props = {
-  /** Whether a run is actively progressing вЂ” controls the status pill. */
+  /** Whether a run is actively progressing - controls the status pill. */
   active?: boolean;
 };
 
@@ -66,7 +65,7 @@ export function AppHeader({ active = false }: Props) {
         </nav>
       </div>
 
-      {/* Right cluster: system status, icon buttons, avatar */}
+      {/* Right cluster: system status + operator context */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs text-gray-500 font-mono">
           <span
@@ -78,23 +77,16 @@ export function AppHeader({ active = false }: Props) {
           {active ? "SYSTEM ACTIVE" : "SYSTEM IDLE"}
         </div>
         <div className="h-4 w-px bg-gray-200 mx-1" aria-hidden />
-        <button
-          type="button"
-          className="text-gray-400 hover:text-gray-900 transition-colors"
-          aria-label="Settings"
-        >
-          <Gear size={18} />
-        </button>
-        <button
-          type="button"
-          className="text-gray-400 hover:text-gray-900 transition-colors"
-          aria-label="Notifications"
-        >
-          <Bell size={18} />
-        </button>
         <div
-          className="w-7 h-7 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 border border-gray-200 flex items-center justify-center text-[10px] font-semibold text-gray-600 shadow-sm ml-2 cursor-pointer"
-          aria-label="Operator"
+          className="hidden sm:flex items-center rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-gray-400"
+          aria-label="Portfolio demo operator workspace"
+        >
+          Operator view
+        </div>
+        <div
+          className="w-7 h-7 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 border border-gray-200 flex items-center justify-center text-[10px] font-semibold text-gray-600 shadow-sm ml-1"
+          aria-label="Operator session"
+          title="Operator session"
         >
           OP
         </div>

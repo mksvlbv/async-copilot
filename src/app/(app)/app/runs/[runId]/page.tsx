@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LiveRunView } from "./_components/live-run-view";
 import type { RunWithDetails } from "@/lib/supabase/types";
@@ -35,7 +36,15 @@ export default async function RunDetailPage({
     return (
       <div className="max-w-xl mx-auto px-8 py-16 text-center">
         <h1 className="text-xl font-semibold text-gray-900 mb-2">Couldn&apos;t load this run</h1>
-        <p className="text-sm text-gray-500">{error.message}</p>
+        <p className="text-sm text-gray-500">
+          This run is temporarily unavailable. Reload the page or return to the runs list.
+        </p>
+        <Link
+          href="/app/runs"
+          className="inline-flex mt-4 text-sm text-gray-700 hover:text-gray-900 underline underline-offset-4"
+        >
+          Back to Runs
+        </Link>
       </div>
     );
   }

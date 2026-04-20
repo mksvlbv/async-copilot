@@ -98,6 +98,24 @@ The fastest visual way to evaluate this project is a short operator walkthrough.
 
 Until a final GIF/video is attached, this walkthrough doc is the source of truth for the demo narrative.
 
+### Screenshot Gallery
+
+#### Landing
+
+![Async Copilot landing screen](public/demo/landing.png)
+
+#### Intake Workspace
+
+![Async Copilot intake workspace](public/demo/intake.png)
+
+#### Completed Run / Response Pack
+
+![Async Copilot completed run and response pack](public/demo/response-pack.png)
+
+#### Runs List
+
+![Async Copilot runs list](public/demo/runs.png)
+
 ---
 
 ## Try it

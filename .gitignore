@@ -1,6 +1,11 @@
 # Compound Engineering — temporary worktrees created by review agents
 .claude/worktrees/
 
+# Local agent / workflow tooling (not part of the public portfolio repo)
+.claude/
+.openclaude/
+CLAUDE.md
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

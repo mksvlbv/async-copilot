@@ -4,7 +4,7 @@
 
 Live demo: **https://async-copilot.vercel.app**
 
-![Async Copilot Demo Walkthrough](public/demo/demo.webp)
+![Async Copilot Demo Walkthrough](public/demo/demo.gif)
 
 A full-stack implementation case study that shows a support-triage pipeline end-to-end: landing page -> case intake -> live-run signature screen -> completed response pack. Built with Next.js 15 App Router, Supabase (Postgres), Tailwind, and **real AI inference** via Llama 3.3 70B (Groq).
 

@@ -2,7 +2,7 @@
  * App surface layout — workspace shell.
  * Wraps all (app) routes with the shared AppHeader.
  */
-import { AppHeader } from "./_components/app-header";
+import { AppHeader } from "@/components/shared/app-header";
 
 export default function AppLayout({
   children,

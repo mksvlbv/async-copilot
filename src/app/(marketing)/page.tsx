@@ -21,7 +21,7 @@ import {
   BookOpen,
   Ticket,
 } from "@phosphor-icons/react/dist/ssr";
-import { HeroMockup } from "./_sections/hero-mockup";
+import { HeroMockup } from "@/components/marketing/hero-mockup";
 
 export default function LandingPage() {
   return (

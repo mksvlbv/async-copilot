@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка для Інтерв'ю</title>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            background-color: #121212;
+            padding: 10px 0 20px 0;
+            border-bottom: 1px solid #333;
+            z-index: 100;
+        }
+        input#searchInput {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        input#searchInput:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .qa-card {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+        .qa-card:hover {
+            border-color: #555;
+        }
+        .question {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #60a5fa; /* Blue */
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .answer {
+            font-size: 1em;
+            line-height: 1.6;
+            color: #cccccc;
+        }
+        .keyword {
+            color: #10b981; /* Green */
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <input type="text" id="searchInput" placeholder="Пошук по ключовому слову (наприклад: 'галюцинації', 'база', 'зациклення')..." autofocus>
+    </div>
+
+    <div class="grid-container" id="qaList">
+        <!-- КАРТКА 1 -->
+        <div class="qa-card">
+            <div class="question">1. Як саме ти створюєш веб-проєкт з нуля за допомогою ШІ?</div>
+            <div class="answer">
+                Працюю покроково: 1) Структура і база даних. 2) Базовий кістяк сайту. 3) Малюємо UI компоненти. Ніколи не прошу все одразу, щоб ШІ не заплутався.
+            </div>
+        </div>
+
+        <!-- КАРТКА 2 -->
+        <div class="qa-card">
+            <div class="question">2. Як ти борешся з галюцинаціями ШІ?</div>
+            <div class="answer">
+                1) Даю мінімум файлів у контекст.<br>
+                2) Постійно <span class="keyword">Git Commit</span> (зберігаюсь). Відкочуюсь назад, якщо щось зламав.<br>
+                3) Пишу <span class="keyword">E2E тести (Playwright)</span>. Вони одразу покажуть, якщо ШІ поламає старий код.
+            </div>
+        </div>
+
+        <!-- КАРТКА 3 -->
+        <div class="qa-card">
+            <div class="question">3. Що робити, якщо ШІ зациклився (loop)?</div>
+            <div class="answer">
+                Зупиняю генерацію. Йду в <span class="keyword">офіційну документацію</span>, знаходжу правильний шматок коду і показую ШІ, або виправляю цей рядок руками.
+            </div>
+        </div>
+        
+        <!-- КАРТКА 4 -->
+        <div class="qa-card">
+            <div class="question">4. Розкажи про роботу з базами даних (Supabase, API).</div>
+            <div class="answer">
+                Використовую PostgreSQL (Supabase) + Prisma. Задаю <span class="keyword">жорсткі типи даних</span>. Коли є суворі правила, ШІ майже не помиляється.
+            </div>
+        </div>
+
+        <!-- ДОДАВАЙ СВОЇ 28 ПИТАНЬ СЮДИ ЗА ТАКИМ ЖЕ ШАБЛОНОМ -->
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const cards = document.querySelectorAll('.qa-card');
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

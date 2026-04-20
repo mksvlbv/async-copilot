@@ -10,6 +10,7 @@ import { triageModel, isAIEnabled } from "@/lib/ai/client";
 import { getStagePrompt } from "@/lib/ai/prompts";
 import type { StageContext } from "@/lib/ai/prompts";
 import type { Sample } from "@/lib/supabase/types";
+import { retry } from "@/lib/retry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -196,24 +197,52 @@ async function generateStageOutput(
   const prompt = getStagePrompt(stageKey);
   if (!prompt) return {};
 
-  const { text } = await generateText({
-    model: triageModel,
-    system: prompt.system,
-    prompt: prompt.user(ctx),
-    maxOutputTokens: 400,
-    temperature: 0.3,
-  });
-
-  // Parse JSON from LLM response — strip markdown fences if model wraps output
-  const cleaned = text
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
   try {
-    return JSON.parse(cleaned) as Record<string, unknown>;
-  } catch {
-    // If JSON parse fails, return the raw text as a fallback field
-    return { raw_output: text, parse_error: true };
+    const { text } = await retry(() => 
+      generateText({
+        model: triageModel,
+        system: prompt.system,
+        prompt: prompt.user(ctx),
+        maxOutputTokens: 400,
+        temperature: 0.3,
+      }),
+    {
+      maxAttempts: 3,
+      baseDelay: 1000,
+      maxDelay: 10000,
+      // Retry on network errors or 5xx responses
+      retryOn: (error: unknown) => {
+        // If it's a fetch-related error or contains certain status codes, retry
+        if (error instanceof Error) {
+          return error.message.includes('fetch') || 
+                 error.message.includes('NetworkError') ||
+                 error.message.includes('500') ||
+                 error.message.includes('502') ||
+                 error.message.includes('503') ||
+                 error.message.includes('504');
+        }
+        return false;
+      }
+    });
+
+    // Parse JSON from LLM response — strip markdown fences if model wraps output
+    const cleaned = text
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+    try {
+      return JSON.parse(cleaned) as Record<string, unknown>;
+    } catch {
+      // If JSON parse fails, return the raw text as a fallback field
+      return { raw_output: text, parse_error: true };
+    }
+  } catch (err) {
+    console.warn(`[advance] LLM failed for stage ${stageKey} after retries, falling back to synthetic`, err);
+    // Fall back to synthetic output if all retries fail
+    return syntheticOutputFor(stageKey, {
+      caseTitle: ctx.title,
+      caseBody: ctx.body,
+    });
   }
 }
 

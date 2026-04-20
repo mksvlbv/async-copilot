@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { LiveRunView } from "./_components/live-run-view";
+import { LiveRunView } from "@/features/runs/components/live-run-view";
 import type { RunWithDetails } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";

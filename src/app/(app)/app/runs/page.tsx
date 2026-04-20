@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { RunsTable } from "./_components/runs-table";
+import { RunsTable } from "@/features/runs/components/runs-table";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

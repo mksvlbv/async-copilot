@@ -490,7 +490,11 @@ function TimelinePanel({
     run.state === "failed";
 
   return (
-    <section className="flex-1 flex flex-col bg-gray-50/50 min-w-0 overflow-hidden">
+    <section 
+      className="flex-1 flex flex-col bg-gray-50/50 min-w-0 overflow-hidden"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {/* Top header */}
       <div className="px-8 py-6 border-b border-gray-200 bg-white/50 backdrop-blur-sm shrink-0">
         <div className="flex items-center gap-2 mb-2">

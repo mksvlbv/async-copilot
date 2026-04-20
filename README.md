@@ -4,6 +4,8 @@
 
 Live demo: **https://async-copilot.vercel.app**
 
+![Async Copilot Demo Walkthrough](public/demo/demo.webp)
+
 A full-stack implementation case study that shows a support-triage pipeline end-to-end: landing page -> case intake -> live-run signature screen -> completed response pack. Built with Next.js 15 App Router, Supabase (Postgres), Tailwind, and **real AI inference** via Llama 3.3 70B (Groq).
 
 ## What this demonstrates
@@ -13,6 +15,18 @@ A full-stack implementation case study that shows a support-triage pipeline end-
 - **Human-approved outbound integration**: optional Slack webhook dispatch after approval, with dry-run mode and visible dispatch status.
 - **Production-style delivery discipline**: 5-table data model, unit and E2E coverage for critical flows, GitHub Actions CI, health checks, and cron cleanup.
 - **Free-tier systems thinking**: deployable on Vercel + Supabase + Groq without paid infrastructure.
+
+## Skills Demonstrated in This Project
+
+- 🏗️ **Full-Stack Architecture**: Next.js 15 App Router, Supabase, Tailwind, Vercel AI SDK
+- 🤖 **AI Integration**: Real LLM inference (Groq/Llama 3.3 70B) with graceful fallback mechanisms
+- ♿️ **Accessibility**: ARIA live regions, skip navigation, contrast optimization, screen reader support
+- ⚡ **Performance**: Core Web Vitals monitoring, bundle budgeting, image optimization, React rendering optimization
+- 🛡️ **Resilience**: Error Boundaries, retry mechanisms with exponential backoff, circuit breaker patterns
+- 🧪 **Advanced Testing**: Contract testing, accessibility unit tests, visual regression, performance testing
+- 🔒 **Security**: Dependency scanning, CSP headers, input validation/sanitization, sophisticated rate limiting
+- 📊 **Observability**: Sentry error tracking, request ID tracing, comprehensive logging
+- 📝 **Documentation**: Architecture Decision Records, code comments for complex algorithms, API documentation
 
 ---
 

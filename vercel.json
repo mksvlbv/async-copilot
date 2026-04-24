@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/cleanup-stale",
-      "schedule": "0 * * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/daily-stats",

@@ -43,7 +43,13 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "pending", label: "Pending" },
 ];
 
-export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
+export function RunsTable({
+  initialRuns,
+  workspaceSlug,
+}: {
+  initialRuns: RunRow[];
+  workspaceSlug: string;
+}) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -133,7 +139,7 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
               return (
                 <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors group">
                   <td className="px-4 py-3">
-                    <Link href={`/app/runs/${r.id}` as never} className="block">
+                    <Link href={`/app/w/${workspaceSlug}/runs/${r.id}` as never} className="block">
                       <div className="text-gray-900 font-medium truncate">{c?.title ?? "вЂ”"}</div>
                       <div className="text-[11px] text-gray-500 font-mono">{c?.case_ref ?? r.id.slice(0, 8)}</div>
                     </Link>
@@ -153,7 +159,7 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
-                      href={`/app/runs/${r.id}` as never}
+                      href={`/app/w/${workspaceSlug}/runs/${r.id}` as never}
                       className="inline-flex opacity-0 group-hover:opacity-100 transition-opacity"
                       aria-label="Open run"
                     >
@@ -169,7 +175,7 @@ export function RunsTable({ initialRuns }: { initialRuns: RunRow[] }) {
                   {initialRuns.length === 0 ? (
                     <>
                       No runs yet.{" "}
-                      <Link href={"/app" as never} className="text-black font-medium underline">
+                      <Link href={`/app/w/${workspaceSlug}` as never} className="text-black font-medium underline">
                         Start one
                       </Link>
                       .

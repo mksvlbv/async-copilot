@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { getRunAccess, getSessionUser } from "@/lib/auth/workspace";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { appendRunEvent, userActorPayload } from "@/lib/runs/events";
 import type { StagedAction } from "@/lib/supabase/types";
 import {
   dispatchApprovedRunToSlack,
@@ -20,6 +22,17 @@ export async function POST(
   { params }: { params: Promise<{ runId: string }> },
 ) {
   const { runId } = await params;
+
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const access = await getRunAccess(runId, ["admin", "reviewer"]);
+  if (!access) {
+    return NextResponse.json({ error: "Run not found or approval not permitted" }, { status: 404 });
+  }
+
   const admin = createAdminClient();
 
   const { data: pack, error: findErr } = await admin
@@ -44,7 +57,7 @@ export async function POST(
 
   const { data: run, error: runErr } = await admin
     .from("runs")
-    .select("id, state, confidence, urgency, case:cases(case_ref, title)")
+    .select("id, workspace_id, state, confidence, urgency, case:cases(case_ref, title)")
     .eq("id", runId)
     .maybeSingle();
 
@@ -62,11 +75,18 @@ export async function POST(
   );
   const approvedAt = new Date().toISOString();
 
+  const { data: workspace } = await admin
+    .from("workspaces")
+    .select("slug")
+    .eq("id", run.workspace_id)
+    .maybeSingle();
+
   const { data: approvedPack, error: approvalErr } = await admin
     .from("response_packs")
     .update({
       approved: true,
       approved_at: approvedAt,
+      approved_by: user.id,
       staged_actions: stagedActions,
     })
     .eq("id", pack.id)
@@ -86,7 +106,7 @@ export async function POST(
     caseTitle: caseRow?.title ?? "Untitled case",
     recommendation: pack.recommendation,
     escalationQueue: pack.escalation_queue,
-    runUrl: `${origin}/app/runs/${runId}`,
+    runUrl: `${origin}/app/w/${workspace?.slug ?? "demo"}/runs/${runId}`,
   });
 
   const nextActions = stagedActions.map((action) =>
@@ -117,6 +137,17 @@ export async function POST(
       dispatch_persisted: false,
     });
   }
+
+  await appendRunEvent(admin, {
+    workspace_id: run.workspace_id,
+    case_id: access.run.case_id,
+    run_id: runId,
+    event_type: "response_pack.approved",
+    actor_type: "user",
+    actor_user_id: user.id,
+    payload: userActorPayload(user, "Response pack approved for outbound action."),
+    created_at: approvedAt,
+  });
 
   return NextResponse.json({ response_pack: updated, dispatch, dispatch_persisted: true });
 }

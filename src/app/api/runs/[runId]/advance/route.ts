@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { generateText } from "ai";
+import { getRunAccess, getSessionUser } from "@/lib/auth/workspace";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { appendRunEvent, userActorPayload } from "@/lib/runs/events";
 import {
   buildFallbackResponsePack,
   finalStateFor,
@@ -30,6 +32,17 @@ export async function POST(
   { params }: { params: Promise<{ runId: string }> },
 ) {
   const { runId } = await params;
+
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const access = await getRunAccess(runId);
+  if (!access) {
+    return NextResponse.json({ error: "Run not found" }, { status: 404 });
+  }
+
   const admin = createAdminClient();
 
   // Fetch current run
@@ -114,15 +127,47 @@ export async function POST(
   }
 
   // Mark stage completed
+  const stageStartedAt = stageRow.started_at ?? now;
+  await appendRunEvent(admin, {
+    workspace_id: run.workspace_id,
+    case_id: run.case_id,
+    run_id: run.id,
+    event_type: "stage.started",
+    actor_type: "system",
+    stage_key: stageRow.stage_key,
+    payload: {
+      summary: `Started ${stageRow.stage_label}.`,
+      stage_order: stageRow.stage_order,
+      stage_label: stageRow.stage_label,
+    },
+    created_at: stageStartedAt,
+  });
+
   await admin
     .from("run_stages")
     .update({
       state: "completed",
-      started_at: stageRow.started_at ?? now,
+      started_at: stageStartedAt,
       completed_at: now,
       output,
     })
     .eq("id", stageRow.id);
+
+  await appendRunEvent(admin, {
+    workspace_id: run.workspace_id,
+    case_id: run.case_id,
+    run_id: run.id,
+    event_type: "stage.completed",
+    actor_type: "system",
+    stage_key: stageRow.stage_key,
+    payload: {
+      summary: `Completed ${stageRow.stage_label}.`,
+      stage_order: stageRow.stage_order,
+      stage_label: stageRow.stage_label,
+      duration_ms: stageRow.duration_ms,
+    },
+    created_at: now,
+  });
 
   // Run-level update
   const isFirstAdvance = run.state === "pending";
@@ -135,6 +180,16 @@ export async function POST(
   if (isFirstAdvance) {
     patch.state = "running";
     patch.started_at = now;
+
+    await appendRunEvent(admin, {
+      workspace_id: run.workspace_id,
+      case_id: run.case_id,
+      run_id: run.id,
+      event_type: "run.started",
+      actor_type: "system",
+      payload: userActorPayload(user, "Run execution started.", { state: "running" }),
+      created_at: now,
+    });
   }
 
   if (isTerminal) {
@@ -164,6 +219,19 @@ export async function POST(
         customerName: caseRow?.customer_name ?? null,
       });
       await admin.from("response_packs").insert(pack);
+
+      await appendRunEvent(admin, {
+        workspace_id: run.workspace_id,
+        case_id: run.case_id,
+        run_id: run.id,
+        event_type: "response_pack.created",
+        actor_type: "system",
+        payload: {
+          summary: "Response pack persisted for review.",
+          confidence,
+        },
+        created_at: now,
+      });
     }
   }
 
@@ -175,6 +243,23 @@ export async function POST(
     .single();
   if (updErr) {
     return NextResponse.json({ error: updErr.message }, { status: 500 });
+  }
+
+  if (isTerminal) {
+    await appendRunEvent(admin, {
+      workspace_id: run.workspace_id,
+      case_id: run.case_id,
+      run_id: run.id,
+      event_type: updated.state === "completed" ? "run.completed" : updated.state === "escalated" ? "run.escalated" : "run.failed",
+      actor_type: "system",
+      payload: {
+        summary: `Run ended in ${updated.state}.`,
+        state: updated.state,
+        confidence: updated.confidence,
+        urgency: updated.urgency,
+      },
+      created_at: now,
+    });
   }
 
   return NextResponse.json({

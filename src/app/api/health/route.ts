@@ -23,11 +23,15 @@ export async function GET() {
     supabaseError: null as string | null,
     schema: "unknown" as "unknown" | "ready" | "missing",
     counts: {
+      profiles: 0,
+      workspaces: 0,
+      workspace_memberships: 0,
       samples: 0,
       cases: 0,
       runs: 0,
       run_stages: 0,
       response_packs: 0,
+      run_events: 0,
     },
   };
 
@@ -44,7 +48,17 @@ export async function GET() {
     }
 
     // Schema check : count rows in each table
-    const tables = ["samples", "cases", "runs", "run_stages", "response_packs"] as const;
+    const tables = [
+      "profiles",
+      "workspaces",
+      "workspace_memberships",
+      "samples",
+      "cases",
+      "runs",
+      "run_stages",
+      "response_packs",
+      "run_events",
+    ] as const;
     let schemaReady = true;
     for (const t of tables) {
       const { count, error } = await admin

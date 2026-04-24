@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getRunAccess, getSessionUser } from "@/lib/auth/workspace";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Citation, StagedAction } from "@/lib/supabase/types";
 
@@ -18,15 +19,26 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const format = (searchParams.get("format") ?? "markdown").toLowerCase();
 
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const access = await getRunAccess(runId);
+  if (!access) {
+    return NextResponse.json({ error: "Run not found" }, { status: 404 });
+  }
+
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("runs")
     .select(
       `id, state, confidence, urgency, started_at, completed_at,
        case:cases ( id, case_ref, title, customer_name, customer_account, customer_plan ),
-       response_pack:response_packs ( * )`,
+        response_pack:response_packs ( * )`,
     )
     .eq("id", runId)
+    .eq("workspace_id", access.run.workspace_id)
     .maybeSingle();
 
   if (error) {

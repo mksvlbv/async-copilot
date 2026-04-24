@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import {
+  getCaseAccess,
+  getDefaultWorkspaceMembership,
+  getSessionUser,
+  getWorkspaceAccessForMutation,
+} from "@/lib/auth/workspace";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stagesForSample } from "@/lib/triage/run-model";
 import { apiRateLimiter, getClientIP } from "@/lib/rate-limit";
@@ -16,6 +22,20 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "50", 10), 200);
   const state = searchParams.get("state");
+  const workspaceSlug = searchParams.get("workspace");
+
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const access = workspaceSlug
+    ? await getWorkspaceAccessForMutation(workspaceSlug)
+    : await getDefaultWorkspaceMembership();
+
+  if (!access) {
+    return NextResponse.json({ error: "Workspace access required" }, { status: 403 });
+  }
 
   const admin = createAdminClient();
   let q = admin
@@ -25,6 +45,7 @@ export async function GET(request: Request) {
        started_at, completed_at, created_at,
        case:cases ( id, case_ref, title, customer_name, customer_account )`,
     )
+    .eq("workspace_id", access.workspace.id)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -70,20 +91,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const admin = createAdminClient();
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
 
-  // Look up case + optional sample
-  const { data: caseRow, error: caseErr } = await admin
-    .from("cases")
-    .select("*")
-    .eq("id", case_id)
-    .single();
-  if (caseErr || !caseRow) {
+  const caseAccess = await getCaseAccess(case_id);
+  if (!caseAccess) {
     return NextResponse.json(
-      { error: "Case not found", detail: caseErr?.message },
+      { error: "Case not found" },
       { status: 404 },
     );
   }
+
+  const admin = createAdminClient();
+
+  const caseRow = caseAccess.caseRow;
 
   let sample: Sample | null = null;
   if (caseRow.sample_id) {
@@ -101,7 +124,9 @@ export async function POST(request: Request) {
   const { data: run, error: runErr } = await admin
     .from("runs")
     .insert({
+      workspace_id: caseRow.workspace_id,
       case_id,
+      created_by: user.id,
       state: "pending",
       urgency: sample?.urgency ?? null,
       advance_cursor: 0,
@@ -115,6 +140,19 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  await admin.from("run_events").insert({
+    workspace_id: caseRow.workspace_id,
+    case_id,
+    run_id: run.id,
+    event_type: "run.created",
+    actor_type: "user",
+    actor_user_id: user.id,
+    payload: {
+      actor_label: user.email ?? null,
+      summary: "Run created from workspace intake.",
+    },
+  });
 
   // Pre-provision stages as 'pending'
   const stageRows = stageDefs.map((s, i) => ({

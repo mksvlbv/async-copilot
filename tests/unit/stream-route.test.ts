@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/auth/workspace", () => ({
+  getSessionUser: vi.fn(async () => ({ id: "user_123", email: "reviewer@example.com" })),
+  getRunAccess: vi.fn(async () => ({
+    run: { workspace_id: "ws_123" },
+  })),
+}));
+
 vi.mock("@/lib/ai/client", () => ({
   isAIEnabled: () => false,
   triageModel: null,

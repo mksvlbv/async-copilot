@@ -79,7 +79,17 @@ async function runFiles(client, files, label) {
 }
 
 async function summary(client) {
-  const tables = ["samples", "cases", "runs", "run_stages", "response_packs"];
+  const tables = [
+    "profiles",
+    "workspaces",
+    "workspace_memberships",
+    "samples",
+    "cases",
+    "runs",
+    "run_stages",
+    "response_packs",
+    "run_events",
+  ];
   console.log("\nRow counts:");
   for (const t of tables) {
     const { rows } = await client.query(

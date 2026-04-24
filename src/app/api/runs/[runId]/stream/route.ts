@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { streamText } from "ai";
+import { getRunAccess, getSessionUser } from "@/lib/auth/workspace";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { appendRunEvent } from "@/lib/runs/events";
 import { triageModel, isAIEnabled } from "@/lib/ai/client";
 import { getStagePrompt } from "@/lib/ai/prompts";
 import type { StageContext } from "@/lib/ai/prompts";
@@ -23,6 +25,16 @@ export async function GET(
 ) {
   const { runId } = await params;
 
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  const access = await getRunAccess(runId);
+  if (!access) {
+    return NextResponse.json({ error: "Run not found" }, { status: 404 });
+  }
+
   if (!isAIEnabled()) {
     return NextResponse.json(
       { error: "AI streaming not available — GROQ_API_KEY not configured" },
@@ -37,6 +49,7 @@ export async function GET(
     .from("runs")
     .select("*, case:cases(*), stages:run_stages(*)")
     .eq("id", runId)
+    .eq("workspace_id", access.run.workspace_id)
     .order("stage_order", { foreignTable: "run_stages", ascending: true })
     .maybeSingle();
 
@@ -74,10 +87,29 @@ export async function GET(
       try {
         // Mark run as running if pending
         if (run.state === "pending") {
-          await admin
+          const startedAt = new Date().toISOString();
+          const { data: startedRun } = await admin
             .from("runs")
-            .update({ state: "running", started_at: new Date().toISOString() })
-            .eq("id", runId);
+            .update({ state: "running", started_at: startedAt })
+            .eq("id", runId)
+            .eq("state", "pending")
+            .select("id")
+            .maybeSingle();
+
+          if (startedRun) {
+            await appendRunEvent(admin, {
+              workspace_id: run.workspace_id,
+              case_id: run.case_id,
+              run_id: runId,
+              event_type: "run.started",
+              actor_type: "system",
+              payload: {
+                summary: "Run execution started.",
+                state: "running",
+              },
+              created_at: startedAt,
+            });
+          }
         }
 
         send("run-start", { runId, totalStages: stages.length });
@@ -94,11 +126,33 @@ export async function GET(
           const now = new Date().toISOString();
           send("stage-start", { stageKey, stageOrder, label: stage.stage_label });
 
-          // Mark stage as running in DB
-          await admin
+          // Claim the stage so duplicate SSE connections cannot process it twice.
+          const { data: claimedStage } = await admin
             .from("run_stages")
             .update({ state: "running", started_at: now })
-            .eq("id", stageId);
+            .eq("id", stageId)
+            .eq("state", "pending")
+            .select("id")
+            .maybeSingle();
+
+          if (!claimedStage) {
+            continue;
+          }
+
+          await appendRunEvent(admin, {
+            workspace_id: run.workspace_id,
+            case_id: run.case_id,
+            run_id: runId,
+            event_type: "stage.started",
+            actor_type: "system",
+            stage_key: stageKey,
+            payload: {
+              summary: `Started ${stage.stage_label as string}.`,
+              stage_order: stageOrder,
+              stage_label: stage.stage_label,
+            },
+            created_at: now,
+          });
 
           let output: Record<string, unknown> = {};
 
@@ -139,14 +193,36 @@ export async function GET(
 
           // Mark stage completed in DB
           const completedAt = new Date().toISOString();
-          await admin
+          const { data: completedStage } = await admin
             .from("run_stages")
             .update({
               state: "completed",
               completed_at: completedAt,
               output,
             })
-            .eq("id", stageId);
+            .eq("id", stageId)
+            .eq("state", "running")
+            .select("id")
+            .maybeSingle();
+
+          if (!completedStage) {
+            continue;
+          }
+
+          await appendRunEvent(admin, {
+            workspace_id: run.workspace_id,
+            case_id: run.case_id,
+            run_id: runId,
+            event_type: "stage.completed",
+            actor_type: "system",
+            stage_key: stageKey,
+            payload: {
+              summary: `Completed ${stage.stage_label as string}.`,
+              stage_order: stageOrder,
+              stage_label: stage.stage_label,
+            },
+            created_at: completedAt,
+          });
 
           // Update run cursor
           await admin
@@ -200,7 +276,35 @@ export async function GET(
             customerName: (caseRow?.customer_name as string) ?? null,
           });
           await admin.from("response_packs").insert(pack);
+
+          await appendRunEvent(admin, {
+            workspace_id: run.workspace_id,
+            case_id: run.case_id,
+            run_id: runId,
+            event_type: "response_pack.created",
+            actor_type: "system",
+            payload: {
+              summary: "Response pack persisted for review.",
+              confidence,
+            },
+            created_at: completedAt,
+          });
         }
+
+        await appendRunEvent(admin, {
+          workspace_id: run.workspace_id,
+          case_id: run.case_id,
+          run_id: runId,
+          event_type: finalState === "completed" ? "run.completed" : "run.escalated",
+          actor_type: "system",
+          payload: {
+            summary: `Run ended in ${finalState}.`,
+            state: finalState,
+            confidence,
+            urgency,
+          },
+          created_at: completedAt,
+        });
 
         send("run-done", { runId, state: finalState, confidence });
       } catch (err) {

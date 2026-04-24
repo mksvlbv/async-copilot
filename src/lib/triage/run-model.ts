@@ -166,6 +166,7 @@ export function buildFallbackResponsePack(args: {
     escalation_queue: escalate ? "Tier-2-General" : null,
     approved: false,
     approved_at: null,
+    approved_by: null,
   };
 }
 

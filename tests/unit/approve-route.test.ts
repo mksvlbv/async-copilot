@@ -6,8 +6,17 @@ const { dispatchApprovedRunToSlack } = vi.hoisted(() => ({
 
 const responsePackMaybeSingle = vi.fn();
 const runMaybeSingle = vi.fn();
+const workspaceMaybeSingle = vi.fn();
 const responsePackUpdateSingle = vi.fn();
 const responsePackUpdate = vi.fn();
+const runEventsInsert = vi.fn();
+
+vi.mock("@/lib/auth/workspace", () => ({
+  getSessionUser: vi.fn(async () => ({ id: "user_123", email: "reviewer@example.com" })),
+  getRunAccess: vi.fn(async () => ({
+    run: { workspace_id: "ws_123", case_id: "case_123" },
+  })),
+}));
 
 vi.mock("@/lib/integrations/slack", () => ({
   SLACK_ACTION_INTENT: "slack.notify",
@@ -47,6 +56,20 @@ vi.mock("@/lib/supabase/admin", () => ({
           select: () => ({
             eq: () => ({ maybeSingle: runMaybeSingle }),
           }),
+        };
+      }
+
+      if (table === "workspaces") {
+        return {
+          select: () => ({
+            eq: () => ({ maybeSingle: workspaceMaybeSingle }),
+          }),
+        };
+      }
+
+      if (table === "run_events") {
+        return {
+          insert: runEventsInsert,
         };
       }
 
@@ -99,6 +122,10 @@ describe("POST /api/runs/[runId]/approve", () => {
       target: "Slack webhook (dry-run)",
       last_attempt_at: "2026-04-20T01:00:00.000Z",
     });
+    workspaceMaybeSingle.mockResolvedValue({
+      data: { slug: "acme-support" },
+      error: null,
+    });
     responsePackUpdateSingle.mockResolvedValueOnce({
       data: {
         id: "pack_123",
@@ -140,6 +167,7 @@ describe("POST /api/runs/[runId]/approve", () => {
       1,
       expect.objectContaining({
         approved: true,
+        approved_by: "user_123",
         staged_actions: expect.arrayContaining([
           expect.objectContaining({
             intent: "slack.notify",
@@ -160,6 +188,7 @@ describe("POST /api/runs/[runId]/approve", () => {
         ]),
       }),
     );
+    expect(runEventsInsert).toHaveBeenCalledOnce();
     expect(body.dispatch.status).toBe("dry_run");
   });
 });

@@ -7,6 +7,7 @@
 do $$
 declare
   v_sample_id uuid;
+  v_workspace_id uuid;
   v_case_id uuid;
   v_run_id uuid;
   v_now timestamptz := now();
@@ -17,12 +18,19 @@ begin
     raise exception 'Golden sample not found. Seed 001 must run first.';
   end if;
 
+  select id into v_workspace_id from public.workspaces where slug = 'demo';
+  if v_workspace_id is null then
+    raise exception 'Demo workspace not found. Migration 005 must run first.';
+  end if;
+
   -- Upsert the demo case (stable case_ref so reruns are idempotent)
   insert into public.cases (
+    workspace_id,
     case_ref, title, body, source, sample_id,
     customer_name, customer_account, customer_plan
   )
   values (
+    v_workspace_id,
     'CASE-8924',
     'Payments dispute — duplicate charge / delayed refund',
     E'Hi Support,\n\nI just checked my statement and Stripe definitely authorized $1,200 twice on Nov 12 for my Pro Annual renewal. I only see one invoice (INV-9823) in my account. Can you please look into this immediately and reverse the duplicate charge?\n\nThis is affecting my cash flow this month and I need resolution today.\n\nBest,\nJane Doe\nAcme Corp',
@@ -46,11 +54,12 @@ begin
 
   -- Fresh completed run
   insert into public.runs (
-    case_id, state, confidence, urgency,
+    workspace_id, case_id, state, confidence, urgency,
     started_at, completed_at, last_advanced_at,
     advance_cursor, total_stages
   )
   values (
+    v_workspace_id,
     v_case_id,
     'completed',
     34,
@@ -109,6 +118,28 @@ begin
     ]'::jsonb,
     'Tier-2-Finance'
   );
+
+  insert into public.run_events (workspace_id, case_id, run_id, event_type, actor_type, created_at)
+  values
+    (v_workspace_id, v_case_id, v_run_id, 'run.created', 'system', v_now - interval '5 minutes 5 seconds'),
+    (v_workspace_id, v_case_id, v_run_id, 'run.started', 'system', v_now - interval '5 minutes');
+
+  insert into public.run_events (workspace_id, case_id, run_id, event_type, actor_type, stage_key, payload, created_at)
+  values
+    (v_workspace_id, v_case_id, v_run_id, 'stage.started', 'system', 'ingest',    '{"stage_order":1,"stage_label":"Ingest Case"}'::jsonb,             v_now - interval '5 minutes'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.completed', 'system', 'ingest',  '{"stage_order":1,"stage_label":"Ingest Case","duration_ms":14}'::jsonb,             v_now - interval '5 minutes' + interval '14 ms'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.started', 'system', 'normalize', '{"stage_order":2,"stage_label":"Normalize Facts"}'::jsonb,         v_now - interval '4 minutes 59 seconds'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.completed', 'system', 'normalize','{"stage_order":2,"stage_label":"Normalize Facts","duration_ms":42}'::jsonb,         v_now - interval '4 minutes 59 seconds' + interval '42 ms'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.started', 'system', 'classify',  '{"stage_order":3,"stage_label":"Classify Issue & Urgency"}'::jsonb, v_now - interval '4 minutes 58 seconds'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.completed', 'system', 'classify','{"stage_order":3,"stage_label":"Classify Issue & Urgency","duration_ms":128}'::jsonb, v_now - interval '4 minutes 58 seconds' + interval '128 ms'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.started', 'system', 'query',     '{"stage_order":4,"stage_label":"Query Internal State"}'::jsonb,      v_now - interval '4 minutes 56 seconds'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.completed', 'system', 'query',   '{"stage_order":4,"stage_label":"Query Internal State","duration_ms":312}'::jsonb,      v_now - interval '4 minutes 56 seconds' + interval '312 ms'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.started', 'system', 'policy',    '{"stage_order":5,"stage_label":"Check Policy & Risk"}'::jsonb,       v_now - interval '4 minutes 54 seconds'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.completed', 'system', 'policy',  '{"stage_order":5,"stage_label":"Check Policy & Risk","duration_ms":98}'::jsonb,       v_now - interval '4 minutes 54 seconds' + interval '98 ms'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.started', 'system', 'draft',     '{"stage_order":6,"stage_label":"Draft Response Pack"}'::jsonb,       v_now - interval '4 minutes 53 seconds'),
+    (v_workspace_id, v_case_id, v_run_id, 'stage.completed', 'system', 'draft',   '{"stage_order":6,"stage_label":"Draft Response Pack","duration_ms":244}'::jsonb,       v_now - interval '4 minutes 53 seconds' + interval '244 ms'),
+    (v_workspace_id, v_case_id, v_run_id, 'response_pack.created', 'system', null, '{"confidence":34}'::jsonb,                                              v_now - interval '4 minutes 12 seconds'),
+    (v_workspace_id, v_case_id, v_run_id, 'run.completed', 'system', null,        '{"state":"completed","confidence":34,"urgency":"high"}'::jsonb,  v_now - interval '4 minutes 12 seconds');
 
   raise notice 'Seeded golden run: run_id=%, case_id=%', v_run_id, v_case_id;
 end $$;

@@ -13,6 +13,7 @@ export type RunState =
   | "failed";
 export type StageState = "pending" | "running" | "completed" | "failed";
 export type CaseSource = "intake" | "sample";
+export type WorkspaceRole = "admin" | "reviewer" | "operator";
 
 export type StageDefinition = {
   key: string;
@@ -35,13 +36,45 @@ export type Sample = {
   updated_at: string;
 };
 
+export type Profile = {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Workspace = {
+  id: string;
+  slug: string;
+  name: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkspaceMembership = {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  role: WorkspaceRole;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkspaceMembershipWithWorkspace = WorkspaceMembership & {
+  workspace: Workspace;
+};
+
 export type Case = {
   id: string;
+  workspace_id: string;
   case_ref: string;
   title: string;
   body: string;
   source: CaseSource;
   sample_id: string | null;
+  created_by: string | null;
   customer_name: string | null;
   customer_account: string | null;
   customer_plan: string | null;
@@ -51,7 +84,9 @@ export type Case = {
 
 export type Run = {
   id: string;
+  workspace_id: string;
   case_id: string;
+  created_by: string | null;
   state: RunState;
   confidence: number | null;
   urgency: UrgencyLevel | null;
@@ -107,12 +142,27 @@ export type ResponsePack = {
   escalation_queue: string | null;
   approved: boolean;
   approved_at: string | null;
+  approved_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type RunEvent = {
+  id: number;
+  workspace_id: string;
+  case_id: string;
+  run_id: string;
+  event_type: string;
+  actor_type: "system" | "user";
+  actor_user_id: string | null;
+  stage_key: string | null;
+  payload: Record<string, unknown>;
+  created_at: string;
 };
 
 export type RunWithDetails = Run & {
   case: Case;
   stages: RunStage[];
   response_pack: ResponsePack | null;
+  events: RunEvent[];
 };

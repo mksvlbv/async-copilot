@@ -1,9 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const maybeSingle = vi.fn();
-const eq = vi.fn(() => ({ maybeSingle }));
-const select = vi.fn(() => ({ eq }));
+const query = {
+  eq: vi.fn(() => query),
+  maybeSingle,
+};
+const select = vi.fn(() => query);
 const from = vi.fn(() => ({ select }));
+
+vi.mock("@/lib/auth/workspace", () => ({
+  getSessionUser: vi.fn(async () => ({ id: "user_123", email: "reviewer@example.com" })),
+  getRunAccess: vi.fn(async () => ({
+    run: { workspace_id: "ws_123" },
+  })),
+}));
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from }),
@@ -15,8 +25,8 @@ describe("GET /api/runs/[runId]/export", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     from.mockReturnValue({ select });
-    select.mockReturnValue({ eq });
-    eq.mockReturnValue({ maybeSingle });
+    select.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
   });
 
   it("returns 409 markdown text when the response pack is not ready", async () => {

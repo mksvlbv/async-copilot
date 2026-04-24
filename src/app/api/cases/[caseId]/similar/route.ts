@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCaseAccess, getSessionUser } from "@/lib/auth/workspace";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -20,25 +21,24 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "5", 10), 10);
 
-  const admin = createAdminClient();
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
 
-  // Fetch the source case
-  const { data: sourceCase, error: caseErr } = await admin
-    .from("cases")
-    .select("title, body")
-    .eq("id", caseId)
-    .maybeSingle();
-
-  if (caseErr || !sourceCase) {
+  const access = await getCaseAccess(caseId);
+  if (!access) {
     return NextResponse.json({ error: "Case not found" }, { status: 404 });
   }
 
-  // Call the similarity search function
+  const admin = createAdminClient();
+
   const { data: similar, error: searchErr } = await admin.rpc(
     "search_similar_cases",
     {
-      query_title: sourceCase.title,
-      query_body: sourceCase.body,
+      query_title: access.caseRow.title,
+      query_body: access.caseRow.body,
+      workspace_scope: access.caseRow.workspace_id,
       exclude_case_id: caseId,
       match_limit: limit,
     },

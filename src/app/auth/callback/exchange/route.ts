@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
-    return NextResponse.redirect(new URL("/login?error=auth_env_missing", request.url));
+    return redirectWithError(request, "auth_env_missing");
   }
 
   const cookieStore = await cookies();

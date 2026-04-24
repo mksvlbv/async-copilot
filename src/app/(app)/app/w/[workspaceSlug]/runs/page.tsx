@@ -23,7 +23,7 @@ export default async function WorkspaceRunsPage({
     .from("runs")
     .select(
       `id, state, confidence, urgency, created_at, advance_cursor, total_stages,
-       case:cases ( case_ref, title, customer_name )`,
+       case:cases ( case_ref, title, customer_name, source )`,
     )
     .eq("workspace_id", access.workspace.id)
     .order("created_at", { ascending: false })

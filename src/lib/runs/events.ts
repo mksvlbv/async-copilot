@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 
-type RunEventInsert = {
+export type RunEventInsert = {
   workspace_id: string;
   case_id: string;
   run_id: string;

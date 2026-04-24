@@ -31,7 +31,7 @@ export async function GET(
     .from("runs")
     .select(
       `*,
-       case:cases ( * ),
+       case:cases ( *, gmail_message:gmail_messages ( * ) ),
        stages:run_stages ( * ),
        response_pack:response_packs ( * ),
        events:run_events ( * )`,
@@ -54,8 +54,17 @@ export async function GET(
   const pack = Array.isArray(run.response_pack)
     ? (run.response_pack[0] ?? null)
     : (run.response_pack ?? null);
+  const caseRow = Array.isArray(run.case) ? (run.case[0] ?? null) : (run.case ?? null);
+  const gmailMessage = Array.isArray(caseRow?.gmail_message)
+    ? (caseRow.gmail_message[0] ?? null)
+    : (caseRow?.gmail_message ?? null);
 
   return NextResponse.json({
-    run: { ...run, response_pack: pack, events: run.events ?? [] },
+    run: {
+      ...run,
+      case: caseRow ? { ...caseRow, gmail_message: gmailMessage } : null,
+      response_pack: pack,
+      events: run.events ?? [],
+    },
   });
 }

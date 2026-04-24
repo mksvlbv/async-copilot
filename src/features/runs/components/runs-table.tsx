@@ -30,6 +30,7 @@ type RunRow = {
     case_ref: string;
     title: string;
     customer_name: string | null;
+    source: "intake" | "sample" | "gmail";
   } | null;
 };
 
@@ -141,7 +142,10 @@ export function RunsTable({
                   <td className="px-4 py-3">
                     <Link href={`/app/w/${workspaceSlug}/runs/${r.id}` as never} className="block">
                       <div className="text-gray-900 font-medium truncate">{c?.title ?? "вЂ”"}</div>
-                      <div className="text-[11px] text-gray-500 font-mono">{c?.case_ref ?? r.id.slice(0, 8)}</div>
+                      <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-500 font-mono">
+                        <span>{c?.case_ref ?? r.id.slice(0, 8)}</span>
+                        {c?.source ? <SourceBadge source={c.source} /> : null}
+                      </div>
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-gray-700 text-sm">{c?.customer_name ?? "вЂ”"}</td>
@@ -194,6 +198,26 @@ export function RunsTable({
         Showing {filtered.length} of {initialRuns.length} runs
       </div>
     </div>
+  );
+}
+
+function SourceBadge({ source }: { source: "intake" | "sample" | "gmail" }) {
+  const tone =
+    source === "gmail"
+      ? "border-blue-200 bg-blue-50 text-blue-700"
+      : source === "sample"
+        ? "border-gray-200 bg-gray-100 text-gray-600"
+        : "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+  return (
+    <span
+      className={clsx(
+        "inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest",
+        tone,
+      )}
+    >
+      {source}
+    </span>
   );
 }
 

@@ -249,6 +249,7 @@ function CaseContextPanel({
   workspaceSlug: string;
 }) {
   const c = run.case;
+  const gmailMessage = c.gmail_message ?? null;
   const urgencyStage = run.stages.find((s) => s.stage_key === "classify");
   const queryStage = run.stages.find((s) => s.stage_key === "query");
 
@@ -267,6 +268,7 @@ function CaseContextPanel({
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Customer Identity</h3>
           <dl className="text-xs text-gray-700 space-y-2 border border-gray-200 rounded-md p-3 bg-gray-50/30">
+            <Row label="Source" value={formatCaseSource(c.source)} mono />
             <Row label="Name" value={c.customer_name ?? "—"} />
             <Row label="Account" value={c.customer_account ?? "—"} />
             <Row label="Plan" value={c.customer_plan ?? "—"} mono />
@@ -305,15 +307,34 @@ function CaseContextPanel({
           <div className="space-y-3">
             <EvidenceCard
               icon={<Envelope size={12} />}
-              source="Source Email"
-              body={truncate(c.body, 280)}
+              source={c.source === "gmail" ? "Gmail Source" : "Source Email"}
+              body={
+                c.source === "gmail" && gmailMessage
+                  ? [
+                      `Subject: ${gmailMessage.subject ?? c.title}`,
+                      `From: ${gmailMessage.from_email ?? "unknown"}`,
+                      `Thread: ${shortenSourceId(gmailMessage.gmail_thread_id)}`,
+                    ].join("\n")
+                  : truncate(c.body, 280)
+              }
             />
             <EvidenceCard
               icon={<Receipt size={12} />}
               source="Case"
-              body={`Ref: ${c.case_ref}\nSource: ${c.source}`}
+              body={`Ref: ${c.case_ref}\nSource: ${formatCaseSource(c.source)}`}
               mono
             />
+            {gmailMessage ? (
+              <EvidenceCard
+                icon={<Receipt size={12} />}
+                source="Gmail Metadata"
+                body={[
+                  `Message: ${shortenSourceId(gmailMessage.gmail_message_id)}`,
+                  `Snippet: ${gmailMessage.snippet ?? "—"}`,
+                ].join("\n")}
+                mono
+              />
+            ) : null}
           </div>
         </div>
 
@@ -1219,6 +1240,25 @@ function formatEventLabel(eventType: string) {
         .join(" "),
     )
     .join(" ");
+}
+
+function formatCaseSource(source: RunWithDetails["case"]["source"]) {
+  switch (source) {
+    case "gmail":
+      return "Gmail";
+    case "sample":
+      return "Sample";
+    default:
+      return "Manual intake";
+  }
+}
+
+function shortenSourceId(value: string) {
+  if (value.length <= 18) {
+    return value;
+  }
+
+  return `${value.slice(0, 9)}...${value.slice(-6)}`;
 }
 
 function formatEventActor(eventItem: RunWithDetails["events"][number]) {

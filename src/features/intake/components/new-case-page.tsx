@@ -14,7 +14,7 @@ import {
   Paperclip,
 } from "@phosphor-icons/react/dist/ssr";
 import clsx from "clsx";
-import type { Sample, UrgencyLevel } from "@/lib/supabase/types";
+import type { Sample, UrgencyLevel, WorkspaceRole } from "@/lib/supabase/types";
 
 type Channel = "Email" | "Live Chat" | "In-App Widget" | "Customer Portal";
 
@@ -25,20 +25,32 @@ const RUN_START_ERROR = "We couldn't start the triage run right now. Please try 
 
 type Props = {
   workspaceSlug: string;
+  currentRole: WorkspaceRole;
+  gmailConnection: {
+    id: string;
+    gmailUserEmail: string;
+  } | null;
 };
 
-export function NewCasePage({ workspaceSlug }: Props) {
+export function NewCasePage({ workspaceSlug, currentRole, gmailConnection }: Props) {
   return (
     <Suspense fallback={null}>
-      <NewCasePageInner workspaceSlug={workspaceSlug} />
+      <NewCasePageInner
+        workspaceSlug={workspaceSlug}
+        currentRole={currentRole}
+        gmailConnection={gmailConnection}
+      />
     </Suspense>
   );
 }
 
-function NewCasePageInner({ workspaceSlug }: Props) {
+function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedSampleSlug = searchParams?.get("sample") ?? null;
+  const gmailStatus = searchParams?.get("gmail") ?? null;
+  const gmailStatusNotice = gmailStatus ? gmailFeedbackForStatus(gmailStatus) : null;
+  const canManageGmail = currentRole === "admin";
 
   const [customer, setCustomer] = useState("");
   const [channel, setChannel] = useState<Channel>("Email");
@@ -52,6 +64,9 @@ function NewCasePageInner({ workspaceSlug }: Props) {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [gmailUrlOrId, setGmailUrlOrId] = useState("");
+  const [gmailSubmitting, setGmailSubmitting] = useState(false);
+  const [gmailError, setGmailError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -165,6 +180,46 @@ function NewCasePageInner({ workspaceSlug }: Props) {
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : RUN_START_ERROR);
       setSubmitting(false);
+    }
+  }
+
+  async function importFromGmail(event: React.FormEvent) {
+    event.preventDefault();
+    if (gmailSubmitting || !gmailConnection) {
+      return;
+    }
+
+    const trimmed = gmailUrlOrId.trim();
+    if (!trimmed) {
+      setGmailError("Paste a Gmail thread URL or Gmail message/thread id.");
+      return;
+    }
+
+    setGmailSubmitting(true);
+    setGmailError(null);
+
+    try {
+      const response = await fetch(`/api/workspaces/${workspaceSlug}/gmail/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gmail_url_or_id: trimmed }),
+      });
+
+      const data = (await response.json()) as {
+        error?: string;
+        run?: { id: string };
+      };
+
+      if (!response.ok || !data.run) {
+        throw new Error(data.error ?? "We couldn't import that Gmail thread right now.");
+      }
+
+      router.push(`/app/w/${workspaceSlug}/runs/${data.run.id}` as never);
+    } catch (error) {
+      setGmailError(
+        error instanceof Error ? error.message : "We couldn't import that Gmail thread right now.",
+      );
+      setGmailSubmitting(false);
     }
   }
 
@@ -332,6 +387,105 @@ function NewCasePageInner({ workspaceSlug }: Props) {
       </form>
 
       <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-5 pt-1">
+        <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-gray-100 bg-gray-50/60 px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-widest text-blue-700">
+                Gmail Source
+              </span>
+              {gmailConnection ? (
+                <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-widest text-emerald-700">
+                  Connected
+                </span>
+              ) : null}
+            </div>
+            <h2 className="text-sm font-semibold text-gray-900">Import a Gmail thread</h2>
+            <p className="mt-1 text-xs leading-relaxed text-gray-500">
+              Use the narrow real integration path: connect one workspace inbox, then materialize a Gmail thread straight into a case and run.
+            </p>
+          </div>
+
+          <div className="space-y-3 px-4 py-4">
+            {gmailStatusNotice ? (
+              <div
+                className={clsx(
+                  "rounded-md border px-3 py-2 text-xs leading-relaxed",
+                  gmailStatusNotice.tone,
+                )}
+              >
+                {gmailStatusNotice.message}
+              </div>
+            ) : null}
+
+            {gmailConnection ? (
+              <>
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">
+                    Connected Inbox
+                  </div>
+                  <div className="mt-1 text-sm font-medium text-gray-900">
+                    {gmailConnection.gmailUserEmail}
+                  </div>
+                </div>
+
+                <form className="space-y-3" onSubmit={importFromGmail}>
+                  <label className="block">
+                    <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-gray-500">
+                      Gmail URL or ID
+                    </span>
+                    <input
+                      value={gmailUrlOrId}
+                      onChange={(event) => setGmailUrlOrId(event.target.value)}
+                      placeholder="https://mail.google.com/... or Gmail id"
+                      className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-black focus:ring-1 focus:ring-black"
+                    />
+                  </label>
+
+                  {gmailError ? <div className="text-xs text-red-600">{gmailError}</div> : null}
+
+                  <button
+                    type="submit"
+                    disabled={gmailSubmitting || gmailUrlOrId.trim().length === 0}
+                    className={clsx(
+                      "inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors",
+                      gmailSubmitting || gmailUrlOrId.trim().length === 0
+                        ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                        : "bg-blue-600 text-white hover:bg-blue-500",
+                    )}
+                  >
+                    {gmailSubmitting ? (
+                      <>
+                        <CircleNotch size={14} className="animate-spin" /> Importing from Gmail...
+                      </>
+                    ) : (
+                      <>
+                        Import Gmail Thread <ArrowRight size={14} />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="space-y-3">
+                <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-3 text-xs leading-relaxed text-gray-500">
+                  {canManageGmail
+                    ? "No workspace Gmail inbox is connected yet. Connect one shared inbox to unlock the real intake path."
+                    : "A workspace admin needs to connect Gmail before members can import real inbox threads."}
+                </div>
+
+                {canManageGmail ? (
+                  <a
+                    href={`/api/workspaces/${workspaceSlug}/gmail/connect`}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-gray-950 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900"
+                  >
+                    Connect Gmail <ArrowRight size={14} />
+                  </a>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </section>
+
         <div>
           <h2 className="text-[11px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-1">
             Pre-configured Scenarios
@@ -460,4 +614,35 @@ function SampleSkeleton() {
       <div className="h-3 w-1/2 rounded bg-gray-100" />
     </div>
   );
+}
+
+function gmailFeedbackForStatus(status: string) {
+  switch (status) {
+    case "connected":
+      return {
+        tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
+        message: "Workspace Gmail connection is live. Paste a Gmail thread URL or id to import a real case.",
+      };
+    case "access_denied":
+      return {
+        tone: "border-amber-200 bg-amber-50 text-amber-700",
+        message: "Google access was denied before the Gmail connection finished.",
+      };
+    case "oauth_env_missing":
+      return {
+        tone: "border-red-200 bg-red-50 text-red-700",
+        message: "Google OAuth environment variables are missing for this deployment.",
+      };
+    case "workspace_access_lost":
+    case "forbidden":
+      return {
+        tone: "border-red-200 bg-red-50 text-red-700",
+        message: "Workspace access no longer allows this Gmail connection flow.",
+      };
+    default:
+      return {
+        tone: "border-red-200 bg-red-50 text-red-700",
+        message: "Gmail connection could not be completed. Retry the connect flow and then import again.",
+      };
+  }
 }

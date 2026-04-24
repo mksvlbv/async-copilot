@@ -25,7 +25,7 @@ export default async function WorkspaceRunDetailPage({
     .from("runs")
     .select(
       `*,
-       case:cases ( * ),
+       case:cases ( *, gmail_message:gmail_messages ( * ) ),
        stages:run_stages ( * ),
        response_pack:response_packs ( * ),
        events:run_events ( * )`,
@@ -60,7 +60,11 @@ export default async function WorkspaceRunDetailPage({
   const pack = Array.isArray(data.response_pack)
     ? (data.response_pack[0] ?? null)
     : (data.response_pack ?? null);
-  const caseRow = Array.isArray(data.case) ? data.case[0] : data.case;
+  const caseRowRaw = Array.isArray(data.case) ? data.case[0] : data.case;
+  const gmailMessage = Array.isArray(caseRowRaw?.gmail_message)
+    ? (caseRowRaw.gmail_message[0] ?? null)
+    : (caseRowRaw?.gmail_message ?? null);
+  const caseRow = caseRowRaw ? { ...caseRowRaw, gmail_message: gmailMessage } : caseRowRaw;
 
   const initialRun: RunWithDetails = {
     ...data,

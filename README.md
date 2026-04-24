@@ -187,9 +187,10 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 
 ## Honest scope boundaries
 
-- No Gmail or ticket-source ingestion yet.
+- Gmail now exists only as a narrow manual import path: one workspace inbox, one thread/message import at a time.
 - No workspace member management UI yet.
-- No CRM, email, or ticketing integrations yet; the only outbound boundary is an optional Slack webhook dispatched after human approval.
+- No mailbox sync engine, Gmail history/webhook sync, or attachment ingestion yet.
+- No CRM or ticketing integrations yet; the only outbound boundary is an optional Slack webhook dispatched after human approval.
 - No production SLA claims or security guarantees beyond what is documented here.
 - This is a portfolio implementation, not a live support product.
 
@@ -197,15 +198,29 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 
 ## Data model
 
-5 tables, 4 enums, permissive RLS (writes gated through server routes using the secret key):
+The repo now combines the original run engine tables with the Milestone 3 workspace/auth foundation and a narrow Gmail source layer.
+
+Operational core:
 
 - `samples` — curated scenario library (read-only in UI)
-- `cases` — support-case instances, from intake or materialized from a sample
+- `cases` — support-case instances from manual intake, samples, or Gmail
 - `runs` — triage lifecycle (`pending` → `running` → `completed`/`escalated`)
 - `run_stages` — 6 stages per run with `output` JSON blobs + `duration_ms`
 - `response_packs` — final artifact (confidence, recommendation, summary, draft reply, citations, staged actions)
+- `run_events` — append-only reviewer timeline and audit trail for material state transitions
 
-Schema: `supabase/migrations/001_initial_schema.sql`
+Workspace/auth layer:
+
+- `profiles`
+- `workspaces`
+- `workspace_memberships`
+
+Gmail source layer:
+
+- `workspace_gmail_accounts` — one shared Gmail connection per workspace
+- `gmail_messages` — durable imported Gmail source-of-truth rows
+
+Schema: `supabase/migrations/001_initial_schema.sql` through `007_milestone4_gmail_foundation.sql`
 Seeds: `supabase/seeds/001_samples.sql` + `002_golden_run.sql`
 
 ---
@@ -221,7 +236,8 @@ cp .env.example .env.local
 #    Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 #              SUPABASE_SECRET_KEY, SUPABASE_DB_URL
 #    Optional: GROQ_API_KEY (enables real AI), NEXT_PUBLIC_SENTRY_DSN,
-#              SLACK_WEBHOOK_URL, SLACK_WEBHOOK_DRY_RUN
+#              SLACK_WEBHOOK_URL, SLACK_WEBHOOK_DRY_RUN,
+#              GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_OAUTH_REDIRECT_URI
 
 # 3. One-shot migrate + seed
 npm run db:init
@@ -257,6 +273,15 @@ Useful scripts:
 - `npm run test:watch` — Vitest in watch mode
 - `npm run db:migrate` · `npm run db:seed` — split init
 
+### Google OAuth callback configuration
+
+Manual Gmail import requires a Google OAuth client that allows the app callback URL.
+
+- Development callback: `http://localhost:3000/api/gmail/callback`
+- Production callback: `https://async-copilot.vercel.app/api/gmail/callback`
+
+If `GOOGLE_OAUTH_REDIRECT_URI` is set, it must match one of the allowed redirect URIs in the Google Cloud OAuth client exactly.
+
 ---
 
 ## Key design decisions
@@ -267,6 +292,7 @@ Useful scripts:
 - **Rate limiting** — In-memory sliding window (20 req/min/IP) on write endpoints. Upgradeable to Upstash Redis.
 - **Self-healing** — Vercel Cron runs daily to clean up zombie runs stuck in "running" state.
 - **Approval-gated integration boundary** — no autonomous action. Human approval can dispatch a Slack summary (live or dry-run); all other staged actions remain queued.
+- **Narrow real Gmail intake** — a workspace can connect one Gmail inbox and manually import one thread/message into a case and run. Full sync/history processing remains deferred.
 - **Idempotent schema + seeds** — `npm run db:init` is safe to re-run. Demo environment can be reset cheaply.
 - **One source of design truth** — `docs/design/design-system.md` holds all tokens; every screen pulls from there.
 

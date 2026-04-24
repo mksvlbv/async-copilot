@@ -17,6 +17,7 @@ export default function LoginPage() {
 function LoginPageInner() {
   const searchParams = useSearchParams();
   const next = searchParams?.get("next") ?? "/app";
+  const authError = searchParams?.get("error");
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -102,6 +103,9 @@ function LoginPageInner() {
             </label>
 
             {error ? <div className="text-sm text-red-600">{error}</div> : null}
+            {!error && authError ? (
+              <div className="text-sm text-red-600">{formatAuthError(authError)}</div>
+            ) : null}
             {sent ? (
               <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
                 Magic link sent. Open the email on this device to continue.
@@ -132,4 +136,19 @@ function LoginPageInner() {
       </div>
     </main>
   );
+}
+
+function formatAuthError(error: string) {
+  switch (error) {
+    case "auth_env_missing":
+      return "Authentication is not configured correctly in this environment.";
+    case "auth_callback_failed":
+      return "The magic link could not be exchanged for a session. Request a fresh link and try again.";
+    case "auth_token_verification_failed":
+      return "The magic link token could not be verified. Request a fresh link and try again.";
+    case "auth_callback_missing_code":
+      return "The magic link callback was incomplete. Request a fresh link and try again.";
+    default:
+      return "Authentication failed. Request a fresh magic link and try again.";
+  }
 }

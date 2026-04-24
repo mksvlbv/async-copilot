@@ -360,6 +360,7 @@ fixed findings.
 ## Documents for reviewers
 
 - `docs/ideation/2026-04-17-async-copilot-ideation.md` — product concept
+- `docs/brainstorms/2026-04-24-async-copilot-v2-spec.md` — v2 product spec, chosen scenario, and milestone order
 - `docs/brainstorms/2026-04-18-async-copilot-requirements.md` — 22 MVP requirements (R1–R22)
 - `docs/plans/2026-04-18-001-feat-async-copilot-demo-plan.md` — 9-unit build plan (what was delivered, unit-by-unit)
 - `docs/design/design-system.md` — canonical tokens

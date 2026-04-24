@@ -1,21 +1,25 @@
 # Implementation Handoff — Async Copilot
 
-**Status**: ready for Cascade implementation
-**Last updated**: 2026-04-18
+**Status**: v1 shipped, v2 spec approved
+**Last updated**: 2026-04-24
 **Prepared by**: planning phase (CE + Variant)
 
-This is the single entry point for the implementing agent (Cascade/Windsurf) to start building. Everything needed to go from zero to working MVP is referenced here. Read this document first, then follow the task order at the bottom.
+This document is the original MVP implementation handoff. For any new work, read the v2 spec first and treat this file as historical build context unless the v2 spec explicitly points back here.
 
 ---
 
 ## 1. Context stack (read in this order)
 
-1. `docs/ideation/2026-04-17-async-copilot-ideation.md` — product concept, screen inventory, build slices
-2. `docs/brainstorms/2026-04-18-async-copilot-requirements.md` — 22 requirements (R1–R22), success criteria, scope boundaries
-3. `docs/plans/2026-04-18-001-feat-async-copilot-demo-plan.md` — 9-unit implementation plan with dependencies and test scenarios
-4. `docs/design/2026-04-18-variant-brief.md` — Variant.com design brief (6 screen prompts)
-5. `docs/design/variant-exports/README.md` — tech stack detected, fixes to apply, visual DNA summary
-6. `docs/design/variant-exports/{01-06}/` — actual HTML + screenshot for each of 6 screens
+1. `docs/brainstorms/2026-04-24-async-copilot-v2-spec.md` — current source of truth for product direction and milestone order
+2. `docs/ideation/2026-04-17-async-copilot-ideation.md` — original product concept, screen inventory, build slices
+3. `docs/brainstorms/2026-04-18-async-copilot-requirements.md` — 22 requirements (R1–R22), success criteria, scope boundaries
+4. `docs/plans/2026-04-18-001-feat-async-copilot-demo-plan.md` — MVP implementation plan with dependencies and test scenarios
+5. `docs/design/2026-04-18-variant-brief.md` — Variant.com design brief (6 screen prompts)
+6. `docs/design/variant-exports/README.md` — tech stack detected, fixes to apply, visual DNA summary
+7. `docs/design/variant-exports/{01-06}/` — actual HTML + screenshot for each of 6 screens
+
+### Important note
+Sections below describe the shipped MVP build path. They remain useful for historical context and design intent, but they do not override the v2 spec.
 
 ---
 

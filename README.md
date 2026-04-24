@@ -135,11 +135,12 @@ Until a final GIF/video is attached, this walkthrough doc is the source of truth
 ## Try it
 
 1. Open the landing — https://async-copilot.vercel.app
-2. Click **Open App** → intake form
-3. Click the **Payments Dispute — Duplicate Charge** scenario card (golden path)
-4. Hit **Start Triage** → watch the 6-stage timeline progress in real time
-5. When it reaches terminal state (~5 sec), inspect the Response Pack, approve it, review the Slack dispatch status, or export the markdown pack
-6. Navigate to **Runs** or **Samples** in the header to browse
+2. Click **Open App** → sign in with a magic link
+3. If this is your first session, create a workspace in onboarding
+4. Open the **Payments Dispute — Duplicate Charge** scenario card (golden path)
+5. Hit **Start Triage** → watch the 6-stage timeline progress in real time
+6. When it reaches terminal state (~5 sec), inspect the Response Pack, approve it, review the Slack dispatch status, or export the markdown pack
+7. Navigate to **Runs** or **Samples** in the header to browse
 
 Try **Paste** instead: type or paste your own case body in the textarea → it still creates a real case + run with a generic fallback response pack.
 
@@ -150,10 +151,13 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 | Route | Purpose |
 |---|---|
 | `/` | Marketing landing — 7 sections (header, hero + workspace mockup, how-it-works, system trust, response pack showcase, closing CTA, footer) |
-| `/app` | **New Case** intake form + live sample picker |
-| `/app/runs/[runId]` | **Live Triage Run** signature screen: Case Context / Visible Triage / Response Pack (polling → terminal → approve / export) |
-| `/app/runs` | Runs list with live search, state chip filters, progress + confidence columns |
-| `/app/samples` | Scenario library — Golden Path + Alternatives, with body preview |
+| `/login` | Magic-link auth entry point |
+| `/app` | Authenticated bootstrap redirect into onboarding or default workspace |
+| `/app/onboarding` | First-workspace bootstrap flow |
+| `/app/w/[workspaceSlug]` | **New Case** intake form + live sample picker inside a workspace |
+| `/app/w/[workspaceSlug]/runs/[runId]` | **Live Triage Run** signature screen: Case Context / Visible Triage / Response Pack / Event Timeline |
+| `/app/w/[workspaceSlug]/runs` | Workspace runs list with search, state chip filters, progress + confidence columns |
+| `/app/w/[workspaceSlug]/samples` | Scenario library — Golden Path + Alternatives, with body preview |
 | `/api/health` | Machine-readable env + schema + row-count snapshot |
 | `/api/samples` · `/api/cases` · `/api/runs` · `/api/runs/[id]` | REST endpoints |
 | `/api/runs/[id]/advance` · `/approve` · `/export` | Run lifecycle mutations + export |
@@ -169,13 +173,13 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 - **Styling**: Tailwind CSS 3.4 with design tokens extracted from Variant exports
 - **Icons**: `@phosphor-icons/react` (server-side rendered SVG)
 - **Database**: Supabase Postgres 17 (`eu-west-1` / Ireland)
-- **Auth client**: `@supabase/ssr` (browser + server), `@supabase/supabase-js` (admin)
+- **Auth**: Supabase Auth (magic link), `@supabase/ssr` (browser + server), `@supabase/supabase-js` (admin)
 - **Observability**: Sentry (error tracking, 5k events/mo free tier)
 - **Hosting**: Vercel (Stockholm edge, auto-deploy on every push to `main`)
 - **Unit Tests**: Vitest · **E2E**: Playwright
 - **CI/CD**: GitHub Actions (typecheck + lint + unit tests + production build on every PR)
 - **Rate Limiting**: In-memory sliding window (20 req/min/IP)
-- **Cron**: Vercel Cron (hourly stale-run cleanup, daily stats snapshot)
+- **Cron**: Vercel Cron (daily stale-run cleanup, daily stats snapshot)
 
 **Total monthly cost: $0** (all services on free tiers)
 
@@ -183,7 +187,8 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 
 ## Honest scope boundaries
 
-- No auth or multi-tenant data separation in this release.
+- No Gmail or ticket-source ingestion yet.
+- No workspace member management UI yet.
 - No CRM, email, or ticketing integrations yet; the only outbound boundary is an optional Slack webhook dispatched after human approval.
 - No production SLA claims or security guarantees beyond what is documented here.
 - This is a portfolio implementation, not a live support product.
@@ -230,6 +235,19 @@ npm test             # Vitest unit tests
 npm run test:e2e     # Playwright E2E
 ```
 
+### Supabase Auth URL configuration
+
+Magic-link auth requires the Supabase project to allow the production callback URL.
+
+- **Site URL**: `https://async-copilot.vercel.app`
+- **Redirect URLs**:
+  - `https://async-copilot.vercel.app/auth/callback`
+  - `https://async-copilot.vercel.app/**`
+  - `http://localhost:3000/auth/callback`
+  - `http://localhost:3000/**`
+
+If the project still has `http://localhost:3000` as the Site URL, Supabase will ignore the requested production redirect and email links will send users back to localhost.
+
 Useful scripts:
 
 - `npm run typecheck` — strict TypeScript
@@ -247,7 +265,7 @@ Useful scripts:
 - **SSE streaming with polling fallback** — When `GROQ_API_KEY` is set, the client connects via SSE and streams real LLM tokens. Without it, falls back to `800ms` polling with synthetic (regex) output. Zero-config degradation.
 - **Real AI, graceful fallback** — Llama 3.3 70B via Groq generates structured JSON for each stage. If the LLM fails or key is missing, regex-based inference kicks in seamlessly.
 - **Rate limiting** — In-memory sliding window (20 req/min/IP) on write endpoints. Upgradeable to Upstash Redis.
-- **Self-healing** — Vercel Cron runs hourly to clean up zombie runs stuck in "running" state.
+- **Self-healing** — Vercel Cron runs daily to clean up zombie runs stuck in "running" state.
 - **Approval-gated integration boundary** — no autonomous action. Human approval can dispatch a Slack summary (live or dry-run); all other staged actions remain queued.
 - **Idempotent schema + seeds** — `npm run db:init` is safe to re-run. Demo environment can be reset cheaply.
 - **One source of design truth** — `docs/design/design-system.md` holds all tokens; every screen pulls from there.

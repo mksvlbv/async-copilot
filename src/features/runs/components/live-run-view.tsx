@@ -562,65 +562,70 @@ function TimelinePanel({
       {/* Timeline */}
       <div className="flex-1 overflow-y-auto mockup-scroll px-8 py-8">
         <div className="relative max-w-2xl mx-auto">
-          {/* Vertical line */}
-          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gray-200" aria-hidden />
+          <div className="relative">
+            {/* Vertical line for the staged execution only. */}
+            <div
+              className="pointer-events-none absolute left-[15px] top-2 bottom-8 w-px bg-gradient-to-b from-gray-200 via-gray-200 to-transparent"
+              aria-hidden
+            />
 
-          <ol className="space-y-6">
-            {stages.map((s) => {
-              const num = String(s.stage_order).padStart(2, "0");
-              const completed = s.state === "completed" || s.stage_order < currentOrder;
-              const running =
-                !isTerminal &&
-                s.stage_order === currentOrder &&
-                (run.state === "running" || run.state === "pending");
-              const pending = !completed && !running;
+            <ol className="space-y-6">
+              {stages.map((s) => {
+                const num = String(s.stage_order).padStart(2, "0");
+                const completed = s.state === "completed" || s.stage_order < currentOrder;
+                const running =
+                  !isTerminal &&
+                  s.stage_order === currentOrder &&
+                  (run.state === "running" || run.state === "pending");
+                const pending = !completed && !running;
 
-              return (
-                <li key={s.id} className="relative pl-12">
-                  {/* Marker */}
-                  <div className="absolute left-0 top-1 z-10">
-                    {completed ? (
-                      <div className="w-8 h-8 bg-gray-950 rounded-full flex items-center justify-center text-white shadow-sm">
-                        <CheckCircle size={16} weight="fill" />
-                      </div>
-                    ) : running ? (
-                      <div className="w-8 h-8 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shadow-sm animate-pulse">
-                        <span className="w-2 h-2 rounded-full bg-blue-500" />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                      </div>
-                    )}
-                  </div>
+                return (
+                  <li key={s.id} className="relative pl-12">
+                    {/* Marker */}
+                    <div className="absolute left-0 top-1 z-10">
+                      {completed ? (
+                        <div className="w-8 h-8 bg-gray-950 rounded-full flex items-center justify-center text-white shadow-sm">
+                          <CheckCircle size={16} weight="fill" />
+                        </div>
+                      ) : running ? (
+                        <div className="w-8 h-8 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shadow-sm animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                        </div>
+                      )}
+                    </div>
 
-                  <h4
-                    className={clsx(
-                      "text-sm font-mono font-medium uppercase tracking-widest mb-1 pt-1",
-                      completed
-                        ? "text-gray-900"
-                        : running
+                    <h4
+                      className={clsx(
+                        "text-sm font-mono font-medium uppercase tracking-widest mb-1 pt-1",
+                        completed
                           ? "text-gray-900"
-                          : "text-gray-400",
-                    )}
-                  >
-                    {num} {s.stage_label}
-                  </h4>
+                          : running
+                            ? "text-gray-900"
+                            : "text-gray-400",
+                      )}
+                    >
+                      {num} {s.stage_label}
+                    </h4>
 
-                  <StageBody
-                    stage={s}
-                    running={running}
-                    pending={pending}
-                    streamingText={streamingTokens?.[s.stage_key]}
-                    isActiveStream={activeStreamStage === s.stage_key}
-                  />
-                </li>
-              );
-            })}
-          </ol>
+                    <StageBody
+                      stage={s}
+                      running={running}
+                      pending={pending}
+                      streamingText={streamingTokens?.[s.stage_key]}
+                      isActiveStream={activeStreamStage === s.stage_key}
+                    />
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
 
           {run.events.length > 0 ? (
-            <div className="mt-10 border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
+            <div className="mt-10 ml-12 border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                 <div className="text-[10px] font-mono font-semibold uppercase tracking-widest text-gray-500">
                   Event Timeline

@@ -81,8 +81,19 @@ export async function GET(request: Request) {
       throw new Error(error.message);
     }
 
+    console.info("[gmail callback] connected", {
+      workspaceSlug: access.workspace.slug,
+      gmailUserEmail: gmailProfile.emailAddress,
+      scopes: tokens.scopes,
+    });
+
     return redirectToWorkspace(request, access.workspace.slug, "connected", true);
   } catch (error) {
+    console.error("[gmail callback] failed", {
+      workspaceSlug: oauthCookie.workspaceSlug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     return redirectToWorkspace(
       request,
       oauthCookie.workspaceSlug,

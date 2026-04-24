@@ -14,16 +14,18 @@ export async function middleware(request: NextRequest) {
         },
         setAll(
           cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>,
-          headers: Record<string, string>,
+          headers?: Record<string, string>,
         ) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => {
             supabaseResponse.cookies.set(name, value, options);
           });
-          Object.entries(headers).forEach(([key, value]) => {
-            supabaseResponse.headers.set(key, String(value));
-          });
+          if (headers) {
+            Object.entries(headers).forEach(([key, value]) => {
+              supabaseResponse.headers.set(key, String(value));
+            });
+          }
         },
       },
     },

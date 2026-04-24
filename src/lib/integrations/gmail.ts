@@ -162,7 +162,7 @@ export async function fetchGmailMessage(accessToken: string, messageId: string) 
 export function extractGmailCandidateId(input: string) {
   const value = input.trim();
   if (!value) {
-    throw new Error("Paste a Gmail thread URL or Gmail message/thread id.");
+    throw new Error("Paste a Gmail message/thread id or a supported Gmail link.");
   }
 
   if (!value.includes("://")) {
@@ -173,7 +173,7 @@ export function extractGmailCandidateId(input: string) {
   try {
     url = new URL(value);
   } catch {
-    throw new Error("Paste a valid Gmail thread URL or Gmail message/thread id.");
+    throw new Error("Paste a valid Gmail message/thread id or a supported Gmail link.");
   }
 
   if (!/(^|\.)mail\.google\.com$/i.test(url.hostname)) {
@@ -535,6 +535,13 @@ function looksLikeGmailId(value: string) {
 function normalizeGmailObjectId(value: string) {
   const trimmed = value.trim();
   const normalized = trimmed.includes(":") ? trimmed.split(":").pop() ?? trimmed : trimmed;
+
+  if (/^FMfc/i.test(normalized)) {
+    throw new Error(
+      "This Gmail browser URL uses a web UI token. Paste the raw Gmail message/thread id instead.",
+    );
+  }
+
   if (!looksLikeGmailId(normalized)) {
     throw new Error("Paste a valid Gmail thread or message id.");
   }

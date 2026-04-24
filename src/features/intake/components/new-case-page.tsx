@@ -431,15 +431,21 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
                 <form className="space-y-3" onSubmit={importFromGmail}>
                   <label className="block">
                     <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-gray-500">
-                      Gmail URL or ID
+                      Gmail ID or Link
                     </span>
                     <input
                       value={gmailUrlOrId}
                       onChange={(event) => setGmailUrlOrId(event.target.value)}
-                      placeholder="https://mail.google.com/... or Gmail id"
+                      placeholder="Raw Gmail thread/message id or supported link"
                       className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-black focus:ring-1 focus:ring-black"
                     />
                   </label>
+
+                  <div className="text-[11px] leading-relaxed text-gray-500">
+                    Best reliability: paste the raw Gmail thread/message id. Some browser URLs like
+                    <span className="mx-1 font-mono text-[10px] text-gray-400">#inbox/FMfc...</span>
+                    are not importable.
+                  </div>
 
                   {gmailError ? <div className="text-xs text-red-600">{gmailError}</div> : null}
 

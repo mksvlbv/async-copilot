@@ -548,7 +548,7 @@ function buildGoldenAssertions({
     },
     {
       key: "urgency",
-      label: "Golden urgency matched",
+      label: "Golden urgency metadata aligned",
       passed: urgencyAssertion.passed,
       detail: urgencyAssertion.detail,
     },
@@ -716,6 +716,6 @@ function describeUrgencyAssertion(
 
   return {
     passed: runUrgency === expectedUrgency,
-    detail: `Expected ${expectedUrgency} and exported ${runUrgency ?? "unavailable"}`,
+    detail: `Configured golden urgency is ${expectedUrgency} and exported run metadata is ${runUrgency ?? "unavailable"}`,
   };
 }

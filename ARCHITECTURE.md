@@ -1,7 +1,7 @@
 # Architecture — Async Copilot
 
-> AI-powered customer support triage system. Real LLM inference (Llama 3.3 70B via Groq),
-> server-owned state machine, SSE streaming, and production-grade observability.
+> AI-powered support and ops triage workspace with auth, workspaces, narrow Gmail intake,
+> approval-gated Slack dispatch, and reviewer-facing trust evidence.
 
 ## System Overview
 
@@ -23,13 +23,13 @@
 
 This is the shortest accurate way to understand the system:
 
-1. Operator creates a case from a seeded scenario or pasted ticket.
+1. Operator creates or imports a case from a seeded scenario, pasted ticket, or narrow Gmail intake.
 2. The server creates a run and advances a 6-stage workflow.
 3. The UI receives either streamed LLM output or polling-based fallback output.
-4. The server persists a response pack with recommendation, citations, and staged actions.
-5. A human approval step is required before the Slack integration boundary is crossed.
-6. Slack dispatch can run in `dry_run` or live mode, and its status is written back to the response pack.
-7. The pack remains exportable as markdown/text/json for handoff.
+4. The server persists a response pack with recommendation, citations, staged actions, and reviewer-facing evidence.
+5. A human approval step is required before the Slack integration boundary is crossed, and approval history is persisted.
+6. Slack dispatch can run in `dry_run` or live mode, and action status is written back through durable attempt history.
+7. The pack remains exportable as markdown/text/json for handoff, including compact trust evidence.
 
 ## Sequence Diagram
 
@@ -75,8 +75,8 @@ sequenceDiagram
 ```
 src/
 ├── app/
-│   ├── (app)/              # Workspace shell (no auth in current MVP)
-│   │   └── app/            # Workspace: runs, samples, intake
+│   ├── (app)/              # Authenticated workspace shell
+│   │   └── app/            # Onboarding + workspace intake, runs, samples
 │   ├── (marketing)/        # Landing + legal pages
 │   └── api/
 │       ├── cases/          # CRUD for support cases
@@ -97,7 +97,7 @@ src/
 │   │   └── prompts.ts      # 6 stage-specific system prompts
 │   ├── supabase/
 │   │   ├── admin.ts        # Service-role client (bypasses RLS)
-│   │   └── types.ts        # Auto-generated DB types
+│   │   └── types.ts        # Hand-written DB types kept in sync with schema
 │   ├── triage/
 │   │   └── run-model.ts    # State machine logic + synthetic fallback
 │   ├── integrations/
@@ -107,8 +107,8 @@ tests/
 ├── unit/                   # Vitest unit tests for run model + route behavior
 └── golden-path.spec.ts     # Playwright E2E
 supabase/
-├── migrations/             # Postgres schema (001-004)
-└── seeds/                  # Demo data + golden run
+├── migrations/             # Postgres schema + workspace/trust slices (001-011)
+└── seeds/                  # Sample library + golden run
 ```
 
 ## Key Design Decisions
@@ -167,14 +167,35 @@ Both are secured via `CRON_SECRET` header (set automatically by Vercel).
 
 ## Data Model
 
-| Table          | Purpose                                          |
-|----------------|--------------------------------------------------|
-| `samples`      | Pre-built demo scenarios with seeded outputs     |
-| `cases`        | Support tickets (from intake or sample)          |
-| `runs`         | Triage execution instances                       |
-| `run_stages`   | Per-stage state, output, timing                  |
-| `response_packs`| Final AI-generated response, citations, actions |
-| `daily_stats`  | Platform metrics (populated by cron)             |
+Operational core:
+
+| Table | Purpose |
+|---|---|
+| `samples` | Curated scenario library with golden expectations |
+| `cases` | Support cases from intake, samples, or Gmail |
+| `runs` | Triage execution instances with background-execution state |
+| `run_stages` | Per-stage state, output, and timing |
+| `response_packs` | Final response pack with citations and staged actions |
+| `run_events` | Append-only event timeline and stage/runtime provenance |
+| `run_action_attempts` | Durable Slack action attempt history and idempotency trail |
+| `response_pack_approvals` | Durable approval history for the reviewer boundary |
+
+Workspace/auth layer:
+
+| Table | Purpose |
+|---|---|
+| `profiles` | User identity profile rows |
+| `workspaces` | Tenant/workspace records |
+| `workspace_memberships` | Role-aware workspace access |
+
+Gmail source layer:
+
+| Table | Purpose |
+|---|---|
+| `workspace_gmail_accounts` | One Gmail connection per workspace |
+| `gmail_messages` | Durable imported Gmail source-of-truth rows |
+
+Migrations currently span `001_initial_schema.sql` through `011_milestone5_approval_history.sql`.
 
 ## Tech Stack
 

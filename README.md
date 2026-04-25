@@ -100,6 +100,18 @@ What is proven in code, not just described:
 - **Build hygiene:** typecheck, lint, unit tests, production build in CI
 - **Honest fallback:** the app remains usable without a model key
 
+## Trust Evidence Snapshot
+
+The trust/evidence layer stays intentionally narrow, but it now proves reviewer-facing signals without overstating autonomy:
+
+- **Approval history:** every response-pack approval is persisted with actor/time and remains portable in reviewer exports.
+- **Slack approval boundary:** Slack is still the only real outbound action boundary, and it remains approval-gated in staged actions plus action-attempt history.
+- **Prompt/version provenance:** newly completed stages persist prompt/version runtime provenance for reviewer inspection.
+- **Response-pack lineage:** exports summarize when the pack was created and how much of the run executed via AI versus synthetic fallback.
+- **Compact timing/fallback evidence:** reviewer exports include concise timing, fallback, and parse-warning summaries instead of only raw stage blobs.
+- **Golden regression checks:** exports lock stage template, duration template, confidence, timing, approval-gate, and urgency metadata alignment checks for the seeded golden path.
+- **Honest wording:** reviewer-facing evidence is phrased to match what the code actually proves, including metadata alignment versus stronger runtime claims.
+
 ---
 
 ## Demo Walkthrough

@@ -427,7 +427,7 @@ describe("GET /api/runs/[runId]/export", () => {
           {
             key: "urgency",
             passed: true,
-            detail: "Expected high and exported high",
+            detail: "Configured golden urgency is high and exported run metadata is high",
           },
           {
             key: "timing_evidence",
@@ -477,7 +477,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[PASS] **Golden stage template matched:** 3/3 stages matched the configured golden template");
     expect(text).toContain("[PASS] **Golden stage duration template matched:** 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] **Golden confidence matched:** Expected 84% and exported 84%");
-    expect(text).toContain("[PASS] **Golden urgency matched:** Expected high and exported high");
+    expect(text).toContain("[PASS] **Golden urgency metadata aligned:** Configured golden urgency is high and exported run metadata is high");
     expect(text).toContain("[PASS] **Slack action remains approval-gated:** Notify escalation channel is still marked as requiring approval");
     expect(text).toContain("- 01 Ingest Case — AI");
     expect(text).toContain("- 02 Normalize Facts — Synthetic fallback");
@@ -505,7 +505,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[PASS] Golden stage template matched: 3/3 stages matched the configured golden template");
     expect(text).toContain("[PASS] Golden stage duration template matched: 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] Golden confidence matched: Expected 84% and exported 84%");
-    expect(text).toContain("[PASS] Golden urgency matched: Expected high and exported high");
+    expect(text).toContain("[PASS] Golden urgency metadata aligned: Configured golden urgency is high and exported run metadata is high");
     expect(text).toContain("[PASS] Slack action remains approval-gated: Notify escalation channel is still marked as requiring approval");
   });
 
@@ -594,7 +594,7 @@ describe("GET /api/runs/[runId]/export", () => {
           {
             key: "urgency",
             passed: false,
-            detail: "Expected high and exported medium",
+            detail: "Configured golden urgency is high and exported run metadata is medium",
           },
           {
             key: "timing_evidence",
@@ -628,7 +628,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[FAIL] **Golden stage template matched:** Expected stage 2 classify, recorded normalize");
     expect(text).toContain("[FAIL] **Golden stage duration template matched:** Golden stage duration template could not be verified until the stage template matches (Expected stage 2 classify, recorded normalize)");
     expect(text).toContain("[FAIL] **Golden confidence matched:** Expected 91% and exported 84%");
-    expect(text).toContain("[FAIL] **Golden urgency matched:** Expected high and exported medium");
+    expect(text).toContain("[FAIL] **Golden urgency metadata aligned:** Configured golden urgency is high and exported run metadata is medium");
     expect(text).toContain("[FAIL] **Timing evidence recorded:** No timing summary was present in the exported trust evidence");
     expect(text).toContain("[FAIL] **Slack action remains approval-gated:** Notify escalation channel is no longer marked as requiring approval");
   });
@@ -650,7 +650,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[FAIL] Golden stage template matched: Expected stage 2 classify, recorded normalize");
     expect(text).toContain("[FAIL] Golden stage duration template matched: Golden stage duration template could not be verified until the stage template matches (Expected stage 2 classify, recorded normalize)");
     expect(text).toContain("[FAIL] Golden confidence matched: Expected 91% and exported 84%");
-    expect(text).toContain("[FAIL] Golden urgency matched: Expected high and exported medium");
+    expect(text).toContain("[FAIL] Golden urgency metadata aligned: Configured golden urgency is high and exported run metadata is medium");
     expect(text).toContain("[FAIL] Timing evidence recorded: No timing summary was present in the exported trust evidence");
     expect(text).toContain("[FAIL] Slack action remains approval-gated: Notify escalation channel is no longer marked as requiring approval");
   });

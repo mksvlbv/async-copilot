@@ -236,6 +236,63 @@ function buildReadyExportData() {
   };
 }
 
+function buildFullGoldenDriftData() {
+  const data = buildReadyExportData();
+  data.case.sample = [
+    {
+      slug: "golden-billing-case",
+      name: "Golden Billing Case",
+      is_golden: true,
+      expected_confidence: 91,
+      expected_stages: [
+        { key: "ingest", label: "Ingest Case", duration_ms: 18 },
+        { key: "classify", label: "Classify Issue & Urgency", duration_ms: 42 },
+        { key: "draft", label: "Draft Response Pack", duration_ms: 120 },
+      ],
+    },
+  ];
+  data.stages = data.stages.map((stage) => ({
+    ...stage,
+    started_at: null,
+    completed_at: null,
+  }));
+  data.stages[1].duration_ms = 99;
+  data.response_pack[0].staged_actions = [
+    {
+      label: "Notify escalation channel",
+      intent: "slack.notify",
+      status: "executed",
+      requires_approval: false,
+    },
+  ];
+
+  return data;
+}
+
+function buildDurationOnlyDriftData() {
+  const data = buildReadyExportData();
+  data.stages[1].duration_ms = 99;
+  return data;
+}
+
+function buildNonGoldenExportData() {
+  const data = buildReadyExportData();
+  data.case.sample = [
+    {
+      slug: "non-golden-billing-case",
+      name: "Non-Golden Billing Case",
+      is_golden: false,
+      expected_confidence: 84,
+      expected_stages: [
+        { key: "ingest", label: "Ingest Case", duration_ms: 18 },
+        { key: "normalize", label: "Normalize Facts", duration_ms: 42 },
+        { key: "draft", label: "Draft Response Pack", duration_ms: 120 },
+      ],
+    },
+  ];
+  return data;
+}
+
 describe("GET /api/runs/[runId]/export", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -409,34 +466,7 @@ describe("GET /api/runs/[runId]/export", () => {
   });
 
   it("returns failing golden assertions when the exported run drifts from the configured golden contract", async () => {
-    const data = buildReadyExportData();
-    data.case.sample = [
-      {
-        slug: "golden-billing-case",
-        name: "Golden Billing Case",
-        is_golden: true,
-        expected_confidence: 91,
-        expected_stages: [
-          { key: "ingest", label: "Ingest Case", duration_ms: 18 },
-          { key: "classify", label: "Classify Issue & Urgency", duration_ms: 42 },
-          { key: "draft", label: "Draft Response Pack", duration_ms: 120 },
-        ],
-      },
-    ];
-    data.stages = data.stages.map((stage) => ({
-      ...stage,
-      started_at: null,
-      completed_at: null,
-    }));
-    data.stages[1].duration_ms = 99;
-    data.response_pack[0].staged_actions = [
-      {
-        label: "Notify escalation channel",
-        intent: "slack.notify",
-        status: "executed",
-        requires_approval: false,
-      },
-    ];
+    const data = buildFullGoldenDriftData();
 
     maybeSingle.mockResolvedValue({
       data,
@@ -481,21 +511,50 @@ describe("GET /api/runs/[runId]/export", () => {
     });
   });
 
+  it("returns markdown export with failing golden assertion lines when the configured golden contract drifts", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildFullGoldenDriftData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=markdown");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/markdown");
+
+    const text = await response.text();
+    expect(text).toContain("### Golden trust assertions");
+    expect(text).toContain("[FAIL] **Golden stage template matched:** Expected stage 2 classify, recorded normalize");
+    expect(text).toContain("[FAIL] **Golden stage duration template matched:** Golden stage duration template could not be verified until the stage template matches (Expected stage 2 classify, recorded normalize)");
+    expect(text).toContain("[FAIL] **Golden confidence matched:** Expected 91% and exported 84%");
+    expect(text).toContain("[FAIL] **Timing evidence recorded:** No timing summary was present in the exported trust evidence");
+    expect(text).toContain("[FAIL] **Slack approval boundary preserved:** Notify escalation channel no longer requires approval");
+  });
+
+  it("returns text export with failing golden assertion lines when the configured golden contract drifts", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildFullGoldenDriftData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=text");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+
+    const text = await response.text();
+    expect(text).toContain("Golden trust assertions:");
+    expect(text).toContain("[FAIL] Golden stage template matched: Expected stage 2 classify, recorded normalize");
+    expect(text).toContain("[FAIL] Golden stage duration template matched: Golden stage duration template could not be verified until the stage template matches (Expected stage 2 classify, recorded normalize)");
+    expect(text).toContain("[FAIL] Golden confidence matched: Expected 91% and exported 84%");
+    expect(text).toContain("[FAIL] Timing evidence recorded: No timing summary was present in the exported trust evidence");
+    expect(text).toContain("[FAIL] Slack approval boundary preserved: Notify escalation channel no longer requires approval");
+  });
+
   it("omits golden assertion evidence for non-golden exports", async () => {
-    const data = buildReadyExportData();
-    data.case.sample = [
-      {
-        slug: "non-golden-billing-case",
-        name: "Non-Golden Billing Case",
-        is_golden: false,
-        expected_confidence: 84,
-        expected_stages: [
-          { key: "ingest", label: "Ingest Case", duration_ms: 18 },
-          { key: "normalize", label: "Normalize Facts", duration_ms: 42 },
-          { key: "draft", label: "Draft Response Pack", duration_ms: 120 },
-        ],
-      },
-    ];
+    const data = buildNonGoldenExportData();
     maybeSingle.mockResolvedValue({
       data,
       error: null,
@@ -512,9 +571,44 @@ describe("GET /api/runs/[runId]/export", () => {
     });
   });
 
+  it("omits golden assertion sections in markdown export for non-golden runs", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildNonGoldenExportData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=markdown");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/markdown");
+
+    const text = await response.text();
+    expect(text).toContain("## Trust evidence");
+    expect(text).not.toContain("### Golden trust assertions");
+    expect(text).not.toContain("Golden stage template matched");
+  });
+
+  it("omits golden assertion sections in text export for non-golden runs", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildNonGoldenExportData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=text");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+
+    const text = await response.text();
+    expect(text).toContain("Trust evidence:");
+    expect(text).not.toContain("Golden trust assertions:");
+    expect(text).not.toContain("Golden stage template matched");
+  });
+
   it("returns a failing duration-template assertion when stage timing drifts but the golden stage template still matches", async () => {
-    const data = buildReadyExportData();
-    data.stages[1].duration_ms = 99;
+    const data = buildDurationOnlyDriftData();
 
     maybeSingle.mockResolvedValue({
       data,
@@ -541,5 +635,23 @@ describe("GET /api/runs/[runId]/export", () => {
         ]),
       },
     });
+  });
+
+  it("returns text export with a failing duration-template assertion when stage timing drifts but the golden stage template still matches", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildDurationOnlyDriftData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=text");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+
+    const text = await response.text();
+    expect(text).toContain("Golden trust assertions:");
+    expect(text).toContain("[PASS] Golden stage template matched: 3/3 stages matched the configured golden template");
+    expect(text).toContain("[FAIL] Golden stage duration template matched: Expected stage 2 normalize duration 42ms, recorded 99ms");
   });
 });

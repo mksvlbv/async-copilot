@@ -196,6 +196,17 @@ export type RunActionAttempt = {
   created_at: string;
 };
 
+export type ResponsePackApproval = {
+  id: string;
+  workspace_id: string;
+  run_id: string;
+  response_pack_id: string;
+  actor_user_id: string | null;
+  actor_label: string | null;
+  approved_at: string;
+  created_at: string;
+};
+
 export type ResponsePack = {
   id: string;
   run_id: string;
@@ -232,4 +243,5 @@ export type RunWithDetails = Run & {
   response_pack: ResponsePack | null;
   events: RunEvent[];
   action_attempts: RunActionAttempt[];
+  approval_history: ResponsePackApproval[];
 };

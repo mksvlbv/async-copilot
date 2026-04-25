@@ -29,20 +29,22 @@ export async function GET(
 
   const { data: run, error: runErr } = await admin
     .from("runs")
-    .select(
-      `*,
-       case:cases ( *, gmail_message:gmail_messages ( * ) ),
-       stages:run_stages ( * ),
+     .select(
+       `*,
+        case:cases ( *, gmail_message:gmail_messages ( * ) ),
+        stages:run_stages ( * ),
         response_pack:response_packs ( * ),
-       events:run_events ( * ),
-       action_attempts:run_action_attempts ( * )`,
-    )
+        events:run_events ( * ),
+        action_attempts:run_action_attempts ( * ),
+        approval_history:response_pack_approvals ( * )`,
+     )
     .eq("id", runId)
     .eq("workspace_id", access.run.workspace_id)
-    .order("stage_order", { foreignTable: "run_stages", ascending: true })
-    .order("id", { foreignTable: "run_events", ascending: true })
-    .order("attempted_at", { foreignTable: "run_action_attempts", ascending: false })
-    .maybeSingle();
+     .order("stage_order", { foreignTable: "run_stages", ascending: true })
+     .order("id", { foreignTable: "run_events", ascending: true })
+     .order("attempted_at", { foreignTable: "run_action_attempts", ascending: false })
+     .order("approved_at", { foreignTable: "response_pack_approvals", ascending: false })
+     .maybeSingle();
 
   if (runErr) {
     return NextResponse.json({ error: runErr.message }, { status: 500 });
@@ -68,6 +70,7 @@ export async function GET(
       response_pack: pack,
       events: run.events ?? [],
       action_attempts: run.action_attempts ?? [],
+      approval_history: run.approval_history ?? [],
     },
   });
 }

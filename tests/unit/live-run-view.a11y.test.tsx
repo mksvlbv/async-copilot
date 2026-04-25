@@ -87,11 +87,22 @@ const mockRun = {
     },
   ],
   response_pack: null,
+  events: [],
+  action_attempts: [],
+  approval_history: [],
+  execution_status: "queued",
+  execution_attempts: 0,
+  execution_next_retry_at: null,
+  execution_lease_expires_at: null,
+  execution_claim_token: null,
+  execution_last_error: null,
 };
 
 describe("LiveRunView accessibility", () => {
   it("should have no accessibility violations when rendered", async () => {
-    const { container } = render(<LiveRunView initialRun={mockRun as any} />);
+    const { container } = render(
+      <LiveRunView initialRun={mockRun as any} workspaceSlug="acme-support" currentRole="reviewer" />,
+    );
     const results = await axe(container);
     // @ts-expect-error - vitest/jest-axe type conflict
     expect(results).toHaveNoViolations();
@@ -129,12 +140,24 @@ describe("LiveRunView accessibility", () => {
         escalation_queue: null,
         approved: false,
         approved_at: null,
+        approved_by: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
+      events: [],
+      action_attempts: [],
+      approval_history: [],
+      execution_status: "completed",
+      execution_attempts: 0,
+      execution_next_retry_at: null,
+      execution_lease_expires_at: null,
+      execution_claim_token: null,
+      execution_last_error: null,
     };
 
-    const { container } = render(<LiveRunView initialRun={terminalRun as any} />);
+    const { container } = render(
+      <LiveRunView initialRun={terminalRun as any} workspaceSlug="acme-support" currentRole="reviewer" />,
+    );
     const results = await axe(container);
     // @ts-expect-error - vitest/jest-axe type conflict
     expect(results).toHaveNoViolations();

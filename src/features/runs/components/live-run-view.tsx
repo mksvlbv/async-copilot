@@ -529,6 +529,7 @@ function TimelinePanel({
   aiMode?: "streaming" | "polling" | null;
 }) {
   const stages = [...run.stages].sort((a, b) => a.stage_order - b.stage_order);
+  const events = run.events ?? [];
   const currentOrder = run.advance_cursor + 1;
   const isTerminal =
     run.state === "completed" ||
@@ -652,18 +653,18 @@ function TimelinePanel({
             </ol>
           </div>
 
-          {run.events.length > 0 ? (
+          {events.length > 0 ? (
             <div className="mt-10 ml-12 border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                 <div className="text-[10px] font-mono font-semibold uppercase tracking-widest text-gray-500">
                   Event Timeline
                 </div>
                 <div className="text-[10px] font-mono text-gray-400">
-                  {run.events.length} events
+                  {events.length} events
                 </div>
               </div>
               <div className="divide-y divide-gray-100">
-                {run.events.map((eventItem) => (
+                {events.map((eventItem) => (
                   <div key={eventItem.id} className="px-4 py-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="text-xs font-semibold text-gray-900">
@@ -793,6 +794,8 @@ function ResponsePackPanel({
   const building = !isTerminal || !pack;
   const escalation = pack ? pack.confidence < 70 : run.confidence != null && run.confidence < 70;
   const slackAction = pack?.staged_actions.find((action) => action.intent === SLACK_ACTION_INTENT) ?? null;
+  const approvalHistory = run.approval_history ?? [];
+  const actionAttempts = run.action_attempts ?? [];
   const canApprove = currentRole === "admin" || currentRole === "reviewer";
   const actionRetryable = approved && slackAction?.status === "failed" && canApprove;
   const primaryDisabled = !pack || approving || !canApprove || (approved && !actionRetryable);
@@ -1020,18 +1023,54 @@ function ResponsePackPanel({
           </div>
         )}
 
-        {run.action_attempts.length > 0 && (
+        {approvalHistory.length > 0 && (
+          <div className="border border-gray-200 rounded-md bg-white overflow-hidden">
+            <div className="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold">
+                Approval History
+              </span>
+              <span className="text-[10px] font-mono text-gray-400">
+                {approvalHistory.length} record{approvalHistory.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="p-3 space-y-2">
+              {approvalHistory.slice(0, 4).map((approval) => (
+                <div
+                  key={approval.id}
+                  className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-mono text-gray-500">
+                      {formatApprovalActor(approval)}
+                    </span>
+                    <span className="shrink-0 rounded border border-green-200 bg-green-50 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-green-700">
+                      Approved
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-600 leading-relaxed">
+                    Response pack crossed the reviewer approval boundary.
+                  </div>
+                  <div className="mt-1 text-[10px] text-gray-400 font-mono">
+                    {formatAttempt(approval.approved_at)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {actionAttempts.length > 0 && (
           <div className="border border-gray-200 rounded-md bg-white overflow-hidden">
             <div className="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between">
               <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold">
                 Action Log
               </span>
               <span className="text-[10px] font-mono text-gray-400">
-                {run.action_attempts.length} attempt{run.action_attempts.length === 1 ? "" : "s"}
+                {actionAttempts.length} attempt{actionAttempts.length === 1 ? "" : "s"}
               </span>
             </div>
             <div className="p-3 space-y-2">
-              {run.action_attempts.slice(0, 4).map((attempt) => (
+              {actionAttempts.slice(0, 4).map((attempt) => (
                 <div
                   key={attempt.id}
                   className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2"
@@ -1366,4 +1405,12 @@ function formatEventSummary(payload: Record<string, unknown>) {
     .slice(0, 2)
     .map(([key, value]) => `${key}=${renderValue(value)}`)
     .join(" · ");
+}
+
+function formatApprovalActor(approval: RunWithDetails["approval_history"][number]) {
+  if (approval.actor_label && approval.actor_label.length > 0) {
+    return approval.actor_label;
+  }
+
+  return approval.actor_user_id ? "Workspace reviewer" : "Historical approval";
 }

@@ -9,6 +9,8 @@ const runMaybeSingle = vi.fn();
 const workspaceMaybeSingle = vi.fn();
 const responsePackUpdateSingle = vi.fn();
 const responsePackUpdate = vi.fn();
+const responsePackApprovalsMaybeSingle = vi.fn();
+const responsePackApprovalsUpsert = vi.fn();
 const runEventsInsert = vi.fn();
 const runActionAttemptMaybeSingle = vi.fn();
 const runActionAttemptInsert = vi.fn();
@@ -24,15 +26,21 @@ vi.mock("@/lib/auth/workspace", () => ({
 
 vi.mock("@/lib/integrations/slack", () => ({
   SLACK_ACTION_INTENT: "slack.notify",
-  ensureSlackDispatchAction: (actions: Array<Record<string, unknown>>) => [
-    ...actions,
-    {
-      label: "Send approved run summary to Slack",
-      intent: "slack.notify",
-      status: "queued",
-      requires_approval: true,
-    },
-  ],
+  ensureSlackDispatchAction: (actions: Array<Record<string, unknown>>) => {
+    if (actions.some((action) => action.intent === "slack.notify")) {
+      return actions;
+    }
+
+    return [
+      ...actions,
+      {
+        label: "Send approved run summary to Slack",
+        intent: "slack.notify",
+        status: "queued",
+        requires_approval: true,
+      },
+    ];
+  },
   dispatchApprovedRunToSlack,
 }));
 
@@ -86,6 +94,17 @@ vi.mock("@/lib/supabase/admin", () => ({
         };
       }
 
+      if (table === "response_pack_approvals") {
+        return {
+          upsert: (payload: Record<string, unknown>, options: Record<string, unknown>) => {
+            responsePackApprovalsUpsert(payload, options);
+            return {
+              select: () => ({ maybeSingle: responsePackApprovalsMaybeSingle }),
+            };
+          },
+        };
+      }
+
       if (table === "run_action_attempts") {
         return {
           select: () => ({
@@ -119,6 +138,13 @@ import { POST } from "@/app/api/runs/[runId]/approve/route";
 describe("POST /api/runs/[runId]/approve", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    responsePackApprovalsMaybeSingle.mockResolvedValue({
+      data: {
+        id: "approval_123",
+        response_pack_id: "pack_123",
+      },
+      error: null,
+    });
     runActionAttemptMaybeSingle.mockResolvedValue({ data: null, error: null });
     runActionAttemptInsert.mockResolvedValue({ error: null });
     runActionAttemptUpdateEqStatus.mockResolvedValue({ error: null });
@@ -228,6 +254,16 @@ describe("POST /api/runs/[runId]/approve", () => {
       }),
     );
     expect(runEventsInsert).toHaveBeenCalledOnce();
+    expect(responsePackApprovalsUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        response_pack_id: "pack_123",
+        actor_user_id: "user_123",
+        actor_label: "reviewer@example.com",
+      }),
+      expect.objectContaining({
+        onConflict: "response_pack_id",
+      }),
+    );
     expect(runActionAttemptInsert).toHaveBeenCalledOnce();
     expect(runActionAttemptUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -312,8 +348,104 @@ describe("POST /api/runs/[runId]/approve", () => {
 
     expect(response.status).toBe(200);
     expect(dispatchApprovedRunToSlack).not.toHaveBeenCalled();
+    expect(responsePackApprovalsUpsert).not.toHaveBeenCalled();
     expect(runActionAttemptInsert).not.toHaveBeenCalled();
     expect(body.already_approved).toBe(true);
+    expect(body.dispatch.status).toBe("dry_run");
+  });
+
+  it("retries failed Slack dispatch without duplicating approval history", async () => {
+    responsePackMaybeSingle.mockResolvedValue({
+      data: {
+        id: "pack_123",
+        run_id: "run_123",
+        confidence: 61,
+        recommendation: "Escalate with context",
+        escalation_queue: "Tier-2-General",
+        approved: true,
+        approved_at: "2026-04-20T01:00:00.000Z",
+        approved_by: "user_123",
+        staged_actions: [
+          {
+            label: "Send approved run summary to Slack",
+            intent: "slack.notify",
+            status: "failed",
+            requires_approval: true,
+            detail: "Slack webhook returned 500.",
+            target: "Slack webhook",
+          },
+        ],
+      },
+      error: null,
+    });
+    runMaybeSingle.mockResolvedValue({
+      data: {
+        id: "run_123",
+        state: "escalated",
+        confidence: 61,
+        urgency: "high",
+        case: { case_ref: "CASE-123", title: "Payment dispute" },
+      },
+      error: null,
+    });
+    runActionAttemptMaybeSingle.mockResolvedValueOnce({
+      data: {
+        id: "attempt_123",
+        workspace_id: "ws_123",
+        run_id: "run_123",
+        response_pack_id: "pack_123",
+        action_intent: "slack.notify",
+        action_label: "Send approved run summary to Slack",
+        attempt_no: 1,
+        status: "failed",
+        target: "Slack webhook",
+        detail: "Slack webhook returned 500.",
+        idempotency_key: "run_123:slack.notify:1",
+        actor_user_id: "user_123",
+        attempted_at: "2026-04-20T01:05:00.000Z",
+        created_at: "2026-04-20T01:05:00.000Z",
+      },
+      error: null,
+    });
+    dispatchApprovedRunToSlack.mockResolvedValue({
+      ok: true,
+      status: "dry_run",
+      detail: "Slack dispatch simulated in dry-run mode.",
+      target: "Slack webhook (dry-run)",
+      last_attempt_at: "2026-04-20T01:10:00.000Z",
+    });
+    workspaceMaybeSingle.mockResolvedValue({
+      data: { slug: "acme-support" },
+      error: null,
+    });
+    responsePackUpdateSingle.mockResolvedValueOnce({
+      data: {
+        id: "pack_123",
+        approved: true,
+        staged_actions: [
+          {
+            label: "Send approved run summary to Slack",
+            intent: "slack.notify",
+            status: "dry_run",
+            requires_approval: true,
+            target: "Slack webhook (dry-run)",
+          },
+        ],
+      },
+      error: null,
+    });
+
+    const response = await POST(
+      new Request("https://async-copilot.vercel.app/api/runs/run_123/approve"),
+      { params: Promise.resolve({ runId: "run_123" }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(dispatchApprovedRunToSlack).toHaveBeenCalledOnce();
+    expect(responsePackApprovalsUpsert).not.toHaveBeenCalled();
+    expect(runActionAttemptInsert).toHaveBeenCalledOnce();
+    expect(body.retried).toBe(true);
     expect(body.dispatch.status).toBe("dry_run");
   });
 });

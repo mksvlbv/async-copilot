@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { getRunAccess, getSessionUser } from "@/lib/auth/workspace";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { appendRunEvent, userActorPayload } from "@/lib/runs/events";
-import type { ResponsePack, RunActionAttempt, StagedAction } from "@/lib/supabase/types";
+import type {
+  ResponsePack,
+  ResponsePackApproval,
+  RunActionAttempt,
+  StagedAction,
+} from "@/lib/supabase/types";
 import {
   dispatchApprovedRunToSlack,
   ensureSlackDispatchAction,
@@ -126,6 +131,19 @@ export async function POST(
     }
 
     currentPack = approvedPack;
+
+    const approvalHistory = await persistApprovalHistory(admin, {
+      workspaceId: run.workspace_id,
+      runId,
+      responsePackId: currentPack.id,
+      actorUserId: user.id,
+      actorLabel: user.email ?? null,
+      approvedAt,
+    });
+
+    if (!approvalHistory) {
+      return NextResponse.json({ error: "Failed to persist approval history" }, { status: 500 });
+    }
 
     await appendRunEvent(admin, {
       workspace_id: run.workspace_id,
@@ -313,6 +331,42 @@ async function loadLatestSlackAttempt(
   }
 
   return data as RunActionAttempt;
+}
+
+async function persistApprovalHistory(
+  admin: ReturnType<typeof createAdminClient>,
+  approval: {
+    workspaceId: string;
+    runId: string;
+    responsePackId: string;
+    actorUserId: string | null;
+    actorLabel: string | null;
+    approvedAt: string;
+  },
+) {
+  const { data, error } = await admin
+    .from("response_pack_approvals")
+    .upsert(
+      {
+        workspace_id: approval.workspaceId,
+        run_id: approval.runId,
+        response_pack_id: approval.responsePackId,
+        actor_user_id: approval.actorUserId,
+        actor_label: approval.actorLabel,
+        approved_at: approval.approvedAt,
+      },
+      {
+        onConflict: "response_pack_id",
+      },
+    )
+    .select()
+    .maybeSingle();
+
+  if (error || !data) {
+    return null as ResponsePackApproval | null;
+  }
+
+  return data as ResponsePackApproval;
 }
 
 async function persistActionSnapshot(

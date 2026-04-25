@@ -27,15 +27,17 @@ export default async function WorkspaceRunDetailPage({
       `*,
        case:cases ( *, gmail_message:gmail_messages ( * ) ),
        stages:run_stages ( * ),
-        response_pack:response_packs ( * ),
+       response_pack:response_packs ( * ),
        events:run_events ( * ),
-       action_attempts:run_action_attempts ( * )`,
+       action_attempts:run_action_attempts ( * ),
+       approval_history:response_pack_approvals ( * )`,
     )
     .eq("id", runId)
     .eq("workspace_id", access.workspace.id)
     .order("stage_order", { foreignTable: "run_stages", ascending: true })
     .order("id", { foreignTable: "run_events", ascending: true })
     .order("attempted_at", { foreignTable: "run_action_attempts", ascending: false })
+    .order("approved_at", { foreignTable: "response_pack_approvals", ascending: false })
     .maybeSingle();
 
   if (error) {
@@ -75,6 +77,7 @@ export default async function WorkspaceRunDetailPage({
     response_pack: pack,
     events: data.events ?? [],
     action_attempts: data.action_attempts ?? [],
+    approval_history: data.approval_history ?? [],
   };
 
   return (

@@ -198,7 +198,7 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 
 ## Data model
 
-The repo now combines the original run engine tables with the Milestone 3 workspace/auth foundation and a narrow Gmail source layer.
+The repo now combines the original run engine tables with the Milestone 3 workspace/auth foundation, the Milestone 4 Gmail/background execution layer, and a narrow Milestone 5 trust-history layer.
 
 Operational core:
 
@@ -208,6 +208,8 @@ Operational core:
 - `run_stages` — 6 stages per run with `output` JSON blobs + `duration_ms`
 - `response_packs` — final artifact (confidence, recommendation, summary, draft reply, citations, staged actions)
 - `run_events` — append-only reviewer timeline and audit trail for material state transitions
+- `run_action_attempts` — durable outbound action attempt log for Slack delivery and retries
+- `response_pack_approvals` — durable approval-history rows for the reviewer boundary
 
 Workspace/auth layer:
 
@@ -220,7 +222,7 @@ Gmail source layer:
 - `workspace_gmail_accounts` — one shared Gmail connection per workspace
 - `gmail_messages` — durable imported Gmail source-of-truth rows
 
-Schema: `supabase/migrations/001_initial_schema.sql` through `007_milestone4_gmail_foundation.sql`
+Schema: `supabase/migrations/001_initial_schema.sql` through `011_milestone5_approval_history.sql`
 Seeds: `supabase/seeds/001_samples.sql` + `002_golden_run.sql`
 
 ---

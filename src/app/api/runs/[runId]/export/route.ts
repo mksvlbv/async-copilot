@@ -51,7 +51,7 @@ export async function GET(
           customer_name,
           customer_account,
           customer_plan,
-          sample:samples ( slug, name, is_golden, expected_confidence, expected_stages )
+          sample:samples ( slug, name, urgency, is_golden, expected_confidence, expected_stages )
         ),
         stages:run_stages ( * ),
         events:run_events ( * ),
@@ -124,6 +124,7 @@ export async function GET(
   });
   const goldenAssertions = buildGoldenAssertions({
     sample,
+    runUrgency: data.urgency,
     stages,
     pack,
     packLineage,
@@ -453,7 +454,7 @@ function formatAttempt(value: string) {
 
 type GoldenSample = Pick<
   Sample,
-  "slug" | "name" | "is_golden" | "expected_confidence" | "expected_stages"
+  "slug" | "name" | "urgency" | "is_golden" | "expected_confidence" | "expected_stages"
 >;
 
 type GoldenAssertion = {
@@ -461,6 +462,7 @@ type GoldenAssertion = {
     | "stage_template"
     | "stage_duration_profile"
     | "confidence"
+    | "urgency"
     | "timing_evidence"
     | "slack_approval_boundary";
   label: string;
@@ -472,11 +474,13 @@ type GoldenAssertionResult = Pick<GoldenAssertion, "passed" | "detail">;
 
 function buildGoldenAssertions({
   sample,
+  runUrgency,
   stages,
   pack,
   packLineage,
 }: {
   sample: GoldenSample | null;
+  runUrgency: ExportPayload["run"]["urgency"];
   stages: Array<Pick<RunStage, "stage_order" | "stage_key" | "stage_label" | "duration_ms" | "state">>;
   pack: ExportPayload["pack"];
   packLineage: ResponsePackLineage | null;
@@ -491,6 +495,7 @@ function buildGoldenAssertions({
   const expectedConfidence = sample.expected_confidence;
   const confidenceMatched =
     typeof expectedConfidence === "number" && pack.confidence === expectedConfidence;
+  const urgencyAssertion = describeUrgencyAssertion(sample.urgency, runUrgency);
   const completedStages = [...stages]
     .filter((stage) => stage.state === "completed")
     .sort((left, right) => left.stage_order - right.stage_order);
@@ -525,6 +530,12 @@ function buildGoldenAssertions({
         typeof expectedConfidence === "number"
           ? `Expected ${expectedConfidence}% and exported ${pack.confidence}%`
           : "Golden sample has no expected confidence configured",
+    },
+    {
+      key: "urgency",
+      label: "Golden urgency matched",
+      passed: urgencyAssertion.passed,
+      detail: urgencyAssertion.detail,
     },
     {
       key: "timing_evidence",
@@ -674,5 +685,22 @@ function describeStageDurationProfileAssertion(
   return {
     passed: false,
     detail: `Expected stage ${mismatchIndex + 1} ${expectedStage.key} duration ${expectedStage.duration_ms}ms, recorded ${actualStage.duration_ms == null ? "null" : `${actualStage.duration_ms}ms`}`,
+  };
+}
+
+function describeUrgencyAssertion(
+  expectedUrgency: GoldenSample["urgency"] | null | undefined,
+  runUrgency: ExportPayload["run"]["urgency"],
+): GoldenAssertionResult {
+  if (!expectedUrgency) {
+    return {
+      passed: false,
+      detail: "Golden sample has no expected urgency configured",
+    };
+  }
+
+  return {
+    passed: runUrgency === expectedUrgency,
+    detail: `Expected ${expectedUrgency} and exported ${runUrgency ?? "unavailable"}`,
   };
 }

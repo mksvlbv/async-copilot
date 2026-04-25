@@ -41,6 +41,7 @@ function buildReadyExportData() {
         {
           slug: "golden-billing-case",
           name: "Golden Billing Case",
+          urgency: "high",
           is_golden: true,
           expected_confidence: 84,
           expected_stages: [
@@ -242,6 +243,7 @@ function buildFullGoldenDriftData() {
     {
       slug: "golden-billing-case",
       name: "Golden Billing Case",
+      urgency: "high",
       is_golden: true,
       expected_confidence: 91,
       expected_stages: [
@@ -257,6 +259,7 @@ function buildFullGoldenDriftData() {
     completed_at: null,
   }));
   data.stages[1].duration_ms = 99;
+  data.urgency = "medium";
   data.response_pack[0].staged_actions = [
     {
       label: "Notify escalation channel",
@@ -281,6 +284,7 @@ function buildNonGoldenExportData() {
     {
       slug: "non-golden-billing-case",
       name: "Non-Golden Billing Case",
+      urgency: "high",
       is_golden: false,
       expected_confidence: 84,
       expected_stages: [
@@ -388,6 +392,11 @@ describe("GET /api/runs/[runId]/export", () => {
             detail: "Expected 84% and exported 84%",
           },
           {
+            key: "urgency",
+            passed: true,
+            detail: "Expected high and exported high",
+          },
+          {
             key: "timing_evidence",
             passed: true,
             detail: "4.5s active stage time · slowest Draft Response Pack (2.5s)",
@@ -435,6 +444,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[PASS] **Golden stage template matched:** 3/3 stages matched the configured golden template");
     expect(text).toContain("[PASS] **Golden stage duration template matched:** 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] **Golden confidence matched:** Expected 84% and exported 84%");
+    expect(text).toContain("[PASS] **Golden urgency matched:** Expected high and exported high");
     expect(text).toContain("[PASS] **Slack approval boundary preserved:** Notify escalation channel remains approval-gated");
     expect(text).toContain("- 01 Ingest Case — AI");
     expect(text).toContain("- 02 Normalize Facts — Synthetic fallback");
@@ -462,6 +472,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[PASS] Golden stage template matched: 3/3 stages matched the configured golden template");
     expect(text).toContain("[PASS] Golden stage duration template matched: 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] Golden confidence matched: Expected 84% and exported 84%");
+    expect(text).toContain("[PASS] Golden urgency matched: Expected high and exported high");
     expect(text).toContain("[PASS] Slack approval boundary preserved: Notify escalation channel remains approval-gated");
   });
 
@@ -497,6 +508,11 @@ describe("GET /api/runs/[runId]/export", () => {
             detail: "Expected 91% and exported 84%",
           },
           {
+            key: "urgency",
+            passed: false,
+            detail: "Expected high and exported medium",
+          },
+          {
             key: "timing_evidence",
             passed: false,
             detail: "No timing summary was present in the exported trust evidence",
@@ -528,6 +544,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[FAIL] **Golden stage template matched:** Expected stage 2 classify, recorded normalize");
     expect(text).toContain("[FAIL] **Golden stage duration template matched:** Golden stage duration template could not be verified until the stage template matches (Expected stage 2 classify, recorded normalize)");
     expect(text).toContain("[FAIL] **Golden confidence matched:** Expected 91% and exported 84%");
+    expect(text).toContain("[FAIL] **Golden urgency matched:** Expected high and exported medium");
     expect(text).toContain("[FAIL] **Timing evidence recorded:** No timing summary was present in the exported trust evidence");
     expect(text).toContain("[FAIL] **Slack approval boundary preserved:** Notify escalation channel no longer requires approval");
   });
@@ -549,6 +566,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[FAIL] Golden stage template matched: Expected stage 2 classify, recorded normalize");
     expect(text).toContain("[FAIL] Golden stage duration template matched: Golden stage duration template could not be verified until the stage template matches (Expected stage 2 classify, recorded normalize)");
     expect(text).toContain("[FAIL] Golden confidence matched: Expected 91% and exported 84%");
+    expect(text).toContain("[FAIL] Golden urgency matched: Expected high and exported medium");
     expect(text).toContain("[FAIL] Timing evidence recorded: No timing summary was present in the exported trust evidence");
     expect(text).toContain("[FAIL] Slack approval boundary preserved: Notify escalation channel no longer requires approval");
   });
@@ -635,6 +653,24 @@ describe("GET /api/runs/[runId]/export", () => {
         ]),
       },
     });
+  });
+
+  it("returns markdown export with a failing duration-template assertion when stage timing drifts but the golden stage template still matches", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildDurationOnlyDriftData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=markdown");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/markdown");
+
+    const text = await response.text();
+    expect(text).toContain("### Golden trust assertions");
+    expect(text).toContain("[PASS] **Golden stage template matched:** 3/3 stages matched the configured golden template");
+    expect(text).toContain("[FAIL] **Golden stage duration template matched:** Expected stage 2 normalize duration 42ms, recorded 99ms");
   });
 
   it("returns text export with a failing duration-template assertion when stage timing drifts but the golden stage template still matches", async () => {

@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/process-runs",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/cleanup-stale",
       "schedule": "0 5 * * *"
     },

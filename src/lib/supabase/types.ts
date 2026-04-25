@@ -11,6 +11,12 @@ export type RunState =
   | "completed"
   | "escalated"
   | "failed";
+export type RunExecutionStatus =
+  | "queued"
+  | "running"
+  | "retrying"
+  | "completed"
+  | "failed";
 export type StageState = "pending" | "running" | "completed" | "failed";
 export type CaseSource = "intake" | "sample" | "gmail";
 export type WorkspaceRole = "admin" | "reviewer" | "operator";
@@ -131,6 +137,12 @@ export type Run = {
   last_advanced_at: string | null;
   advance_cursor: number;
   total_stages: number;
+  execution_status: RunExecutionStatus;
+  execution_attempts: number;
+  execution_next_retry_at: string | null;
+  execution_lease_expires_at: string | null;
+  execution_claim_token: string | null;
+  execution_last_error: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -164,6 +176,24 @@ export type StagedAction = {
   detail?: string | null;
   target?: string | null;
   last_attempt_at?: string | null;
+  attempt_count?: number | null;
+};
+
+export type RunActionAttempt = {
+  id: string;
+  workspace_id: string;
+  run_id: string;
+  response_pack_id: string;
+  action_intent: string;
+  action_label: string;
+  attempt_no: number;
+  status: "pending" | Extract<StagedAction["status"], "executed" | "dry_run" | "failed">;
+  target: string | null;
+  detail: string | null;
+  idempotency_key: string;
+  actor_user_id: string | null;
+  attempted_at: string;
+  created_at: string;
 };
 
 export type ResponsePack = {
@@ -201,4 +231,5 @@ export type RunWithDetails = Run & {
   stages: RunStage[];
   response_pack: ResponsePack | null;
   events: RunEvent[];
+  action_attempts: RunActionAttempt[];
 };

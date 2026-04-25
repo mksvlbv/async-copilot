@@ -4,12 +4,12 @@
  * Live Triage Run — signature screen.
  * 3-column lockup: Case Context | Visible Triage | Response Pack.
  *
- * Streaming (preferred):
- *   - SSE via GET /api/runs/[id]/stream — real Llama 3.3 tokens in real-time.
- *   - Each stage streams token-by-token like ChatGPT.
+ * Background execution (preferred):
+ *   - Run creation queues server-owned execution immediately.
+ *   - The client observes progress by polling run detail state.
  *
  * Polling (fallback):
- *   - If SSE is unavailable → falls back to POST /advance polling.
+ *   - If background execution is idle, POST /advance can still execute one step.
  *   - Refreshing the page re-reads server state (no client-only run memory).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -189,7 +189,13 @@ export function LiveRunView({ initialRun, workspaceSlug, currentRole }: Props) {
 
       setPolling(true);
       try {
-        await fetch(`/api/runs/${run.id}/advance`, { method: "POST" });
+        const observeOnly =
+          run.execution_status === "running" ||
+          run.execution_status === "retrying";
+
+        if (!observeOnly) {
+          await fetch(`/api/runs/${run.id}/advance`, { method: "POST" });
+        }
         const r = await fetch(`/api/runs/${run.id}`, { cache: "no-store" });
         if (!r.ok) throw new Error(LIVE_UPDATE_ERROR);
         const data = (await r.json()) as { run: RunWithDetails };
@@ -208,7 +214,7 @@ export function LiveRunView({ initialRun, workspaceSlug, currentRole }: Props) {
       clearTimeout(handle);
       aborted.current = true;
     };
-  }, [aiMode, run.id, run.state, run.advance_cursor, paused]);
+  }, [aiMode, run.id, run.state, run.advance_cursor, run.execution_status, paused]);
 
   return (
     <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
@@ -229,6 +235,7 @@ export function LiveRunView({ initialRun, workspaceSlug, currentRole }: Props) {
         run={run}
         workspaceSlug={workspaceSlug}
         currentRole={currentRole}
+        refreshRun={refreshRun}
         isTerminal={isTerminal}
         paused={paused}
         setPaused={setPaused}
@@ -759,6 +766,7 @@ function ResponsePackPanel({
   run,
   workspaceSlug,
   currentRole,
+  refreshRun,
   isTerminal,
   paused,
   setPaused,
@@ -766,6 +774,7 @@ function ResponsePackPanel({
   run: RunWithDetails;
   workspaceSlug: string;
   currentRole: WorkspaceRole;
+  refreshRun: () => Promise<void>;
   isTerminal: boolean;
   paused: boolean;
   setPaused: React.Dispatch<React.SetStateAction<boolean>>;
@@ -785,15 +794,18 @@ function ResponsePackPanel({
   const escalation = pack ? pack.confidence < 70 : run.confidence != null && run.confidence < 70;
   const slackAction = pack?.staged_actions.find((action) => action.intent === SLACK_ACTION_INTENT) ?? null;
   const canApprove = currentRole === "admin" || currentRole === "reviewer";
+  const actionRetryable = approved && slackAction?.status === "failed" && canApprove;
+  const primaryDisabled = !pack || approving || !canApprove || (approved && !actionRetryable);
 
   async function approve() {
-    if (approving || approved || !canApprove) return;
+    if (approving || primaryDisabled) return;
     setApproving(true);
     try {
       const r = await fetch(`/api/runs/${run.id}/approve`, { method: "POST" });
       if (r.ok) {
         const data = (await r.json()) as { response_pack?: RunWithDetails["response_pack"] };
         if (data.response_pack) setPackState(data.response_pack);
+        await refreshRun();
       }
     } finally {
       setApproving(false);
@@ -1008,6 +1020,59 @@ function ResponsePackPanel({
           </div>
         )}
 
+        {run.action_attempts.length > 0 && (
+          <div className="border border-gray-200 rounded-md bg-white overflow-hidden">
+            <div className="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold">
+                Action Log
+              </span>
+              <span className="text-[10px] font-mono text-gray-400">
+                {run.action_attempts.length} attempt{run.action_attempts.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="p-3 space-y-2">
+              {run.action_attempts.slice(0, 4).map((attempt) => (
+                <div
+                  key={attempt.id}
+                  className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-mono text-gray-500">
+                      Attempt #{attempt.attempt_no}
+                    </span>
+                    <span
+                      className={clsx(
+                        "shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest",
+                        actionStatusTone(attempt.status).badge,
+                      )}
+                    >
+                      {attempt.status.replace("_", " ")}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-700 leading-relaxed">
+                    {attempt.action_label}
+                  </div>
+                  {attempt.detail ? (
+                    <div className="mt-1 text-[10px] text-gray-500 leading-relaxed">
+                      {attempt.detail}
+                    </div>
+                  ) : null}
+                  <div className="mt-1 text-[10px] text-gray-400 font-mono">
+                    {formatAttempt(attempt.attempted_at)}
+                    {attempt.target ? ` · ${attempt.target}` : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {run.execution_status === "retrying" && run.execution_last_error ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 leading-relaxed">
+            Background execution retry scheduled. {run.execution_last_error}
+          </div>
+        ) : null}
+
         {!canApprove && pack ? (
           <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 leading-relaxed">
             Reviewer approval required. Operators can inspect the response pack and timeline, but only reviewers and admins can cross the outbound approval boundary.
@@ -1021,12 +1086,14 @@ function ResponsePackPanel({
         <button
           type="button"
           onClick={approve}
-          disabled={!pack || approving || approved}
+          disabled={primaryDisabled}
           className={clsx(
             "w-full text-sm font-medium py-2.5 rounded-md shadow-sm flex items-center justify-center gap-2 transition-colors",
-            !pack || approving || !canApprove
+            primaryDisabled
               ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-              : approved
+              : actionRetryable
+                ? "bg-amber-600 hover:bg-amber-700 text-white"
+                : approved
                 ? "bg-green-600 text-white"
                 : escalation
                   ? "bg-red-600 hover:bg-red-700 text-white"
@@ -1040,6 +1107,10 @@ function ResponsePackPanel({
           ) : !canApprove ? (
             <>
               <Clock size={14} /> Reviewer approval required
+            </>
+          ) : actionRetryable ? (
+            <>
+              <ArrowsClockwise size={14} /> Retry Slack Dispatch
             </>
           ) : approved ? (
             <>
@@ -1189,7 +1260,7 @@ function stagedActionsStatusLabel(
     case "dry_run":
       return "Slack dry-run";
     case "failed":
-      return "Slack dispatch failed";
+      return "Slack failed — retry available";
     default:
       return "queued for execution";
   }

@@ -78,4 +78,29 @@ describe("slack integration helpers", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(result.status).toBe("executed");
   });
+
+  it("retries transient 5xx webhook responses", async () => {
+    process.env.SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/T000/B000/demo";
+    process.env.SLACK_WEBHOOK_DRY_RUN = "false";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, text: vi.fn(async () => "temporarily unavailable") })
+      .mockResolvedValueOnce({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await dispatchApprovedRunToSlack({
+      runId: "run_123",
+      runState: "completed",
+      confidence: 92,
+      urgency: "medium",
+      caseRef: "CASE-123",
+      caseTitle: "Payment dispute",
+      recommendation: "Send the approved reply",
+      escalationQueue: null,
+      runUrl: "https://async-copilot.vercel.app/app/runs/run_123",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.status).toBe("executed");
+  });
 });

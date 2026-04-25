@@ -10,6 +10,10 @@ const workspaceMaybeSingle = vi.fn();
 const responsePackUpdateSingle = vi.fn();
 const responsePackUpdate = vi.fn();
 const runEventsInsert = vi.fn();
+const runActionAttemptMaybeSingle = vi.fn();
+const runActionAttemptInsert = vi.fn();
+const runActionAttemptUpdate = vi.fn();
+const runActionAttemptUpdateEqStatus = vi.fn();
 
 vi.mock("@/lib/auth/workspace", () => ({
   getSessionUser: vi.fn(async () => ({ id: "user_123", email: "reviewer@example.com" })),
@@ -44,7 +48,16 @@ vi.mock("@/lib/supabase/admin", () => ({
             responsePackUpdate(payload);
             return {
               eq: () => ({
-                select: () => ({ single: responsePackUpdateSingle }),
+                eq: () => ({
+                  select: () => ({
+                    maybeSingle: responsePackUpdateSingle,
+                    single: responsePackUpdateSingle,
+                  }),
+                }),
+                select: () => ({
+                  maybeSingle: responsePackUpdateSingle,
+                  single: responsePackUpdateSingle,
+                }),
               }),
             };
           },
@@ -73,6 +86,29 @@ vi.mock("@/lib/supabase/admin", () => ({
         };
       }
 
+      if (table === "run_action_attempts") {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                order: () => ({
+                  limit: () => ({ maybeSingle: runActionAttemptMaybeSingle }),
+                }),
+              }),
+            }),
+          }),
+          insert: runActionAttemptInsert,
+          update: (payload: Record<string, unknown>) => {
+            runActionAttemptUpdate(payload);
+            return {
+              eq: () => ({
+                eq: runActionAttemptUpdateEqStatus,
+              }),
+            };
+          },
+        };
+      }
+
       throw new Error(`Unexpected table ${table}`);
     },
   }),
@@ -83,6 +119,9 @@ import { POST } from "@/app/api/runs/[runId]/approve/route";
 describe("POST /api/runs/[runId]/approve", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    runActionAttemptMaybeSingle.mockResolvedValue({ data: null, error: null });
+    runActionAttemptInsert.mockResolvedValue({ error: null });
+    runActionAttemptUpdateEqStatus.mockResolvedValue({ error: null });
   });
 
   it("approves the pack and records Slack dry-run status", async () => {
@@ -189,6 +228,92 @@ describe("POST /api/runs/[runId]/approve", () => {
       }),
     );
     expect(runEventsInsert).toHaveBeenCalledOnce();
+    expect(runActionAttemptInsert).toHaveBeenCalledOnce();
+    expect(runActionAttemptUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "dry_run",
+        target: "Slack webhook (dry-run)",
+      }),
+    );
+    expect(body.dispatch.status).toBe("dry_run");
+  });
+
+  it("does not redispatch when approval already has a successful Slack attempt", async () => {
+    responsePackMaybeSingle.mockResolvedValue({
+      data: {
+        id: "pack_123",
+        run_id: "run_123",
+        confidence: 90,
+        recommendation: "Ship it",
+        escalation_queue: null,
+        approved: true,
+        staged_actions: [
+          {
+            label: "Send approved run summary to Slack",
+            intent: "slack.notify",
+            status: "queued",
+            requires_approval: true,
+          },
+        ],
+      },
+      error: null,
+    });
+    runMaybeSingle.mockResolvedValue({
+      data: {
+        id: "run_123",
+        state: "completed",
+        confidence: 90,
+        urgency: "medium",
+        case: { case_ref: "CASE-123", title: "Payment dispute" },
+      },
+      error: null,
+    });
+    runActionAttemptMaybeSingle.mockResolvedValueOnce({
+      data: {
+        id: "attempt_123",
+        workspace_id: "ws_123",
+        run_id: "run_123",
+        response_pack_id: "pack_123",
+        action_intent: "slack.notify",
+        action_label: "Send approved run summary to Slack",
+        attempt_no: 1,
+        status: "dry_run",
+        target: "Slack webhook (dry-run)",
+        detail: "Slack dispatch simulated in dry-run mode.",
+        idempotency_key: "run_123:slack.notify:1",
+        actor_user_id: "user_123",
+        attempted_at: "2026-04-20T01:00:00.000Z",
+        created_at: "2026-04-20T01:00:00.000Z",
+      },
+      error: null,
+    });
+    responsePackUpdateSingle.mockResolvedValueOnce({
+      data: {
+        id: "pack_123",
+        approved: true,
+        staged_actions: [
+          {
+            label: "Send approved run summary to Slack",
+            intent: "slack.notify",
+            status: "dry_run",
+            requires_approval: true,
+            target: "Slack webhook (dry-run)",
+          },
+        ],
+      },
+      error: null,
+    });
+
+    const response = await POST(
+      new Request("https://async-copilot.vercel.app/api/runs/run_123/approve"),
+      { params: Promise.resolve({ runId: "run_123" }) },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(dispatchApprovedRunToSlack).not.toHaveBeenCalled();
+    expect(runActionAttemptInsert).not.toHaveBeenCalled();
+    expect(body.already_approved).toBe(true);
     expect(body.dispatch.status).toBe("dry_run");
   });
 });

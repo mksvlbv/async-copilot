@@ -33,13 +33,15 @@ export async function GET(
       `*,
        case:cases ( *, gmail_message:gmail_messages ( * ) ),
        stages:run_stages ( * ),
-       response_pack:response_packs ( * ),
-       events:run_events ( * )`,
+        response_pack:response_packs ( * ),
+       events:run_events ( * ),
+       action_attempts:run_action_attempts ( * )`,
     )
     .eq("id", runId)
     .eq("workspace_id", access.run.workspace_id)
     .order("stage_order", { foreignTable: "run_stages", ascending: true })
     .order("id", { foreignTable: "run_events", ascending: true })
+    .order("attempted_at", { foreignTable: "run_action_attempts", ascending: false })
     .maybeSingle();
 
   if (runErr) {
@@ -65,6 +67,7 @@ export async function GET(
       case: caseRow ? { ...caseRow, gmail_message: gmailMessage } : null,
       response_pack: pack,
       events: run.events ?? [],
+      action_attempts: run.action_attempts ?? [],
     },
   });
 }

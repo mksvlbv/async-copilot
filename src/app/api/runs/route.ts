@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import {
   getCaseAccess,
   getDefaultWorkspaceMembership,
   getSessionUser,
   getWorkspaceAccessForMutation,
 } from "@/lib/auth/workspace";
+import { processRunUntilYield } from "@/lib/runs/background";
 import { createRunForCase } from "@/lib/runs/create-run";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { apiRateLimiter, getClientIP } from "@/lib/rate-limit";
@@ -112,6 +113,21 @@ export async function POST(request: Request) {
       caseRow,
       user,
     });
+
+    try {
+      after(async () => {
+        try {
+          await processRunUntilYield({
+            runId: run.id,
+            user,
+          });
+        } catch (error) {
+          console.error(`[runs] background processing failed for ${run.id}`, error);
+        }
+      });
+    } catch (error) {
+      console.warn(`[runs] unable to schedule background processing for ${run.id}`, error);
+    }
 
     return NextResponse.json({ run }, { status: 201 });
   } catch (error) {

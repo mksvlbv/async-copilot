@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { getSessionUser, getWorkspaceAccessForMutation } from "@/lib/auth/workspace";
 import {
   extractGmailCandidateId,
@@ -8,6 +8,7 @@ import {
   refreshGoogleAccessToken,
   tokenExpiresAtFromNow,
 } from "@/lib/integrations/gmail";
+import { processRunUntilYield } from "@/lib/runs/background";
 import { createRunForCase } from "@/lib/runs/create-run";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Case, GmailMessage, WorkspaceGmailAccount } from "@/lib/supabase/types";
@@ -161,6 +162,8 @@ export async function POST(
         ],
       });
 
+      scheduleBackgroundRun(run.id, user);
+
       return NextResponse.json({ case: existingCase, run, existing: true });
     }
 
@@ -203,6 +206,8 @@ export async function POST(
         },
       ],
     });
+
+    scheduleBackgroundRun(run.id, user);
 
     return NextResponse.json({ case: createdCase, run, existing: false }, { status: 201 });
   } catch (error) {
@@ -279,4 +284,27 @@ function statusForImportError(error: unknown) {
   }
 
   return 500;
+}
+
+function scheduleBackgroundRun(
+  runId: string,
+  user: { id: string; email?: string | null },
+) {
+  try {
+    after(async () => {
+      try {
+        await processRunUntilYield({
+          runId,
+          user: {
+            id: user.id,
+            email: user.email ?? undefined,
+          },
+        });
+      } catch (error) {
+        console.error(`[gmail/import] background processing failed for ${runId}`, error);
+      }
+    });
+  } catch (error) {
+    console.warn(`[gmail/import] unable to schedule background processing for ${runId}`, error);
+  }
 }

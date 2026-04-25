@@ -37,6 +37,19 @@ function buildReadyExportData() {
       customer_name: "Jane Doe",
       customer_account: "Acme Corp",
       customer_plan: "Premium",
+      sample: [
+        {
+          slug: "golden-billing-case",
+          name: "Golden Billing Case",
+          is_golden: true,
+          expected_confidence: 84,
+          expected_stages: [
+            { key: "ingest", label: "Ingest Case", duration_ms: 18 },
+            { key: "normalize", label: "Normalize Facts", duration_ms: 42 },
+            { key: "draft", label: "Draft Response Pack", duration_ms: 120 },
+          ],
+        },
+      ],
     },
     stages: [
       {
@@ -301,6 +314,28 @@ describe("GET /api/runs/[runId]/export", () => {
           timing_summary: "4.5s active stage time · slowest Draft Response Pack (2.5s)",
           signals_summary: "1 synthetic fallback stage · 1 parse warning",
         },
+        golden_assertions: [
+          {
+            key: "stage_template",
+            passed: true,
+            detail: "3/3 stages matched the configured golden template",
+          },
+          {
+            key: "confidence",
+            passed: true,
+            detail: "Expected 84% and exported 84%",
+          },
+          {
+            key: "timing_evidence",
+            passed: true,
+            detail: "4.5s active stage time · slowest Draft Response Pack (2.5s)",
+          },
+          {
+            key: "slack_approval_boundary",
+            passed: true,
+            detail: "Notify escalation channel remains approval-gated",
+          },
+        ],
         approval_history: [
           {
             actor_label: "Jane Reviewer",
@@ -334,11 +369,132 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("## Trust evidence");
     expect(text).toContain("- **Timing:** 4.5s active stage time · slowest Draft Response Pack (2.5s)");
     expect(text).toContain("### Stage lineage");
+    expect(text).toContain("### Golden trust assertions");
+    expect(text).toContain("[PASS] **Golden stage template matched:** 3/3 stages matched the configured golden template");
+    expect(text).toContain("[PASS] **Golden confidence matched:** Expected 84% and exported 84%");
+    expect(text).toContain("[PASS] **Slack approval boundary preserved:** Notify escalation channel remains approval-gated");
     expect(text).toContain("- 01 Ingest Case — AI");
     expect(text).toContain("- 02 Normalize Facts — Synthetic fallback");
     expect(text).toContain("### Approval history");
     expect(text).toContain("Jane Reviewer");
     expect(text).toContain("### Action log");
     expect(text).toContain("Idempotency key: idem_123");
+  });
+
+  it("returns text export with golden trust assertions", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildReadyExportData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=text");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+
+    const text = await response.text();
+    expect(text).toContain("Trust evidence:");
+    expect(text).toContain("Golden trust assertions:");
+    expect(text).toContain("[PASS] Golden stage template matched: 3/3 stages matched the configured golden template");
+    expect(text).toContain("[PASS] Golden confidence matched: Expected 84% and exported 84%");
+    expect(text).toContain("[PASS] Slack approval boundary preserved: Notify escalation channel remains approval-gated");
+  });
+
+  it("returns failing golden assertions when the exported run drifts from the configured golden contract", async () => {
+    const data = buildReadyExportData();
+    data.case.sample = [
+      {
+        slug: "golden-billing-case",
+        name: "Golden Billing Case",
+        is_golden: true,
+        expected_confidence: 91,
+        expected_stages: [
+          { key: "ingest", label: "Ingest Case", duration_ms: 18 },
+          { key: "classify", label: "Classify Issue & Urgency", duration_ms: 42 },
+          { key: "draft", label: "Draft Response Pack", duration_ms: 120 },
+        ],
+      },
+    ];
+    data.stages = data.stages.map((stage) => ({
+      ...stage,
+      started_at: null,
+      completed_at: null,
+    }));
+    data.response_pack[0].staged_actions = [
+      {
+        label: "Notify escalation channel",
+        intent: "slack.notify",
+        status: "executed",
+        requires_approval: false,
+      },
+    ];
+
+    maybeSingle.mockResolvedValue({
+      data,
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=json");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      evidence: {
+        golden_assertions: [
+          {
+            key: "stage_template",
+            passed: false,
+            detail: "Expected stage 2 classify, recorded normalize",
+          },
+          {
+            key: "confidence",
+            passed: false,
+            detail: "Expected 91% and exported 84%",
+          },
+          {
+            key: "timing_evidence",
+            passed: false,
+            detail: "No timing summary was present in the exported trust evidence",
+          },
+          {
+            key: "slack_approval_boundary",
+            passed: false,
+            detail: "Notify escalation channel no longer requires approval",
+          },
+        ],
+      },
+    });
+  });
+
+  it("omits golden assertion evidence for non-golden exports", async () => {
+    const data = buildReadyExportData();
+    data.case.sample = [
+      {
+        slug: "non-golden-billing-case",
+        name: "Non-Golden Billing Case",
+        is_golden: false,
+        expected_confidence: 84,
+        expected_stages: [
+          { key: "ingest", label: "Ingest Case", duration_ms: 18 },
+          { key: "normalize", label: "Normalize Facts", duration_ms: 42 },
+          { key: "draft", label: "Draft Response Pack", duration_ms: 120 },
+        ],
+      },
+    ];
+    maybeSingle.mockResolvedValue({
+      data,
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=json");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      evidence: {
+        golden_assertions: null,
+      },
+    });
   });
 });

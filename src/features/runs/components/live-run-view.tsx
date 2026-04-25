@@ -35,6 +35,12 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { RunWithDetails, StageProvenance, WorkspaceRole } from "@/lib/supabase/types";
 import { SLACK_ACTION_INTENT } from "@/lib/integrations/slack";
+import {
+  formatPromptReference,
+  formatRuntimeReference,
+  getResponsePackLineage,
+  getStageProvenance,
+} from "@/features/runs/lib/provenance";
 
 const POLL_MS = 800;
 const LIVE_UPDATE_ERROR = "Live updates paused. Refresh the page to resume this run.";
@@ -835,6 +841,7 @@ function ResponsePackPanel({
   const slackAction = pack?.staged_actions.find((action) => action.intent === SLACK_ACTION_INTENT) ?? null;
   const approvalHistory = run.approval_history ?? [];
   const actionAttempts = run.action_attempts ?? [];
+  const packLineage = pack ? getResponsePackLineage(run) : null;
   const canApprove = currentRole === "admin" || currentRole === "reviewer";
   const actionRetryable = approved && slackAction?.status === "failed" && canApprove;
   const primaryDisabled = !pack || approving || !canApprove || (approved && !actionRetryable);
@@ -997,6 +1004,63 @@ function ResponsePackPanel({
             </ul>
           </div>
         )}
+
+        {packLineage ? (
+          <div className="border border-gray-200 rounded-md bg-white overflow-hidden">
+            <div className="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold">
+                Pack Provenance
+              </span>
+              <span className="text-[10px] font-mono text-gray-400">
+                {packLineage.stages.length} stage{packLineage.stages.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="p-3 space-y-3">
+              <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
+                <dt className="font-mono uppercase tracking-widest text-gray-400">Created</dt>
+                <dd className="font-mono text-gray-500">{formatAttempt(packLineage.created_at)}</dd>
+              </div>
+              <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
+                <dt className="font-mono uppercase tracking-widest text-gray-400">Execution</dt>
+                <dd>{packLineage.execution_summary}</dd>
+              </div>
+              {packLineage.signals_summary ? (
+                <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
+                  <dt className="font-mono uppercase tracking-widest text-gray-400">Signals</dt>
+                  <dd>{packLineage.signals_summary}</dd>
+                </div>
+              ) : null}
+              <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
+                <dt className="font-mono uppercase tracking-widest text-gray-400">Lineage</dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {packLineage.stages.map((stage) => (
+                    <span
+                      key={`${stage.stage_key}:${stage.stage_order}`}
+                      className="inline-flex items-center gap-1.5 rounded border border-gray-200 bg-gray-50/70 px-2 py-1"
+                    >
+                      <span className="font-mono text-gray-400">
+                        {String(stage.stage_order).padStart(2, "0")}
+                      </span>
+                      <span className="text-gray-700">{stage.stage_label}</span>
+                      {stage.provenance ? (
+                        <span
+                          className={clsx(
+                            "rounded border px-1 py-0.5 text-[9px] font-mono uppercase tracking-widest",
+                            stage.provenance.execution_mode === "ai"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-amber-200 bg-amber-50 text-amber-700",
+                          )}
+                        >
+                          {stage.provenance.execution_mode === "ai" ? "AI" : "Synthetic"}
+                        </span>
+                      ) : null}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* Staged actions */}
         {pack && pack.staged_actions.length > 0 && (
@@ -1444,81 +1508,6 @@ function formatEventSummary(payload: Record<string, unknown>) {
     .slice(0, 2)
     .map(([key, value]) => `${key}=${renderValue(value)}`)
     .join(" · ");
-}
-
-function getStageProvenance(
-  events: RunWithDetails["events"],
-  stageKey: string,
-  stageOrder: number,
-): StageProvenance | null {
-  for (let index = events.length - 1; index >= 0; index -= 1) {
-    const eventItem = events[index];
-    if (eventItem.event_type !== "stage.completed" || eventItem.stage_key !== stageKey) {
-      continue;
-    }
-
-    const eventStageOrder = eventItem.payload?.stage_order;
-    if (typeof eventStageOrder === "number" && eventStageOrder !== stageOrder) {
-      continue;
-    }
-
-    return parseStageProvenance(eventItem.payload);
-  }
-
-  return null;
-}
-
-function parseStageProvenance(payload: Record<string, unknown>): StageProvenance | null {
-  const executionMode = payload.execution_mode;
-  if (executionMode !== "ai" && executionMode !== "synthetic") {
-    return null;
-  }
-
-  const fallbackReason = payload.fallback_reason;
-  return {
-    prompt_key: typeof payload.prompt_key === "string" ? payload.prompt_key : null,
-    prompt_version: typeof payload.prompt_version === "string" ? payload.prompt_version : null,
-    provider: typeof payload.provider === "string" ? payload.provider : null,
-    model: typeof payload.model === "string" ? payload.model : null,
-    execution_mode: executionMode,
-    fallback_reason:
-      fallbackReason === "ai_disabled" || fallbackReason === "llm_failure"
-        ? fallbackReason
-        : null,
-    parse_error: payload.parse_error === true,
-  };
-}
-
-function formatPromptReference(provenance: StageProvenance) {
-  const promptKey = provenance.prompt_key ?? "Prompt unavailable";
-
-  return provenance.prompt_version
-    ? `${promptKey} · ${provenance.prompt_version}`
-    : promptKey;
-}
-
-function formatRuntimeReference(provenance: StageProvenance) {
-  if (provenance.execution_mode === "synthetic") {
-    if (provenance.fallback_reason === "llm_failure") {
-      return "Synthetic fallback · LLM request failed after retries";
-    }
-
-    return "Synthetic fallback · AI unavailable in this environment";
-  }
-
-  if (provenance.provider && provenance.model) {
-    return `${provenance.provider} · ${provenance.model}`;
-  }
-
-  if (provenance.model) {
-    return provenance.model;
-  }
-
-  if (provenance.provider) {
-    return provenance.provider;
-  }
-
-  return "AI execution";
 }
 
 function formatApprovalActor(approval: RunWithDetails["approval_history"][number]) {

@@ -36,10 +36,9 @@ export async function GET(
   }
 
   if (!isAIEnabled()) {
-    return NextResponse.json(
-      { error: "AI streaming not available — GROQ_API_KEY not configured" },
-      { status: 501 },
-    );
+    // Return an empty success response so the client can switch to polling
+    // without surfacing noisy failed-resource errors in the browser console.
+    return new Response(null, { status: 204 });
   }
 
   const admin = createAdminClient();

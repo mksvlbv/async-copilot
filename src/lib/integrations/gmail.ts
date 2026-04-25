@@ -183,6 +183,7 @@ export function extractGmailCandidateId(input: string) {
   const directParams = [
     url.searchParams.get("th"),
     url.searchParams.get("permthid"),
+    url.searchParams.get("permmsgid"),
     url.searchParams.get("message_id"),
     url.searchParams.get("msgid"),
   ];
@@ -195,7 +196,7 @@ export function extractGmailCandidateId(input: string) {
 
   const hash = url.hash.replace(/^#/, "");
   const hashParams = new URLSearchParams(hash.includes("?") ? hash.split("?")[1] : "");
-  for (const key of ["th", "permthid", "message_id", "msgid"]) {
+  for (const key of ["th", "permthid", "permmsgid", "message_id", "msgid"]) {
     const candidate = hashParams.get(key);
     if (candidate) {
       return normalizeGmailObjectId(candidate);

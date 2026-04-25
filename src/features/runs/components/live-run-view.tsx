@@ -9,7 +9,7 @@
  *   - Each stage streams token-by-token like ChatGPT.
  *
  * Polling (fallback):
- *   - If SSE returns 501 (no GROQ_API_KEY) → falls back to POST /advance polling.
+ *   - If SSE is unavailable → falls back to POST /advance polling.
  *   - Refreshing the page re-reads server state (no client-only run memory).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -88,7 +88,7 @@ export function LiveRunView({ initialRun, workspaceSlug, currentRole }: Props) {
         const res = await fetch(`/api/runs/${run.id}/stream`);
 
         // Not available → fall back to polling
-        if (res.status === 501 || res.status === 409) {
+        if (res.status === 204 || res.status === 409) {
           setAiMode("polling");
           return;
         }

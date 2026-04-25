@@ -41,7 +41,7 @@ If you only spend 60-90 seconds on this repo, this is the flow to understand:
 5. The run ends with a response pack containing confidence, recommendation, citations, and staged actions.
 6. A human must approve the pack before any outbound integration boundary is crossed.
 7. Approval can trigger a Slack webhook in `dry_run` or live mode, while all other staged actions remain queued.
-8. The full pack can be exported as markdown for handoff or review.
+8. The full pack can be exported as markdown for handoff or review, including compact trust evidence.
 
 ## Operator Use Case
 
@@ -205,7 +205,7 @@ Operational core:
 - `samples` — curated scenario library (read-only in UI)
 - `cases` — support-case instances from manual intake, samples, or Gmail
 - `runs` — triage lifecycle (`pending` → `running` → `completed`/`escalated`)
-- `run_stages` — 6 stages per run with `output` JSON blobs + `duration_ms`
+- `run_stages` — 6 stages per run with `output` JSON blobs, persisted timestamps, and legacy `duration_ms` seed metadata
 - `response_packs` — final artifact (confidence, recommendation, summary, draft reply, citations, staged actions)
 - `run_events` — append-only reviewer timeline and audit trail for material state transitions; new `stage.completed` rows now also carry per-stage prompt/version provenance
 - `run_action_attempts` — durable outbound action attempt log for Slack delivery and retries

@@ -36,6 +36,7 @@ import {
 import type { RunWithDetails, StageProvenance, WorkspaceRole } from "@/lib/supabase/types";
 import { SLACK_ACTION_INTENT } from "@/lib/integrations/slack";
 import {
+  formatStageDurationLabel,
   formatPromptReference,
   formatRuntimeReference,
   getResponsePackLineage,
@@ -741,13 +742,12 @@ function StageBody({
   // completed
   const out = stage.output as Record<string, unknown>;
   const hasOutput = out && Object.keys(out).length > 0;
+  const durationLabel = formatStageDurationLabel(stage);
   return (
     <div className="mt-1 bg-white border border-gray-200 rounded-md p-3 shadow-sm space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Output</span>
-        <span className="text-[10px] font-mono text-gray-400">
-          {stage.duration_ms != null ? `${stage.duration_ms} ms` : ""}
-        </span>
+        <span className="text-[10px] font-mono text-gray-400">{durationLabel ?? ""}</span>
       </div>
       {provenance ? (
         <div className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2">
@@ -1024,6 +1024,12 @@ function ResponsePackPanel({
                 <dt className="font-mono uppercase tracking-widest text-gray-400">Execution</dt>
                 <dd>{packLineage.execution_summary}</dd>
               </div>
+              {packLineage.timing_summary ? (
+                <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
+                  <dt className="font-mono uppercase tracking-widest text-gray-400">Timing</dt>
+                  <dd>{packLineage.timing_summary}</dd>
+                </div>
+              ) : null}
               {packLineage.signals_summary ? (
                 <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
                   <dt className="font-mono uppercase tracking-widest text-gray-400">Signals</dt>

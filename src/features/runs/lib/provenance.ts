@@ -1,4 +1,4 @@
-import type { RunWithDetails, StageProvenance } from "@/lib/supabase/types";
+import type { RunStage, RunWithDetails, StageProvenance } from "@/lib/supabase/types";
 
 export type PackLineageStage = {
   stage_order: number;
@@ -12,6 +12,7 @@ export type ResponsePackLineage = {
   stages: PackLineageStage[];
   runtime_provenance_coverage: "none" | "partial" | "full";
   execution_summary: string;
+  timing_summary: string | null;
   signals_summary: string | null;
 };
 
@@ -79,6 +80,7 @@ export function getResponsePackLineage(
       aiStages,
       syntheticStages,
     }),
+    timing_summary: formatPackTimingSummary(completedStages),
     signals_summary: formatPackSignalsSummary({
       syntheticStages,
       parseWarnings,
@@ -116,6 +118,21 @@ export function formatRuntimeReference(provenance: StageProvenance) {
   }
 
   return "AI execution";
+}
+
+export function formatStageDurationLabel(
+  stage: Pick<RunStage, "started_at" | "completed_at" | "duration_ms">,
+) {
+  const actualElapsedMs = getElapsedMs(stage.started_at, stage.completed_at);
+  if (actualElapsedMs != null) {
+    return formatElapsedDuration(actualElapsedMs);
+  }
+
+  if (stage.duration_ms != null) {
+    return `est. ${formatElapsedDuration(stage.duration_ms)}`;
+  }
+
+  return null;
 }
 
 function getLatestResponsePackCreatedEvent(events: RunWithDetails["events"]) {
@@ -198,4 +215,69 @@ function formatPackSignalsSummary({
   }
 
   return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+function formatPackTimingSummary(
+  stages: Array<Pick<RunWithDetails["stages"][number], "stage_label" | "started_at" | "completed_at">>,
+) {
+  const timedStages = stages
+    .map((stage) => ({
+      stage_label: stage.stage_label,
+      elapsed_ms: getElapsedMs(stage.started_at, stage.completed_at),
+    }))
+    .filter((stage): stage is { stage_label: string; elapsed_ms: number } => stage.elapsed_ms != null);
+
+  if (timedStages.length === 0) {
+    return null;
+  }
+
+  const totalElapsedMs = timedStages.reduce((total, stage) => total + stage.elapsed_ms, 0);
+  const slowestStage = timedStages.reduce((slowest, stage) =>
+    stage.elapsed_ms > slowest.elapsed_ms ? stage : slowest,
+  );
+
+  const coverageSummary =
+    timedStages.length < stages.length ? ` across ${timedStages.length}/${stages.length} stages` : "";
+
+  return `${formatElapsedDuration(totalElapsedMs)} active stage time${coverageSummary} · slowest ${slowestStage.stage_label} (${formatElapsedDuration(slowestStage.elapsed_ms)})`;
+}
+
+export function getElapsedMs(startedAt: string | null, completedAt: string | null) {
+  if (!startedAt || !completedAt) {
+    return null;
+  }
+
+  const started = Date.parse(startedAt);
+  const completed = Date.parse(completedAt);
+  if (Number.isNaN(started) || Number.isNaN(completed) || completed < started) {
+    return null;
+  }
+
+  return completed - started;
+}
+
+export function formatElapsedDuration(valueMs: number) {
+  if (valueMs < 1000) {
+    return `${Math.round(valueMs)}ms`;
+  }
+
+  if (valueMs < 10_000) {
+    return `${(valueMs / 1000).toFixed(1)}s`;
+  }
+
+  if (valueMs < 60_000) {
+    return `${Math.round(valueMs / 1000)}s`;
+  }
+
+  const totalSeconds = Math.round(valueMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (valueMs < 3_600_000) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}m`;
 }

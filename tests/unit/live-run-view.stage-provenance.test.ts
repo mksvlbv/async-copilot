@@ -3,7 +3,26 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { LiveRunView } from "@/features/runs/components/live-run-view";
 
-function buildCompletedRun(eventPayload: Record<string, unknown>) {
+function buildCompletedRun(
+  eventPayload: Record<string, unknown>,
+  stageOverrides?: Record<string, unknown>,
+) {
+  const stage = {
+    id: "stage_1",
+    run_id: "run_stage_123",
+    stage_order: 1,
+    stage_key: "ingest",
+    stage_label: "Ingest Case",
+    state: "completed",
+    duration_ms: 18,
+    output: { parsed: "text", tokens: 50 },
+    started_at: "2026-04-25T08:00:00.000Z",
+    completed_at: "2026-04-25T08:00:01.000Z",
+    created_at: "2026-04-25T08:00:00.000Z",
+    updated_at: "2026-04-25T08:00:01.000Z",
+    ...(stageOverrides ?? {}),
+  };
+
   return {
     id: "run_stage_123",
     workspace_id: "ws_123",
@@ -43,20 +62,7 @@ function buildCompletedRun(eventPayload: Record<string, unknown>) {
       gmail_message: null,
     },
     stages: [
-      {
-        id: "stage_1",
-        run_id: "run_stage_123",
-        stage_order: 1,
-        stage_key: "ingest",
-        stage_label: "Ingest Case",
-        state: "completed",
-        duration_ms: 18,
-        output: { parsed: "text", tokens: 50 },
-        started_at: "2026-04-25T08:00:00.000Z",
-        completed_at: "2026-04-25T08:00:01.000Z",
-        created_at: "2026-04-25T08:00:00.000Z",
-        updated_at: "2026-04-25T08:00:01.000Z",
-      },
+      stage,
     ],
     response_pack: null,
     events: [
@@ -105,6 +111,8 @@ describe("LiveRunView stage provenance", () => {
     expect(markup).toContain("Provenance");
     expect(markup).toContain("triage.ingest · v1");
     expect(markup).toContain("groq · llama-3.3-70b-versatile");
+    expect(markup).toContain("1.0s");
+    expect(markup).not.toContain("18 ms");
     expect(markup).toContain("Model returned non-JSON output; raw stage output was kept for review.");
   });
 
@@ -149,5 +157,31 @@ describe("LiveRunView stage provenance", () => {
 
     expect(markup).not.toContain("Provenance");
     expect(markup).not.toContain("triage.ingest · v1");
+  });
+
+  it("falls back to estimated duration labeling when timestamps are unavailable", () => {
+    const markup = renderToStaticMarkup(
+      createElement(LiveRunView, {
+        initialRun: buildCompletedRun(
+          {
+            prompt_key: "triage.ingest",
+            prompt_version: "v1",
+            provider: "groq",
+            model: "llama-3.3-70b-versatile",
+            execution_mode: "ai",
+            fallback_reason: null,
+            parse_error: false,
+          },
+          {
+            started_at: null,
+            completed_at: null,
+          },
+        ) as any,
+        workspaceSlug: "acme-support",
+        currentRole: "reviewer",
+      }),
+    );
+
+    expect(markup).toContain("est. 18ms");
   });
 });

@@ -207,7 +207,7 @@ Operational core:
 - `runs` — triage lifecycle (`pending` → `running` → `completed`/`escalated`)
 - `run_stages` — 6 stages per run with `output` JSON blobs + `duration_ms`
 - `response_packs` — final artifact (confidence, recommendation, summary, draft reply, citations, staged actions)
-- `run_events` — append-only reviewer timeline and audit trail for material state transitions
+- `run_events` — append-only reviewer timeline and audit trail for material state transitions; new `stage.completed` rows now also carry per-stage prompt/version provenance
 - `run_action_attempts` — durable outbound action attempt log for Slack delivery and retries
 - `response_pack_approvals` — durable approval-history rows for the reviewer boundary
 
@@ -224,6 +224,10 @@ Gmail source layer:
 
 Schema: `supabase/migrations/001_initial_schema.sql` through `011_milestone5_approval_history.sql`
 Seeds: `supabase/seeds/001_samples.sql` + `002_golden_run.sql`
+
+Stage provenance note:
+- prompt/version provenance is attached only to newly completed `stage.completed` events
+- historical runs keep rendering normally, but older stage cards will not show provenance unless they were completed after this slice shipped
 
 ---
 

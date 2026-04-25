@@ -6,6 +6,8 @@
  */
 
 export type StagePrompt = {
+  prompt_key: string;
+  prompt_version: string;
   system: string;
   /** Template that receives {title, body, customer} placeholders. */
   user: (ctx: StageContext) => string;
@@ -21,6 +23,8 @@ export type StageContext = {
 
 const STAGE_PROMPTS: Record<string, StagePrompt> = {
   ingest: {
+    prompt_key: "triage.ingest",
+    prompt_version: "v1",
     system: `You are an AI triage system's Ingest stage. Parse the incoming support ticket and extract basic metadata.
 Respond with ONLY a valid JSON object (no markdown, no code fences) with these fields:
 - "parsed": the format detected ("text", "html", "email")
@@ -32,6 +36,8 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) with these f
   },
 
   normalize: {
+    prompt_key: "triage.normalize",
+    prompt_version: "v1",
     system: `You are an AI triage system's Normalize stage. Extract named entities from the support ticket.
 Respond with ONLY a valid JSON object (no markdown, no code fences) with these fields:
 - "entities_extracted": array of entity strings found (e.g. "amount", "invoice", "api_endpoint", "auth", "security", "date", "product")
@@ -41,6 +47,8 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) with these f
   },
 
   classify: {
+    prompt_key: "triage.classify",
+    prompt_version: "v1",
     system: `You are an AI triage system's Classify stage. Determine the intent and urgency of a support ticket.
 Respond with ONLY a valid JSON object (no markdown, no code fences) with these fields:
 - "intent": one of "payments_issue", "api_issue", "feature_request", "auth_issue", "security_issue", "general_inquiry"
@@ -51,6 +59,8 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) with these f
   },
 
   query: {
+    prompt_key: "triage.query",
+    prompt_version: "v1",
     system: `You are an AI triage system's Query stage. Determine which internal systems should be checked to resolve this ticket.
 Respond with ONLY a valid JSON object (no markdown, no code fences) with these fields:
 - "internal_checks": array of system names to query (e.g. "status_page", "customer_profile", "recent_orders", "billing_ledger", "api_logs", "auth_logs")
@@ -61,6 +71,8 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) with these f
   },
 
   policy: {
+    prompt_key: "triage.policy",
+    prompt_version: "v1",
     system: `You are an AI triage system's Policy Check stage. Evaluate the ticket against company policies and assess risk.
 Respond with ONLY a valid JSON object (no markdown, no code fences) with these fields:
 - "policy": the applicable policy (e.g. "standard_response_allowed", "escalation_required", "refund_eligible", "security_protocol")
@@ -71,6 +83,8 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) with these f
   },
 
   draft: {
+    prompt_key: "triage.draft",
+    prompt_version: "v1",
     system: `You are an AI triage system's Draft stage. Generate a professional customer-facing response draft.
 Respond with ONLY a valid JSON object (no markdown, no code fences) with these fields:
 - "generated": true

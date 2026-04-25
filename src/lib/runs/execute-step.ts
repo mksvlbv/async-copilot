@@ -1,11 +1,29 @@
 import type { User } from "@supabase/supabase-js";
 import { generateText } from "ai";
-import { triageModel, isAIEnabled } from "@/lib/ai/client";
-import { getStagePrompt, type StageContext } from "@/lib/ai/prompts";
+import {
+  TRIAGE_MODEL_ID,
+  TRIAGE_PROVIDER,
+  triageModel,
+  isAIEnabled,
+} from "@/lib/ai/client";
+import {
+  getStagePrompt,
+  type StageContext,
+  type StagePrompt,
+} from "@/lib/ai/prompts";
 import { appendRunEvent, userActorPayload } from "@/lib/runs/events";
 import { retry } from "@/lib/retry";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Case, Run, RunStage, Sample, UrgencyLevel } from "@/lib/supabase/types";
+import type {
+  Case,
+  Run,
+  RunStage,
+  Sample,
+  StageExecutionMode,
+  StageFallbackReason,
+  StageProvenance,
+  UrgencyLevel,
+} from "@/lib/supabase/types";
 import {
   buildFallbackResponsePack,
   finalStateFor,
@@ -14,6 +32,10 @@ import {
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 type ExecutionUser = Pick<User, "id" | "email"> | null;
+type StageGenerationResult = {
+  output: Record<string, unknown>;
+  provenance: StageProvenance | null;
+};
 
 export type ExecuteRunStepResult = {
   run: Run;
@@ -26,6 +48,51 @@ export type ExecuteRunStepResult = {
 
 export function isRunTerminalState(state: Run["state"]) {
   return state === "completed" || state === "escalated" || state === "failed";
+}
+
+export function buildStageProvenance({
+  prompt,
+  executionMode,
+  fallbackReason = null,
+  parseError = false,
+}: {
+  prompt?: Pick<StagePrompt, "prompt_key" | "prompt_version">;
+  executionMode: StageExecutionMode;
+  fallbackReason?: StageFallbackReason | null;
+  parseError?: boolean;
+}): StageProvenance {
+  return {
+    prompt_key: prompt?.prompt_key ?? null,
+    prompt_version: prompt?.prompt_version ?? null,
+    provider: executionMode === "ai" ? TRIAGE_PROVIDER : null,
+    model: executionMode === "ai" ? TRIAGE_MODEL_ID : null,
+    execution_mode: executionMode,
+    fallback_reason: fallbackReason,
+    parse_error: parseError,
+  };
+}
+
+export function stageProvenanceUsesAI(provenance: StageProvenance | null | undefined) {
+  return provenance?.execution_mode === "ai";
+}
+
+function buildSyntheticStageOutput(
+  stageKey: string,
+  ctx: StageContext,
+  prompt: StagePrompt | undefined,
+  fallbackReason: StageFallbackReason,
+): StageGenerationResult {
+  return {
+    output: syntheticOutputFor(stageKey, {
+      caseTitle: ctx.title,
+      caseBody: ctx.body,
+    }),
+    provenance: buildStageProvenance({
+      prompt,
+      executionMode: "synthetic",
+      fallbackReason,
+    }),
+  };
 }
 
 export async function loadRunById(admin: AdminClient, runId: string) {
@@ -158,6 +225,7 @@ export async function executeRunStep({
 
   let output: Record<string, unknown> = stageRow.output ?? {};
   let usedAI = false;
+  let provenance: StageProvenance | null = null;
 
   try {
     if (!output || Object.keys(output).length === 0) {
@@ -168,15 +236,23 @@ export async function executeRunStep({
         customerAccount: caseRow.customer_account ?? null,
         customerPlan: caseRow.customer_plan ?? null,
       };
+      const prompt = getStagePrompt(stageRow.stage_key);
 
       if (isAIEnabled()) {
-        output = await generateStageOutput(stageRow.stage_key, stageCtx);
-        usedAI = true;
+        const generated = await generateStageOutput(stageRow.stage_key, stageCtx, prompt);
+        output = generated.output;
+        provenance = generated.provenance;
+        usedAI = stageProvenanceUsesAI(provenance);
       } else {
-        output = syntheticOutputFor(stageRow.stage_key, {
-          caseTitle: stageCtx.title,
-          caseBody: stageCtx.body,
-        });
+        const generated = buildSyntheticStageOutput(
+          stageRow.stage_key,
+          stageCtx,
+          prompt,
+          "ai_disabled",
+        );
+        output = generated.output;
+        provenance = generated.provenance;
+        usedAI = stageProvenanceUsesAI(provenance);
       }
     }
   } catch (error) {
@@ -226,6 +302,7 @@ export async function executeRunStep({
       stage_order: stageRow.stage_order,
       stage_label: stageRow.stage_label,
       duration_ms: stageRow.duration_ms,
+      ...(provenance ?? {}),
     },
     created_at: completedAt,
   });
@@ -474,10 +551,13 @@ async function finalizeRun(
 async function generateStageOutput(
   stageKey: string,
   ctx: StageContext,
-): Promise<Record<string, unknown>> {
-  const prompt = getStagePrompt(stageKey);
+  prompt = getStagePrompt(stageKey),
+): Promise<StageGenerationResult> {
   if (!prompt) {
-    return {};
+    return {
+      output: {},
+      provenance: null,
+    };
   }
 
   try {
@@ -513,19 +593,29 @@ async function generateStageOutput(
 
     const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
     try {
-      return JSON.parse(cleaned) as Record<string, unknown>;
+      return {
+        output: JSON.parse(cleaned) as Record<string, unknown>,
+        provenance: buildStageProvenance({
+          prompt,
+          executionMode: "ai",
+        }),
+      };
     } catch {
-      return { raw_output: text, parse_error: true };
+      return {
+        output: { raw_output: text, parse_error: true },
+        provenance: buildStageProvenance({
+          prompt,
+          executionMode: "ai",
+          parseError: true,
+        }),
+      };
     }
   } catch (error) {
     console.warn(
       `[execute-step] LLM failed for stage ${stageKey} after retries, falling back to synthetic`,
       error,
     );
-    return syntheticOutputFor(stageKey, {
-      caseTitle: ctx.title,
-      caseBody: ctx.body,
-    });
+    return buildSyntheticStageOutput(stageKey, ctx, prompt, "llm_failure");
   }
 }
 

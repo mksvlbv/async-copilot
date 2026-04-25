@@ -33,7 +33,7 @@ import {
   Export,
   CopySimple,
 } from "@phosphor-icons/react/dist/ssr";
-import type { RunWithDetails, WorkspaceRole } from "@/lib/supabase/types";
+import type { RunWithDetails, StageProvenance, WorkspaceRole } from "@/lib/supabase/types";
 import { SLACK_ACTION_INTENT } from "@/lib/integrations/slack";
 
 const POLL_MS = 800;
@@ -607,6 +607,7 @@ function TimelinePanel({
                   s.stage_order === currentOrder &&
                   (run.state === "running" || run.state === "pending");
                 const pending = !completed && !running;
+                const provenance = getStageProvenance(events, s.stage_key, s.stage_order);
 
                 return (
                   <li key={s.id} className="relative pl-12">
@@ -644,6 +645,7 @@ function TimelinePanel({
                       stage={s}
                       running={running}
                       pending={pending}
+                      provenance={provenance}
                       streamingText={streamingTokens?.[s.stage_key]}
                       isActiveStream={activeStreamStage === s.stage_key}
                     />
@@ -696,12 +698,14 @@ function StageBody({
   stage,
   running,
   pending,
+  provenance,
   streamingText,
   isActiveStream,
 }: {
   stage: RunWithDetails["stages"][number];
   running: boolean;
   pending: boolean;
+  provenance?: StageProvenance | null;
   streamingText?: string;
   isActiveStream?: boolean;
 }) {
@@ -739,6 +743,41 @@ function StageBody({
           {stage.duration_ms != null ? `${stage.duration_ms} ms` : ""}
         </span>
       </div>
+      {provenance ? (
+        <div className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-gray-500">
+              Provenance
+            </span>
+            <span
+              className={clsx(
+                "shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest",
+                provenance.execution_mode === "ai"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700",
+              )}
+            >
+              {provenance.execution_mode === "ai" ? "AI" : "Synthetic fallback"}
+            </span>
+          </div>
+          <dl className="mt-2 space-y-1 text-[10px] text-gray-600">
+            <div className="grid grid-cols-[56px_1fr] gap-2">
+              <dt className="font-mono uppercase tracking-widest text-gray-400">Prompt</dt>
+              <dd className="font-mono break-all">{formatPromptReference(provenance)}</dd>
+            </div>
+            <div className="grid grid-cols-[56px_1fr] gap-2">
+              <dt className="font-mono uppercase tracking-widest text-gray-400">Runtime</dt>
+              <dd className="break-words">{formatRuntimeReference(provenance)}</dd>
+            </div>
+            {provenance.parse_error ? (
+              <div className="grid grid-cols-[56px_1fr] gap-2">
+                <dt className="font-mono uppercase tracking-widest text-gray-400">Warning</dt>
+                <dd>Model returned non-JSON output; raw stage output was kept for review.</dd>
+              </div>
+            ) : null}
+          </dl>
+        </div>
+      ) : null}
       {hasOutput ? (
         <dl className="text-[11px] text-gray-700 space-y-1">
           {Object.entries(out)
@@ -1405,6 +1444,81 @@ function formatEventSummary(payload: Record<string, unknown>) {
     .slice(0, 2)
     .map(([key, value]) => `${key}=${renderValue(value)}`)
     .join(" · ");
+}
+
+function getStageProvenance(
+  events: RunWithDetails["events"],
+  stageKey: string,
+  stageOrder: number,
+): StageProvenance | null {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const eventItem = events[index];
+    if (eventItem.event_type !== "stage.completed" || eventItem.stage_key !== stageKey) {
+      continue;
+    }
+
+    const eventStageOrder = eventItem.payload?.stage_order;
+    if (typeof eventStageOrder === "number" && eventStageOrder !== stageOrder) {
+      continue;
+    }
+
+    return parseStageProvenance(eventItem.payload);
+  }
+
+  return null;
+}
+
+function parseStageProvenance(payload: Record<string, unknown>): StageProvenance | null {
+  const executionMode = payload.execution_mode;
+  if (executionMode !== "ai" && executionMode !== "synthetic") {
+    return null;
+  }
+
+  const fallbackReason = payload.fallback_reason;
+  return {
+    prompt_key: typeof payload.prompt_key === "string" ? payload.prompt_key : null,
+    prompt_version: typeof payload.prompt_version === "string" ? payload.prompt_version : null,
+    provider: typeof payload.provider === "string" ? payload.provider : null,
+    model: typeof payload.model === "string" ? payload.model : null,
+    execution_mode: executionMode,
+    fallback_reason:
+      fallbackReason === "ai_disabled" || fallbackReason === "llm_failure"
+        ? fallbackReason
+        : null,
+    parse_error: payload.parse_error === true,
+  };
+}
+
+function formatPromptReference(provenance: StageProvenance) {
+  const promptKey = provenance.prompt_key ?? "Prompt unavailable";
+
+  return provenance.prompt_version
+    ? `${promptKey} · ${provenance.prompt_version}`
+    : promptKey;
+}
+
+function formatRuntimeReference(provenance: StageProvenance) {
+  if (provenance.execution_mode === "synthetic") {
+    if (provenance.fallback_reason === "llm_failure") {
+      return "Synthetic fallback · LLM request failed after retries";
+    }
+
+    return "Synthetic fallback · AI unavailable in this environment";
+  }
+
+  if (provenance.provider && provenance.model) {
+    return `${provenance.provider} · ${provenance.model}`;
+  }
+
+  if (provenance.model) {
+    return provenance.model;
+  }
+
+  if (provenance.provider) {
+    return provenance.provider;
+  }
+
+  return "AI execution";
 }
 
 function formatApprovalActor(approval: RunWithDetails["approval_history"][number]) {

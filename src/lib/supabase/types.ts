@@ -18,8 +18,20 @@ export type RunExecutionStatus =
   | "completed"
   | "failed";
 export type StageState = "pending" | "running" | "completed" | "failed";
+export type StageExecutionMode = "ai" | "synthetic";
+export type StageFallbackReason = "ai_disabled" | "llm_failure";
 export type CaseSource = "intake" | "sample" | "gmail";
 export type WorkspaceRole = "admin" | "reviewer" | "operator";
+
+export type StageProvenance = {
+  prompt_key: string | null;
+  prompt_version: string | null;
+  provider: string | null;
+  model: string | null;
+  execution_mode: StageExecutionMode;
+  fallback_reason: StageFallbackReason | null;
+  parse_error: boolean;
+};
 
 export type StageDefinition = {
   key: string;

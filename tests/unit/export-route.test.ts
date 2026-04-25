@@ -321,6 +321,11 @@ describe("GET /api/runs/[runId]/export", () => {
             detail: "3/3 stages matched the configured golden template",
           },
           {
+            key: "stage_duration_profile",
+            passed: true,
+            detail: "3/3 stage durations matched the configured golden template",
+          },
+          {
             key: "confidence",
             passed: true,
             detail: "Expected 84% and exported 84%",
@@ -371,6 +376,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("### Stage lineage");
     expect(text).toContain("### Golden trust assertions");
     expect(text).toContain("[PASS] **Golden stage template matched:** 3/3 stages matched the configured golden template");
+    expect(text).toContain("[PASS] **Golden stage duration template matched:** 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] **Golden confidence matched:** Expected 84% and exported 84%");
     expect(text).toContain("[PASS] **Slack approval boundary preserved:** Notify escalation channel remains approval-gated");
     expect(text).toContain("- 01 Ingest Case — AI");
@@ -397,6 +403,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("Trust evidence:");
     expect(text).toContain("Golden trust assertions:");
     expect(text).toContain("[PASS] Golden stage template matched: 3/3 stages matched the configured golden template");
+    expect(text).toContain("[PASS] Golden stage duration template matched: 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] Golden confidence matched: Expected 84% and exported 84%");
     expect(text).toContain("[PASS] Slack approval boundary preserved: Notify escalation channel remains approval-gated");
   });
@@ -421,6 +428,7 @@ describe("GET /api/runs/[runId]/export", () => {
       started_at: null,
       completed_at: null,
     }));
+    data.stages[1].duration_ms = 99;
     data.response_pack[0].staged_actions = [
       {
         label: "Notify escalation channel",
@@ -446,6 +454,12 @@ describe("GET /api/runs/[runId]/export", () => {
             key: "stage_template",
             passed: false,
             detail: "Expected stage 2 classify, recorded normalize",
+          },
+          {
+            key: "stage_duration_profile",
+            passed: false,
+            detail:
+              "Golden stage duration template could not be verified until the stage template matches (Expected stage 2 classify, recorded normalize)",
           },
           {
             key: "confidence",
@@ -494,6 +508,37 @@ describe("GET /api/runs/[runId]/export", () => {
     await expect(response.json()).resolves.toMatchObject({
       evidence: {
         golden_assertions: null,
+      },
+    });
+  });
+
+  it("returns a failing duration-template assertion when stage timing drifts but the golden stage template still matches", async () => {
+    const data = buildReadyExportData();
+    data.stages[1].duration_ms = 99;
+
+    maybeSingle.mockResolvedValue({
+      data,
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=json");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      evidence: {
+        golden_assertions: expect.arrayContaining([
+          expect.objectContaining({
+            key: "stage_template",
+            passed: true,
+            detail: "3/3 stages matched the configured golden template",
+          }),
+          expect.objectContaining({
+            key: "stage_duration_profile",
+            passed: false,
+            detail: "Expected stage 2 normalize duration 42ms, recorded 99ms",
+          }),
+        ]),
       },
     });
   });

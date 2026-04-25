@@ -8,6 +8,7 @@ import type {
   Citation,
   ResponsePackApproval,
   RunActionAttempt,
+  RunStage,
   Sample,
   StagedAction,
 } from "@/lib/supabase/types";
@@ -123,6 +124,7 @@ export async function GET(
   });
   const goldenAssertions = buildGoldenAssertions({
     sample,
+    stages,
     pack,
     packLineage,
   });
@@ -455,18 +457,27 @@ type GoldenSample = Pick<
 >;
 
 type GoldenAssertion = {
-  key: "stage_template" | "confidence" | "timing_evidence" | "slack_approval_boundary";
+  key:
+    | "stage_template"
+    | "stage_duration_profile"
+    | "confidence"
+    | "timing_evidence"
+    | "slack_approval_boundary";
   label: string;
   passed: boolean;
   detail: string;
 };
 
+type GoldenAssertionResult = Pick<GoldenAssertion, "passed" | "detail">;
+
 function buildGoldenAssertions({
   sample,
+  stages,
   pack,
   packLineage,
 }: {
   sample: GoldenSample | null;
+  stages: Array<Pick<RunStage, "stage_order" | "stage_key" | "stage_label" | "duration_ms" | "state">>;
   pack: ExportPayload["pack"];
   packLineage: ResponsePackLineage | null;
 }): GoldenAssertion[] | null {
@@ -476,21 +487,18 @@ function buildGoldenAssertions({
 
   const expectedStages = Array.isArray(sample.expected_stages) ? sample.expected_stages : [];
   const lineageStages = packLineage?.stages ?? [];
-  const stageTemplateMatched =
-    expectedStages.length > 0 &&
-    expectedStages.length === lineageStages.length &&
-    expectedStages.every((expectedStage, index) => {
-      const actualStage = lineageStages[index];
-      return (
-        actualStage != null &&
-        actualStage.stage_order === index + 1 &&
-        actualStage.stage_key === expectedStage.key &&
-        actualStage.stage_label === expectedStage.label
-      );
-    });
+  const stageTemplateAssertion = describeStageTemplateAssertion(expectedStages, lineageStages);
   const expectedConfidence = sample.expected_confidence;
   const confidenceMatched =
     typeof expectedConfidence === "number" && pack.confidence === expectedConfidence;
+  const completedStages = [...stages]
+    .filter((stage) => stage.state === "completed")
+    .sort((left, right) => left.stage_order - right.stage_order);
+  const durationProfileAssertion = describeStageDurationProfileAssertion(
+    expectedStages,
+    completedStages,
+    stageTemplateAssertion,
+  );
   const slackAction = pack.staged_actions.find(
     (action) => action.intent === SLACK_ACTION_INTENT,
   );
@@ -500,8 +508,14 @@ function buildGoldenAssertions({
     {
       key: "stage_template",
       label: "Golden stage template matched",
-      passed: stageTemplateMatched,
-      detail: describeStageTemplateAssertion(expectedStages, lineageStages),
+      passed: stageTemplateAssertion.passed,
+      detail: stageTemplateAssertion.detail,
+    },
+    {
+      key: "stage_duration_profile",
+      label: "Golden stage duration template matched",
+      passed: durationProfileAssertion.passed,
+      detail: durationProfileAssertion.detail,
     },
     {
       key: "confidence",
@@ -535,13 +549,19 @@ function buildGoldenAssertions({
 function describeStageTemplateAssertion(
   expectedStages: GoldenSample["expected_stages"],
   lineageStages: ResponsePackLineage["stages"],
-) {
+): GoldenAssertionResult {
   if (expectedStages.length === 0) {
-    return "Golden sample has no expected stage template configured";
+    return {
+      passed: false,
+      detail: "Golden sample has no expected stage template configured",
+    };
   }
 
   if (lineageStages.length === 0) {
-    return "No completed stage lineage was present in the exported trust evidence";
+    return {
+      passed: false,
+      detail: "No completed stage lineage was present in the exported trust evidence",
+    };
   }
 
   const mismatchIndex = expectedStages.findIndex((expectedStage, index) => {
@@ -555,18 +575,104 @@ function describeStageTemplateAssertion(
   });
 
   if (mismatchIndex === -1 && expectedStages.length === lineageStages.length) {
-    return `${lineageStages.length}/${expectedStages.length} stages matched the configured golden template`;
+    return {
+      passed: true,
+      detail: `${lineageStages.length}/${expectedStages.length} stages matched the configured golden template`,
+    };
   }
 
   if (mismatchIndex === -1) {
-    return `Expected ${expectedStages.length} configured stages, recorded ${lineageStages.length}`;
+    return {
+      passed: false,
+      detail: `Expected ${expectedStages.length} configured stages, recorded ${lineageStages.length}`,
+    };
   }
 
   const expectedStage = expectedStages[mismatchIndex];
   const actualStage = lineageStages[mismatchIndex];
   if (!actualStage) {
-    return `Expected stage ${mismatchIndex + 1} ${expectedStage.label}, but recorded lineage ended early`;
+    return {
+      passed: false,
+      detail: `Expected stage ${mismatchIndex + 1} ${expectedStage.label}, but recorded lineage ended early`,
+    };
   }
 
-  return `Expected stage ${mismatchIndex + 1} ${expectedStage.key}, recorded ${actualStage.stage_key}`;
+  return {
+    passed: false,
+    detail: `Expected stage ${mismatchIndex + 1} ${expectedStage.key}, recorded ${actualStage.stage_key}`,
+  };
+}
+
+function describeStageDurationProfileAssertion(
+  expectedStages: GoldenSample["expected_stages"],
+  completedStages: Array<
+    Pick<RunStage, "stage_order" | "stage_key" | "stage_label" | "duration_ms">
+  >,
+  stageTemplateAssertion: GoldenAssertionResult,
+): GoldenAssertionResult {
+  if (expectedStages.length === 0) {
+    return {
+      passed: false,
+      detail: "Golden sample has no expected stage durations configured",
+    };
+  }
+
+  if (completedStages.length === 0) {
+    return {
+      passed: false,
+      detail: "No completed stage durations were present in the exported run",
+    };
+  }
+
+  if (!stageTemplateAssertion.passed) {
+    return {
+      passed: false,
+      detail: `Golden stage duration template could not be verified until the stage template matches (${stageTemplateAssertion.detail})`,
+    };
+  }
+
+  const mismatchIndex = expectedStages.findIndex((expectedStage, index) => {
+    const actualStage = completedStages[index];
+    return (
+      actualStage == null ||
+      typeof expectedStage.duration_ms !== "number" ||
+      actualStage.duration_ms !== expectedStage.duration_ms
+    );
+  });
+
+  if (mismatchIndex === -1 && expectedStages.length === completedStages.length) {
+    return {
+      passed: true,
+      detail: `${completedStages.length}/${expectedStages.length} stage durations matched the configured golden template`,
+    };
+  }
+
+  if (mismatchIndex === -1) {
+    return {
+      passed: false,
+      detail: `Expected ${expectedStages.length} configured stage durations, recorded ${completedStages.length}`,
+    };
+  }
+
+  const expectedStage = expectedStages[mismatchIndex];
+  const actualStage = completedStages[mismatchIndex];
+
+  if (typeof expectedStage.duration_ms !== "number") {
+    return {
+      passed: false,
+      detail: `Expected stage ${mismatchIndex + 1} ${expectedStage.key} has no configured duration`,
+    };
+  }
+
+  if (!actualStage) {
+    return {
+      passed: false,
+      detail: `Expected stage ${mismatchIndex + 1} duration ${expectedStage.duration_ms}ms, but recorded stages ended early`,
+    };
+  }
+
+  return {
+    passed: false,
+    detail: `Expected stage ${mismatchIndex + 1} ${expectedStage.key} duration ${expectedStage.duration_ms}ms, recorded ${actualStage.duration_ms == null ? "null" : `${actualStage.duration_ms}ms`}`,
+  };
 }

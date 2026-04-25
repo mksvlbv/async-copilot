@@ -297,6 +297,39 @@ function buildNonGoldenExportData() {
   return data;
 }
 
+function buildApprovalFallbackExportData() {
+  const data = buildReadyExportData();
+  data.approval_history = [
+    {
+      id: "approval_123",
+      workspace_id: "ws_123",
+      run_id: "run_123",
+      response_pack_id: "pack_123",
+      actor_user_id: "user_123",
+      actor_label: null,
+      approved_at: "2026-04-25T08:05:30.000Z",
+      created_at: "2026-04-25T08:05:30.000Z",
+    },
+    {
+      id: "approval_124",
+      workspace_id: "ws_123",
+      run_id: "run_123",
+      response_pack_id: "pack_123",
+      actor_user_id: null,
+      actor_label: null,
+      approved_at: "2026-04-25T08:05:45.000Z",
+      created_at: "2026-04-25T08:05:45.000Z",
+    },
+  ];
+  return data;
+}
+
+function buildUnsafeFilenameExportData() {
+  const data = buildReadyExportData();
+  data.case.case_ref = 'CASE "123" / export\\review';
+  return data;
+}
+
 describe("GET /api/runs/[runId]/export", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -404,7 +437,7 @@ describe("GET /api/runs/[runId]/export", () => {
           {
             key: "slack_approval_boundary",
             passed: true,
-            detail: "Notify escalation channel remains approval-gated",
+            detail: "Notify escalation channel is still marked as requiring approval",
           },
         ],
         approval_history: [
@@ -445,7 +478,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[PASS] **Golden stage duration template matched:** 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] **Golden confidence matched:** Expected 84% and exported 84%");
     expect(text).toContain("[PASS] **Golden urgency matched:** Expected high and exported high");
-    expect(text).toContain("[PASS] **Slack approval boundary preserved:** Notify escalation channel remains approval-gated");
+    expect(text).toContain("[PASS] **Slack action remains approval-gated:** Notify escalation channel is still marked as requiring approval");
     expect(text).toContain("- 01 Ingest Case — AI");
     expect(text).toContain("- 02 Normalize Facts — Synthetic fallback");
     expect(text).toContain("### Approval history");
@@ -473,7 +506,58 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[PASS] Golden stage duration template matched: 3/3 stage durations matched the configured golden template");
     expect(text).toContain("[PASS] Golden confidence matched: Expected 84% and exported 84%");
     expect(text).toContain("[PASS] Golden urgency matched: Expected high and exported high");
-    expect(text).toContain("[PASS] Slack approval boundary preserved: Notify escalation channel remains approval-gated");
+    expect(text).toContain("[PASS] Slack action remains approval-gated: Notify escalation channel is still marked as requiring approval");
+  });
+
+  it("returns a sanitized download filename in markdown export headers", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildUnsafeFilenameExportData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=markdown");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Disposition")).toBe(
+      'attachment; filename="CASE-123-export-review.md"',
+    );
+  });
+
+  it("returns markdown export with approval-history fallback labels", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildApprovalFallbackExportData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=markdown");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/markdown");
+
+    const text = await response.text();
+    expect(text).toContain("### Approval history");
+    expect(text).toContain("Workspace reviewer");
+    expect(text).toContain("Historical approval");
+  });
+
+  it("returns text export with approval-history fallback labels", async () => {
+    maybeSingle.mockResolvedValue({
+      data: buildApprovalFallbackExportData(),
+      error: null,
+    });
+
+    const request = new Request("https://async-copilot.vercel.app/api/runs/run_123/export?format=text");
+    const response = await GET(request, { params: Promise.resolve({ runId: "run_123" }) });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+
+    const text = await response.text();
+    expect(text).toContain("Approval history:");
+    expect(text).toContain("Workspace reviewer");
+    expect(text).toContain("Historical approval");
   });
 
   it("returns failing golden assertions when the exported run drifts from the configured golden contract", async () => {
@@ -520,7 +604,7 @@ describe("GET /api/runs/[runId]/export", () => {
           {
             key: "slack_approval_boundary",
             passed: false,
-            detail: "Notify escalation channel no longer requires approval",
+            detail: "Notify escalation channel is no longer marked as requiring approval",
           },
         ],
       },
@@ -546,7 +630,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[FAIL] **Golden confidence matched:** Expected 91% and exported 84%");
     expect(text).toContain("[FAIL] **Golden urgency matched:** Expected high and exported medium");
     expect(text).toContain("[FAIL] **Timing evidence recorded:** No timing summary was present in the exported trust evidence");
-    expect(text).toContain("[FAIL] **Slack approval boundary preserved:** Notify escalation channel no longer requires approval");
+    expect(text).toContain("[FAIL] **Slack action remains approval-gated:** Notify escalation channel is no longer marked as requiring approval");
   });
 
   it("returns text export with failing golden assertion lines when the configured golden contract drifts", async () => {
@@ -568,7 +652,7 @@ describe("GET /api/runs/[runId]/export", () => {
     expect(text).toContain("[FAIL] Golden confidence matched: Expected 91% and exported 84%");
     expect(text).toContain("[FAIL] Golden urgency matched: Expected high and exported medium");
     expect(text).toContain("[FAIL] Timing evidence recorded: No timing summary was present in the exported trust evidence");
-    expect(text).toContain("[FAIL] Slack approval boundary preserved: Notify escalation channel no longer requires approval");
+    expect(text).toContain("[FAIL] Slack action remains approval-gated: Notify escalation channel is no longer marked as requiring approval");
   });
 
   it("omits golden assertion evidence for non-golden exports", async () => {

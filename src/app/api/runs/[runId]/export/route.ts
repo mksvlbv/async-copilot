@@ -168,11 +168,13 @@ export async function GET(
   }
 
   const text = format === "text" ? renderText(payload) : renderMarkdown(payload);
+  const extension = format === "text" ? "txt" : "md";
+  const exportFilename = `${sanitizeExportFilenameBase(caseRow?.case_ref)}.${extension}`;
   return new NextResponse(text, {
     status: 200,
     headers: {
       "Content-Type": format === "text" ? "text/plain; charset=utf-8" : "text/markdown; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${caseRow?.case_ref ?? "export"}.${format === "text" ? "txt" : "md"}"`,
+      "Content-Disposition": `attachment; filename="${exportFilename}"`,
     },
   });
 }
@@ -452,6 +454,19 @@ function formatAttempt(value: string) {
   return `${yyyy}-${mm}-${dd} ${hh}:${min} UTC`;
 }
 
+function sanitizeExportFilenameBase(value: string | null | undefined) {
+  if (!value) {
+    return "export";
+  }
+
+  const sanitized = value
+    .replace(/[^A-Za-z0-9_-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return sanitized.length > 0 ? sanitized : "export";
+}
+
 type GoldenSample = Pick<
   Sample,
   "slug" | "name" | "urgency" | "is_golden" | "expected_confidence" | "expected_stages"
@@ -546,12 +561,12 @@ function buildGoldenAssertions({
     },
     {
       key: "slack_approval_boundary",
-      label: "Slack approval boundary preserved",
+      label: "Slack action remains approval-gated",
       passed: slackApprovalBoundaryPreserved,
       detail: slackAction
         ? slackApprovalBoundaryPreserved
-          ? `${slackAction.label} remains approval-gated`
-          : `${slackAction.label} no longer requires approval`
+          ? `${slackAction.label} is still marked as requiring approval`
+          : `${slackAction.label} is no longer marked as requiring approval`
         : "No Slack staged action was present in the exported pack",
     },
   ];

@@ -13,6 +13,11 @@ The goal is not to explain every implementation detail. The goal is to help a re
 
 ## Recording Goal
 
+This script belongs to the current demo asset package:
+
+- `docs/demo/2026-04-25-async-copilot-demo-asset-package.md`
+- `public/demo/demo.gif`
+
 Show this sequence clearly:
 
 1. intake
@@ -141,12 +146,14 @@ Short narration:
 
 ## README Companion
 
-The README already contains:
+The README and demo package already contain:
 
 - `Reviewer Quick Read`
 - `Operator Use Case`
 - `End-to-End Flow`
 - `Proof Map`
 - `Trust Evidence Snapshot`
+- `public/demo/demo.gif`
+- `docs/demo/2026-04-25-async-copilot-demo-asset-package.md`
 
 Use this walkthrough as the visual companion to those sections.

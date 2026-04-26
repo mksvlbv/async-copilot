@@ -116,13 +116,15 @@ The trust/evidence layer stays intentionally narrow, but it now proves reviewer-
 
 ## Demo Walkthrough
 
-The fastest visual way to evaluate this project is a short operator walkthrough.
+The fastest visual way to evaluate this project is the bundled demo preview plus the short operator walkthrough.
 
+- Demo preview: `public/demo/demo.gif`
+- Demo asset package: `docs/demo/2026-04-25-async-copilot-demo-asset-package.md`
 - Recording script: `docs/demo/2026-04-20-async-copilot-reviewer-walkthrough.md`
 - Target length: **60-90 seconds**
 - Core sequence: **intake -> run -> terminal pack -> approval -> Slack status -> export**
 
-Until a final GIF/video is attached, this walkthrough doc is the source of truth for the demo narrative.
+The GIF is the primary quick-look asset. The walkthrough remains the source of truth for re-recording a narrated 60-90 second demo.
 
 ### Screenshot Gallery
 

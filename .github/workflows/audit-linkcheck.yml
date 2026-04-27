@@ -36,7 +36,7 @@ jobs:
           format: markdown
           output: ./lychee-report.md
           fail: false # don't fail the workflow — advisory
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: lychee-report

@@ -72,39 +72,46 @@ sequenceDiagram
 
 ## Directory Structure
 
-```
+```bash
 src/
 ├── app/
-│   ├── (app)/              # Authenticated workspace shell
-│   │   └── app/            # Onboarding + workspace intake, runs, samples
 │   ├── (marketing)/        # Landing + legal pages
+│   ├── (app)/              # Authenticated workspace shell
+│   │   └── app/
+│   │       ├── onboarding/ # First-workspace bootstrap
+│   │       └── w/[workspaceSlug]/
+│   │           ├── page.tsx
+│   │           ├── runs/
+│   │           └── samples/
 │   └── api/
-│       ├── cases/          # CRUD for support cases
+│       ├── cases/          # Support case CRUD + similarity lookup
+│       ├── gmail/          # Google OAuth callback
 │       ├── runs/           # Run lifecycle (create, advance, stream, export)
-│       │   └── [runId]/
-│       │       ├── advance/    # POST — step the state machine
-│       │       ├── stream/     # GET  — SSE real-time LLM tokens
-│       │       ├── approve/    # POST — human approval
-│       │       └── export/     # GET  — export run data
 │       ├── samples/        # Pre-built demo scenarios
+│       ├── workspaces/     # Workspace bootstrap
 │       ├── health/         # Uptime check
 │       └── cron/
-│           ├── cleanup-stale/  # Hourly: kill zombie runs
-│           └── daily-stats/    # Daily: snapshot metrics
-├── lib/
-│   ├── ai/
-│   │   ├── client.ts       # Groq provider (Vercel AI SDK)
-│   │   └── prompts.ts      # 6 stage-specific system prompts
-│   ├── supabase/
-│   │   ├── admin.ts        # Service-role client (bypasses RLS)
-│   │   └── types.ts        # Hand-written DB types kept in sync with schema
-│   ├── triage/
-│   │   └── run-model.ts    # State machine logic + synthetic fallback
-│   ├── integrations/
-│   │   └── slack.ts        # Approval-gated Slack webhook dispatch
-│   └── rate-limit.ts       # In-memory rate limiter (20 req/min/IP)
+│           ├── process-runs/   # Minute cron: background pickup
+│           ├── cleanup-stale/  # Daily cleanup of zombie runs
+│           └── daily-stats/    # Daily metrics snapshot
+├── components/             # Shared marketing and shell UI
+├── features/               # Intake and runs UI modules
+└── lib/
+    ├── ai/
+    │   ├── client.ts       # Groq provider (Vercel AI SDK)
+    │   └── prompts.ts      # 6 stage-specific system prompts
+    ├── runs/               # Background execution and event helpers
+    ├── supabase/
+    │   ├── admin.ts        # Service-role client (bypasses RLS)
+    │   └── types.ts        # Hand-written DB types kept in sync with schema
+    ├── triage/
+    │   └── run-model.ts    # State machine logic + synthetic fallback
+    ├── integrations/
+    │   ├── gmail.ts        # Narrow Gmail import helper
+    │   └── slack.ts        # Approval-gated Slack webhook dispatch
+    └── rate-limit.ts       # In-memory rate limiter (20 req/min/IP)
 tests/
-├── unit/                   # Vitest unit tests for run model + route behavior
+├── unit/                   # Vitest unit tests for route/model behavior
 └── golden-path.spec.ts     # Playwright E2E
 supabase/
 ├── migrations/             # Postgres schema + workspace/trust slices (001-011)
@@ -158,12 +165,13 @@ This keeps the implementation honest while still proving a real external boundar
 In-memory sliding-window rate limiter (20 requests/minute/IP) on write endpoints.
 Zero external dependencies. Can be swapped for `@upstash/ratelimit` for distributed limiting.
 
-### 6. Self-Healing Cron
+### 6. Background and Maintenance Cron
 
-**Hourly:** `cleanup-stale` finds runs stuck in "running" for >30 minutes and marks them "failed".
+**Every minute:** `process-runs` picks up queued, retrying, or lease-expired runs and advances them server-side.
+**Daily:** `cleanup-stale` finds runs stuck in "running" for >30 minutes and marks them "failed".
 **Daily:** `daily-stats` snapshots platform metrics into `daily_stats` table.
 
-Both are secured via `CRON_SECRET` header (set automatically by Vercel).
+Cron endpoints check a `Bearer ${CRON_SECRET}` authorization header when `CRON_SECRET` is configured.
 
 ## Data Model
 

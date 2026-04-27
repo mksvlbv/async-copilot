@@ -6,13 +6,16 @@
 .openclaude/
 CLAUDE.md
 
+# Local scratch work
+scratch/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 
-# Node (for future Next.js implementation)
+# Node / Next.js
 node_modules/
 .next/
 out/

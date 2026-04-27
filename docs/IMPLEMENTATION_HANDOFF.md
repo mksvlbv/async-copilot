@@ -16,7 +16,7 @@ This document is the original MVP implementation handoff. For any new work, read
 4. `docs/plans/2026-04-18-001-feat-async-copilot-demo-plan.md` — MVP implementation plan with dependencies and test scenarios
 5. `docs/design/2026-04-18-variant-brief.md` — Variant.com design brief (6 screen prompts)
 6. `docs/design/variant-exports/README.md` — tech stack detected, fixes to apply, visual DNA summary
-7. `docs/design/variant-exports/{01-06}/` — actual HTML + screenshot for each of 6 screens
+7. `docs/design/variant-exports/{01-06}/` — reference `index.html` + screenshot + source URL for each of 6 screens
 
 ### Important note
 Sections below describe the shipped MVP build path. They remain useful for historical context and design intent, but they do not override the v2 spec.
@@ -43,17 +43,13 @@ Do **not** introduce additional UI libraries (shadcn, Radix, Headless UI) unless
 
 ## 3. Design system extraction — first task
 
-The Variant exports are **fully audited and self-contained**:
+The Variant exports remain useful as historical design references:
 - Each `index.html` contains compiled Tailwind CSS inline (24-30 KB `<style>` block)
 - No JavaScript — designs are static markup
-- All external assets (Inter + JetBrains Mono fonts, Phosphor Icons) mirrored in `docs/design/variant-exports/_vendor/`
-- Each folder has both `index.html` (with CDN references) and `index.offline.html` (fully local, verified working with 0 console errors)
+- The public repo keeps the slim reference set only: `index.html`, `screenshot.png`, and `source-url.txt`
+- Old offline duplicates and vendored font/icon dumps were removed during GitHub hiring-readiness cleanup
 
-To view any screen offline during implementation:
-```
-python -m http.server 8765 --directory docs/design/variant-exports
-# then open http://localhost:8765/01-landing/index.offline.html
-```
+To inspect any screen during implementation, open `docs/design/variant-exports/01-landing/index.html` or review the paired screenshots in the same folders.
 
 Before scaffolding, Cascade should:
 

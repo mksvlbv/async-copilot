@@ -6,27 +6,20 @@ Live demo: **https://async-copilot.vercel.app**
 
 ![Async Copilot Demo Walkthrough](public/demo/demo.gif)
 
-A full-stack implementation case study that shows a support-triage pipeline end-to-end: landing page -> case intake -> live-run signature screen -> completed response pack. Built with Next.js 15 App Router, Supabase (Postgres), Tailwind, and **real AI inference** via Llama 3.3 70B (Groq).
+A hiring-focused AI Product Engineer case study: a scoped support-triage workflow with real LLM inference, deterministic fallback, human approval gates, Slack dispatch evidence, and portable reviewer exports.
 
-## What this demonstrates
+## Why this project exists
 
-- **6-stage support workflow** with visible progression, approval gates, and exportable response packs.
-- **Real AI inference plus graceful fallback**: Groq streaming when configured, synthetic stage output when it is not.
-- **Human-approved outbound integration**: optional Slack webhook dispatch after approval, with dry-run mode and visible dispatch status.
-- **Production-style delivery discipline**: 5-table data model, unit and E2E coverage for critical flows, GitHub Actions CI, health checks, and cron cleanup.
-- **Free-tier systems thinking**: deployable on Vercel + Supabase + Groq without paid infrastructure.
+Async Copilot is not a generic chatbot demo. It shows how AI can sit inside a real operational workflow where a human operator still owns the final decision.
 
-## Skills Demonstrated in This Project
+The product proves a narrow but complete loop:
 
-- 🏗️ **Full-Stack Architecture**: Next.js 15 App Router, Supabase, Tailwind, Vercel AI SDK
-- 🤖 **AI Integration**: Real LLM inference (Groq/Llama 3.3 70B) with graceful fallback mechanisms
-- ♿️ **Accessibility**: ARIA live regions, skip navigation, contrast optimization, screen reader support
-- ⚡ **Performance**: Core Web Vitals monitoring, bundle budgeting, image optimization, React rendering optimization
-- 🛡️ **Resilience**: Error Boundaries, retry mechanisms with exponential backoff, circuit breaker patterns
-- 🧪 **Advanced Testing**: Contract testing, accessibility unit tests, visual regression, performance testing
-- 🔒 **Security**: Dependency scanning, CSP headers, input validation/sanitization, sophisticated rate limiting
-- 📊 **Observability**: Sentry error tracking, request ID tracing, comprehensive logging
-- 📝 **Documentation**: Architecture Decision Records, code comments for complex algorithms, API documentation
+- **Workflow product thinking:** intake -> visible triage -> response pack -> approval -> export.
+- **Applied AI integration:** Groq/Llama inference when configured, synthetic fallback when not.
+- **Trust boundaries:** no autonomous outbound action; Slack dispatch is approval-gated and logged.
+- **Durability:** persisted run stages, event timeline, background pickup, retries, and idempotent action attempts.
+- **Reviewer evidence:** markdown/text/JSON exports include provenance, approval history, action log, timing/fallback summaries, and golden assertions.
+- **Delivery discipline:** unit tests, E2E smoke coverage, CI, audit tooling, and documented scope boundaries.
 
 ---
 
@@ -97,8 +90,18 @@ What is proven in code, not just described:
 
 - **Golden-path E2E:** intake -> run -> escalation/completion -> approve -> export
 - **Failure-path unit tests:** export before pack ready, stream without AI, approval dispatch state
-- **Build hygiene:** typecheck, lint, unit tests, production build in CI
+- **Build hygiene:** lint, unit tests, production build, typecheck, and high-severity production dependency audit in CI
 - **Honest fallback:** the app remains usable without a model key
+
+## Hiring Signal
+
+This repository is structured as a flagship portfolio project for an **AI Product Engineer / Applied AI Engineer** profile.
+
+- **Product judgment:** scoped a narrow support-ops workflow instead of a broad chatbot.
+- **Full-stack execution:** shipped UI, API routes, database schema, auth/workspaces, and deployment wiring.
+- **AI workflow engineering:** integrated streaming LLM output while keeping deterministic fallback behavior.
+- **Trust and evaluation:** added provenance, approval history, action attempts, golden assertions, and portable exports.
+- **Professional delivery:** kept validation gates, GitHub Actions, audit docs, demo assets, and scope boundaries aligned.
 
 ## Trust Evidence Snapshot
 
@@ -176,7 +179,7 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 | `/api/samples` · `/api/cases` · `/api/runs` · `/api/runs/[id]` | REST endpoints |
 | `/api/runs/[id]/advance` · `/approve` · `/export` | Run lifecycle mutations + export |
 | `/api/runs/[id]/stream` | **SSE streaming** — real-time LLM tokens (Llama 3.3 70B) |
-| `/api/cron/cleanup-stale` · `/api/cron/daily-stats` | Self-healing cron jobs (Vercel Cron) |
+| `/api/cron/process-runs` · `/cleanup-stale` · `/daily-stats` | Background pickup and maintenance cron jobs |
 
 ---
 
@@ -184,16 +187,16 @@ Try **Paste** instead: type or paste your own case body in the textarea → it s
 
 - **Framework**: Next.js 15 (App Router, TypeScript, typedRoutes, `next/font/google`)
 - **AI Inference**: Groq (Llama 3.3 70B) via Vercel AI SDK 6 — real streaming, JSON output
-- **Styling**: Tailwind CSS 3.4 with design tokens extracted from Variant exports
+- **Styling**: Tailwind CSS 3.4 with project design tokens
 - **Icons**: `@phosphor-icons/react` (server-side rendered SVG)
 - **Database**: Supabase Postgres 17 (`eu-west-1` / Ireland)
 - **Auth**: Supabase Auth (magic link), `@supabase/ssr` (browser + server), `@supabase/supabase-js` (admin)
 - **Observability**: Sentry (error tracking, 5k events/mo free tier)
 - **Hosting**: Vercel (Stockholm edge, auto-deploy on every push to `main`)
 - **Unit Tests**: Vitest · **E2E**: Playwright
-- **CI/CD**: GitHub Actions (typecheck + lint + unit tests + production build on every PR)
+- **CI/CD**: GitHub Actions (audit + lint + unit tests + build + typecheck on pushes/PRs)
 - **Rate Limiting**: In-memory sliding window (20 req/min/IP)
-- **Cron**: Vercel Cron (daily stale-run cleanup, daily stats snapshot)
+- **Cron**: Vercel Cron (background run pickup, stale-run cleanup, daily stats snapshot)
 
 **Total monthly cost: $0** (all services on free tiers)
 
@@ -310,7 +313,7 @@ If `GOOGLE_OAUTH_REDIRECT_URI` is set, it must match one of the allowed redirect
 - **SSE streaming with polling fallback** — When `GROQ_API_KEY` is set, the client connects via SSE and streams real LLM tokens. Without it, falls back to `800ms` polling with synthetic (regex) output. Zero-config degradation.
 - **Real AI, graceful fallback** — Llama 3.3 70B via Groq generates structured JSON for each stage. If the LLM fails or key is missing, regex-based inference kicks in seamlessly.
 - **Rate limiting** — In-memory sliding window (20 req/min/IP) on write endpoints. Upgradeable to Upstash Redis.
-- **Self-healing** — Vercel Cron runs daily to clean up zombie runs stuck in "running" state.
+- **Background pickup and cleanup** — Vercel Cron picks up queued/retrying runs and cleans up stale running runs.
 - **Approval-gated integration boundary** — no autonomous action. Human approval can dispatch a Slack summary (live or dry-run); all other staged actions remain queued.
 - **Narrow real Gmail intake** — a workspace can connect one Gmail inbox and manually import one thread/message into a case and run. Full sync/history processing remains deferred.
 - **Idempotent schema + seeds** — `npm run db:init` is safe to re-run. Demo environment can be reset cheaply.
@@ -325,48 +328,60 @@ src/
   app/
     layout.tsx, icon.svg, error.tsx, not-found.tsx
     (marketing)/
-      page.tsx                         # landing — 7 sections
-      _sections/hero-mockup.tsx        # 3-column workspace mockup
+      page.tsx                         # landing page
     (app)/
-      layout.tsx                        # app-shell
-      _components/app-header.tsx        # sticky nav with active highlight
+      layout.tsx                       # authenticated app shell
       app/
-        page.tsx                        # new-case intake (client)
-        runs/
-          page.tsx                      # server wrapper
-          _components/runs-table.tsx    # client filter + table
-          [runId]/
-            page.tsx                    # server detail loader
-            _components/live-run-view.tsx  # signature screen (polling)
-        samples/page.tsx                # library with golden + alternatives
+        onboarding/page.tsx            # first-workspace bootstrap
+        w/[workspaceSlug]/
+          page.tsx                     # case intake + sample picker
+          runs/page.tsx                # workspace run history
+          runs/[runId]/page.tsx        # live run detail
+          samples/page.tsx             # scenario library
     api/
       cases/route.ts                   # GET list, POST create
+      cases/[caseId]/similar/route.ts  # pgvector similarity lookup
+      gmail/callback/route.ts          # Google OAuth callback
       samples/route.ts                 # GET list
       runs/route.ts                    # GET list, POST create
       runs/[runId]/route.ts            # GET detail
       runs/[runId]/advance/route.ts    # POST — one stage forward
       runs/[runId]/approve/route.ts    # POST — approve response pack
       runs/[runId]/export/route.ts     # GET — markdown/text/json
+      runs/[runId]/stream/route.ts     # GET — SSE stage streaming
+      workspaces/route.ts              # workspace bootstrap
+      cron/process-runs/route.ts       # background run pickup
       health/route.ts                  # GET — env + schema + counts
+  components/
+    marketing/hero-mockup.tsx
+    shared/app-header.tsx
+  features/
+    intake/components/new-case-page.tsx
+    runs/components/live-run-view.tsx
+    runs/components/runs-table.tsx
   lib/
     ai/client.ts                         # Groq provider (Vercel AI SDK)
     integrations/slack.ts                # approval-gated Slack webhook helper
+    integrations/gmail.ts                # narrow manual Gmail import helper
     ai/prompts.ts                        # 6 stage system prompts
     supabase/{client,server,admin,types}.ts
+    runs/{background,create-run,events,execute-step}.ts
     triage/run-model.ts                  # state machine + synthetic fallback
     rate-limit.ts                        # in-memory rate limiter
 supabase/
-  migrations/001-004                     # Postgres schema
+  migrations/001-011                     # Postgres schema through Milestone 5
   seeds/{001_samples,002_golden_run}.sql
-  scripts/db-init.mjs                      # pg-based migrator (no Supabase CLI)
+scripts/
+  db-init.mjs                            # pg-based migrator (no Supabase CLI)
 tests/
   unit/*.test.ts                         # route + model unit coverage
   golden-path.spec.ts                    # Playwright E2E
 docs/
-  ideation/        brainstorms/        plans/
-  design/
-    design-system.md                   # canonical tokens
-    variant-exports/                   # downloaded Variant HTML + vendored fonts/icons
+  audit/                                # audit reports and scorecards
+  brainstorms/                          # requirements and v2 product spec
+  case-study/                           # reviewer-facing engineering narrative
+  demo/                                 # GIF/screenshots/walkthrough package
+  design/                               # design system and reference screenshots
 ```
 
 ---
@@ -409,24 +424,21 @@ reports stay accessible without polluting the repo.
 npm run audit         # links + a11y + perf + visual
 ```
 
-Artifacts are written to `.lighthouseci/`, `.lostpixel/`, and
-`docs/audit/ai-<date>.md` respectively. Baselines for Lost Pixel live in
-`.lostpixel/baseline/` and **should be committed** after a visual change
-is approved.
+Artifacts are written to `.lighthouseci/`, `.lostpixel/`, and workflow artifacts. Baselines for Lost Pixel should be committed only after an intentional visual change is approved.
 
 ### Last audit report
 
-See `docs/audit/2026-04-18.md` for the current baseline scorecard and
-fixed findings.
+See `docs/audit/2026-04-26-github-hiring-readiness.md` for the current GitHub/repository hygiene pass and `docs/audit/2026-04-18.md` for the original site-audit baseline.
 
 ---
 
 ## Documents for reviewers
 
-- `docs/ideation/2026-04-17-async-copilot-ideation.md` — product concept
+- `docs/case-study/engineering-case-study.md` — concise engineering narrative
+- `docs/demo/2026-04-25-async-copilot-demo-asset-package.md` — GIF, screenshots, and walkthrough map
+- `docs/audit/2026-04-26-github-hiring-readiness.md` — repo hygiene and security audit
+- `ARCHITECTURE.md` — system architecture, data model, design decisions
 - `docs/brainstorms/2026-04-24-async-copilot-v2-spec.md` — v2 product spec, chosen scenario, and milestone order
 - `docs/brainstorms/2026-04-18-async-copilot-requirements.md` — 22 MVP requirements (R1–R22)
-- `docs/plans/2026-04-18-001-feat-async-copilot-demo-plan.md` — 9-unit build plan (what was delivered, unit-by-unit)
 - `docs/design/design-system.md` — canonical tokens
-- `docs/IMPLEMENTATION_HANDOFF.md` — original entry-point doc for the implementing agent
-- `ARCHITECTURE.md` — system architecture, data model, design decisions
+- `docs/plans/2026-04-18-001-feat-async-copilot-demo-plan.md` — original 9-unit build plan

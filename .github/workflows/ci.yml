@@ -23,9 +23,6 @@ jobs:
       - name: Dependency audit
         run: npm audit --omit=dev --audit-level=high
 
-      - name: Typecheck
-        run: npm run typecheck
-
       - name: Lint
         run: npm run lint
 
@@ -34,3 +31,6 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck

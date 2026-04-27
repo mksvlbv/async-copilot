@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src scripts eslint.config.mjs --ext .ts,.tsx,.mjs",
     "typecheck": "tsc --noEmit",
     "db:init": "node scripts/db-init.mjs all",
     "db:migrate": "node scripts/db-init.mjs migrate",

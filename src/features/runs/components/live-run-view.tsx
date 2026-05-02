@@ -224,11 +224,7 @@ export function LiveRunView({ initialRun, workspaceSlug, currentRole }: Props) {
   }, [aiMode, run.id, run.state, run.advance_cursor, run.execution_status, paused]);
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
-      {/* Mobile-only notice: left/right panels hidden < lg */}
-      <div className="lg:hidden px-5 py-2 bg-amber-50 border-b border-amber-100 text-[11px] font-mono text-amber-800 tracking-wide shrink-0">
-        Case Context &amp; Response Pack are best viewed on desktop.
-      </div>
+    <div className="flex-1 flex min-h-0 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
       <CaseContextPanel run={run} workspaceSlug={workspaceSlug} />
       <TimelinePanel
         run={run}
@@ -268,16 +264,16 @@ function CaseContextPanel({
   const queryStage = run.stages.find((s) => s.stage_key === "query");
 
   return (
-    <aside className="hidden lg:flex w-[340px] shrink-0 border-r border-gray-200 bg-white flex-col z-10">
+    <aside className="flex w-full shrink-0 flex-col border-b border-gray-200 bg-white z-10 lg:w-[300px] lg:border-b-0 lg:border-r xl:w-[340px]">
       <div className="h-12 border-b border-gray-100 flex items-center justify-between px-5 bg-gray-50/50 shrink-0">
-        <span className="text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest">
+        <span className="text-[10px] font-mono font-semibold text-gray-700 uppercase tracking-widest">
           Case Context
         </span>
-        <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded font-mono border border-gray-200">
+        <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-[10px] rounded font-mono border border-gray-200">
           STATIC
         </span>
       </div>
-      <div className="flex-1 overflow-y-auto mockup-scroll p-5 space-y-6">
+      <div className="mockup-scroll p-4 space-y-6 sm:p-5 lg:flex-1 lg:overflow-y-auto">
         {/* Customer identity */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Customer Identity</h3>
@@ -292,7 +288,7 @@ function CaseContextPanel({
         {/* Extracted Facts (populated from classify + query stage outputs) */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
-            <MagicWand size={14} weight="fill" className="text-gray-400" /> Extracted Facts
+            <MagicWand size={14} weight="fill" className="text-gray-500" /> Extracted Facts
           </h3>
           <div className="space-y-2.5">
             <Fact
@@ -361,9 +357,9 @@ function CaseContextPanel({
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex justify-between items-center">
-      <dt className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">{label}</dt>
-      <dd className={clsx("text-gray-900 font-medium", mono && "font-mono text-[11px] bg-gray-100 px-1.5 py-0.5 rounded")}>
+    <div className="flex items-center justify-between gap-3">
+      <dt className="text-gray-700 font-mono text-[10px] uppercase tracking-widest">{label}</dt>
+      <dd className={clsx("min-w-0 break-words text-right text-gray-900 font-medium", mono && "break-all font-mono text-[11px] bg-gray-100 px-1.5 py-0.5 rounded")}>
         {value}
       </dd>
     </div>
@@ -391,11 +387,11 @@ function Fact({
     accent === "red"
       ? "text-red-600"
       : accent === "amber"
-        ? "text-amber-600"
+        ? "text-amber-700"
         : "text-gray-900";
   return (
     <div className={clsx("flex flex-col gap-1 border-l-2 pl-3", borderClass)}>
-      <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">{label}</span>
+      <span className="text-[10px] font-mono text-gray-700 uppercase tracking-widest">{label}</span>
       <span className={clsx("text-sm font-medium", textClass, mono && "font-mono text-xs")}>
         {value}
       </span>
@@ -422,7 +418,7 @@ function EvidenceCard({
         </div>
         <CaretRight size={10} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
-      <p className={clsx("p-3 text-[11px] text-gray-700 leading-relaxed whitespace-pre-line", mono && "font-mono")}>
+      <p className={clsx("p-3 text-[11px] text-gray-700 leading-relaxed whitespace-pre-line break-words", mono && "font-mono")}>
         {body}
       </p>
     </div>
@@ -473,7 +469,7 @@ function SimilarCasesSection({
     return (
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
-          <ShareNetwork size={14} weight="fill" className="text-gray-400" /> Similar Cases
+          <ShareNetwork size={14} weight="fill" className="text-gray-500" /> Similar Cases
         </h3>
         <div className="animate-pulse space-y-2">
           <div className="h-14 bg-gray-100 rounded-md" />
@@ -488,8 +484,8 @@ function SimilarCasesSection({
   return (
     <div>
       <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-1.5">
-        <ShareNetwork size={14} weight="fill" className="text-gray-400" /> Similar Cases
-        <span className="text-[9px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-widest ml-auto">
+        <ShareNetwork size={14} weight="fill" className="text-gray-500" /> Similar Cases
+        <span className="text-[9px] font-mono text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 uppercase tracking-widest ml-auto">
           pgvector + trgm
         </span>
       </h3>
@@ -502,7 +498,7 @@ function SimilarCasesSection({
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-mono text-gray-500">{sc.case_ref}</span>
-              <span className="text-[9px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+              <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
                 {Math.round(sc.similarity * 100)}% match
               </span>
             </div>
@@ -545,13 +541,13 @@ function TimelinePanel({
 
   return (
     <section 
-      className="flex-1 flex flex-col bg-gray-50/50 min-w-0 overflow-hidden"
+      className="flex w-full flex-col bg-gray-50/50 min-w-0 lg:flex-1 lg:overflow-hidden"
       aria-live="polite"
       aria-atomic="true"
     >
       {/* Top header */}
-      <div className="px-8 py-6 border-b border-gray-200 bg-white/50 backdrop-blur-sm shrink-0">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="px-4 py-5 border-b border-gray-200 bg-white/50 backdrop-blur-sm shrink-0 sm:px-6 lg:px-6 lg:py-6 xl:px-8">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
           <span className="relative flex h-2 w-2" aria-hidden>
             {isTerminal ? (
               <span
@@ -586,17 +582,17 @@ function TimelinePanel({
             </span>
           )}
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+        <h1 className="break-words text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl">
           {run.case.title}
         </h1>
-        <p className="text-sm text-gray-500 mt-2 font-mono">
+        <p className="break-words text-sm text-gray-500 mt-2 font-mono">
           Running execution pipeline for {run.case.case_ref}
         </p>
         {pollError && <div className="mt-3 text-[11px] text-red-600 font-medium">{pollError}</div>}
       </div>
 
       {/* Timeline */}
-      <div className="flex-1 overflow-y-auto mockup-scroll px-8 py-8">
+      <div className="mockup-scroll px-4 py-6 sm:px-6 lg:flex-1 lg:overflow-y-auto lg:px-6 lg:py-8 xl:px-8">
         <div className="relative max-w-2xl mx-auto">
           <div className="relative">
             {/* Vertical line for the staged execution only. */}
@@ -663,8 +659,8 @@ function TimelinePanel({
           </div>
 
           {events.length > 0 ? (
-            <div className="mt-10 ml-12 border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+            <div className="mt-8 border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden sm:mt-10 sm:ml-12">
+              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-2">
                 <div className="text-[10px] font-mono font-semibold uppercase tracking-widest text-gray-500">
                   Event Timeline
                 </div>
@@ -674,7 +670,7 @@ function TimelinePanel({
               </div>
               <div className="divide-y divide-gray-100">
                 {events.map((eventItem) => (
-                  <div key={eventItem.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                  <div key={eventItem.id} className="px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0">
                       <div className="text-xs font-semibold text-gray-900">
                         {formatEventLabel(eventItem.event_type)}
@@ -687,7 +683,7 @@ function TimelinePanel({
                         {formatEventSummary(eventItem.payload)}
                       </div>
                     </div>
-                    <div className="shrink-0 text-[10px] font-mono text-gray-400">
+                    <div className="text-[10px] font-mono text-gray-400 sm:shrink-0">
                       {formatAttempt(eventItem.created_at)}
                     </div>
                   </div>
@@ -718,7 +714,7 @@ function StageBody({
 }) {
   if (pending) {
     return (
-      <div className="text-xs text-gray-400">Awaiting previous stage…</div>
+      <div className="text-xs text-gray-600">Awaiting previous stage…</div>
     );
   }
   if (running || isActiveStream) {
@@ -746,8 +742,8 @@ function StageBody({
   return (
     <div className="mt-1 bg-white border border-gray-200 rounded-md p-3 shadow-sm space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Output</span>
-        <span className="text-[10px] font-mono text-gray-400">{durationLabel ?? ""}</span>
+        <span className="text-[10px] font-mono text-gray-700 uppercase tracking-widest">Output</span>
+        <span className="text-[10px] font-mono text-gray-600">{durationLabel ?? ""}</span>
       </div>
       {provenance ? (
         <div className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2">
@@ -767,17 +763,17 @@ function StageBody({
             </span>
           </div>
           <dl className="mt-2 space-y-1 text-[10px] text-gray-600">
-            <div className="grid grid-cols-[56px_1fr] gap-2">
-              <dt className="font-mono uppercase tracking-widest text-gray-400">Prompt</dt>
+            <div className="grid grid-cols-1 gap-1 sm:grid-cols-[56px_1fr] sm:gap-2">
+              <dt className="font-mono uppercase tracking-widest text-gray-700">Prompt</dt>
               <dd className="font-mono break-all">{formatPromptReference(provenance)}</dd>
             </div>
-            <div className="grid grid-cols-[56px_1fr] gap-2">
-              <dt className="font-mono uppercase tracking-widest text-gray-400">Runtime</dt>
+            <div className="grid grid-cols-1 gap-1 sm:grid-cols-[56px_1fr] sm:gap-2">
+              <dt className="font-mono uppercase tracking-widest text-gray-700">Runtime</dt>
               <dd className="break-words">{formatRuntimeReference(provenance)}</dd>
             </div>
             {provenance.parse_error ? (
-              <div className="grid grid-cols-[56px_1fr] gap-2">
-                <dt className="font-mono uppercase tracking-widest text-gray-400">Warning</dt>
+              <div className="grid grid-cols-1 gap-1 sm:grid-cols-[56px_1fr] sm:gap-2">
+                <dt className="font-mono uppercase tracking-widest text-gray-700">Warning</dt>
                 <dd>Model returned non-JSON output; raw stage output was kept for review.</dd>
               </div>
             ) : null}
@@ -789,16 +785,16 @@ function StageBody({
           {Object.entries(out)
             .slice(0, 4)
             .map(([k, v]) => (
-              <div key={k} className="grid grid-cols-[auto_1fr] gap-2">
-                <dt className="text-gray-500">{k.replace(/_/g, " ")}</dt>
-                <dd className={clsx("font-medium truncate", typeof v === "string" && /^\d+$/.test(v) ? "font-mono" : "")}>
+              <div key={k} className="grid grid-cols-1 gap-1 sm:grid-cols-[auto_1fr] sm:gap-2">
+                <dt className="text-gray-700">{k.replace(/_/g, " ")}</dt>
+                <dd className={clsx("break-words font-medium sm:truncate", typeof v === "string" && /^\d+$/.test(v) ? "font-mono" : "")}>
                   {renderValue(v)}
                 </dd>
               </div>
             ))}
         </dl>
       ) : (
-        <div className="text-[11px] text-gray-400">No detailed output.</div>
+        <div className="text-[11px] text-gray-600">No detailed output.</div>
       )}
     </div>
   );
@@ -893,7 +889,7 @@ function ResponsePackPanel({
   }
 
   return (
-    <aside className="hidden lg:flex w-[360px] shrink-0 border-l border-gray-200 bg-white flex-col z-10 shadow-[-8px_0_24px_rgba(0,0,0,0.02)]">
+    <aside className="flex w-full shrink-0 flex-col border-t border-gray-200 bg-white z-10 shadow-[-8px_0_24px_rgba(0,0,0,0.02)] lg:w-[320px] lg:border-l lg:border-t-0 xl:w-[360px]">
       <div className="h-12 border-b border-gray-100 flex items-center justify-between px-5 bg-gray-50/50 shrink-0">
         <span className="text-[10px] font-mono font-semibold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
           <Package size={12} /> Response Pack
@@ -915,7 +911,7 @@ function ResponsePackPanel({
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto mockup-scroll p-5 space-y-4">
+      <div className="mockup-scroll p-4 space-y-4 sm:p-5 lg:flex-1 lg:overflow-y-auto">
         {/* Confidence card */}
         <div
           className={clsx(
@@ -923,16 +919,16 @@ function ResponsePackPanel({
             escalation ? "border-red-200 border-l-4 border-l-red-500" : "border-gray-200 border-l-4 border-l-green-500",
           )}
         >
-          <div className="p-4 border-b border-gray-100 flex justify-between items-start">
+          <div className="p-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="text-[10px] font-mono text-gray-500 uppercase mb-1">System Confidence</div>
+              <div className="text-[10px] font-mono text-gray-700 uppercase mb-1">System Confidence</div>
               <div className="text-2xl font-bold text-gray-900 font-mono tracking-tight flex items-baseline gap-1">
                 {run.confidence ?? "—"}
-                <span className="text-sm text-gray-400">%</span>
+                <span className="text-sm text-gray-600">%</span>
               </div>
             </div>
             {escalation && (
-              <div className="bg-red-50 text-red-700 text-[10px] font-mono px-2 py-0.5 rounded border border-red-100 font-medium">
+              <div className="w-fit bg-red-50 text-red-700 text-[10px] font-mono px-2 py-0.5 rounded border border-red-100 font-medium">
                 ESCALATION REQUIRED
               </div>
             )}
@@ -950,7 +946,7 @@ function ResponsePackPanel({
           <div className="border border-gray-200 rounded-md overflow-hidden shadow-sm">
             <div className="bg-gray-50 border-b border-gray-200 px-3 py-2 flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <Info size={12} className="text-gray-500" />
+                <Info size={12} className="text-gray-600" />
                 <span className="text-[10px] font-mono uppercase text-gray-600">Internal Triage Note</span>
               </div>
               <CheckCircle size={12} weight="fill" className="text-green-500" />
@@ -973,9 +969,9 @@ function ResponsePackPanel({
                 className="p-1 hover:bg-gray-200 rounded text-gray-500 disabled:opacity-40"
                 aria-label="Copy"
               >
-                {copyOk ? <CheckCircle size={12} weight="fill" className="text-green-600" /> : <Copy size={12} />}
+                {copyOk ? <CheckCircle size={12} weight="fill" className="text-green-700" /> : <Copy size={12} />}
               </button>
-              <span className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-[10px] font-mono uppercase tracking-widest text-gray-400">
+              <span className="px-1.5 py-0.5 rounded border border-gray-200 bg-white text-[10px] font-mono uppercase tracking-widest text-gray-700">
                 Read-only
               </span>
             </div>
@@ -988,16 +984,16 @@ function ResponsePackPanel({
         {/* Citations */}
         {pack && pack.citations.length > 0 && (
           <div className="border border-gray-200 rounded-md bg-gray-50/50 p-3">
-            <div className="text-[10px] font-mono uppercase text-gray-500 mb-2 tracking-widest">
+            <div className="text-[10px] font-mono uppercase text-gray-700 mb-2 tracking-widest">
               Sources Cited
             </div>
             <ul className="space-y-1.5 text-[11px] text-gray-700">
               {pack.citations.slice(0, 4).map((c) => (
                 <li key={c.id} className="flex items-start gap-2">
-                  <span className="font-mono text-gray-500 shrink-0">·</span>
+                    <span className="font-mono text-gray-700 shrink-0">·</span>
                   <div className="flex-1">
                     <span className="font-semibold">{c.source}</span>
-                    <span className="text-gray-500"> — {c.note}</span>
+                    <span className="text-gray-700"> — {c.note}</span>
                   </div>
                 </li>
               ))}
@@ -1011,40 +1007,40 @@ function ResponsePackPanel({
               <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold">
                 Pack Provenance
               </span>
-              <span className="text-[10px] font-mono text-gray-400">
+              <span className="text-[10px] font-mono text-gray-600">
                 {packLineage.stages.length} stage{packLineage.stages.length === 1 ? "" : "s"}
               </span>
             </div>
-            <div className="p-3 space-y-3">
-              <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
-                <dt className="font-mono uppercase tracking-widest text-gray-400">Created</dt>
-                <dd className="font-mono text-gray-500">{formatAttempt(packLineage.created_at)}</dd>
+            <dl className="p-3 space-y-3">
+              <div className="grid grid-cols-1 gap-1 text-[10px] text-gray-600 sm:grid-cols-[56px_1fr] sm:gap-2">
+                <dt className="font-mono uppercase tracking-widest text-gray-700">Created</dt>
+                <dd className="font-mono text-gray-700">{formatAttempt(packLineage.created_at)}</dd>
               </div>
-              <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
-                <dt className="font-mono uppercase tracking-widest text-gray-400">Execution</dt>
+              <div className="grid grid-cols-1 gap-1 text-[10px] text-gray-600 sm:grid-cols-[56px_1fr] sm:gap-2">
+                <dt className="font-mono uppercase tracking-widest text-gray-700">Execution</dt>
                 <dd>{packLineage.execution_summary}</dd>
               </div>
               {packLineage.timing_summary ? (
-                <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
-                  <dt className="font-mono uppercase tracking-widest text-gray-400">Timing</dt>
+                <div className="grid grid-cols-1 gap-1 text-[10px] text-gray-600 sm:grid-cols-[56px_1fr] sm:gap-2">
+                  <dt className="font-mono uppercase tracking-widest text-gray-700">Timing</dt>
                   <dd>{packLineage.timing_summary}</dd>
                 </div>
               ) : null}
               {packLineage.signals_summary ? (
-                <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
-                  <dt className="font-mono uppercase tracking-widest text-gray-400">Signals</dt>
+                <div className="grid grid-cols-1 gap-1 text-[10px] text-gray-600 sm:grid-cols-[56px_1fr] sm:gap-2">
+                  <dt className="font-mono uppercase tracking-widest text-gray-700">Signals</dt>
                   <dd>{packLineage.signals_summary}</dd>
                 </div>
               ) : null}
-              <div className="grid grid-cols-[56px_1fr] gap-2 text-[10px] text-gray-600">
-                <dt className="font-mono uppercase tracking-widest text-gray-400">Lineage</dt>
+              <div className="grid grid-cols-1 gap-1 text-[10px] text-gray-600 sm:grid-cols-[56px_1fr] sm:gap-2">
+                <dt className="font-mono uppercase tracking-widest text-gray-700">Lineage</dt>
                 <dd className="flex flex-wrap gap-1.5">
                   {packLineage.stages.map((stage) => (
                     <span
                       key={`${stage.stage_key}:${stage.stage_order}`}
                       className="inline-flex items-center gap-1.5 rounded border border-gray-200 bg-gray-50/70 px-2 py-1"
                     >
-                      <span className="font-mono text-gray-400">
+                      <span className="font-mono text-gray-600">
                         {String(stage.stage_order).padStart(2, "0")}
                       </span>
                       <span className="text-gray-700">{stage.stage_label}</span>
@@ -1054,7 +1050,7 @@ function ResponsePackPanel({
                             "rounded border px-1 py-0.5 text-[9px] font-mono uppercase tracking-widest",
                             stage.provenance.execution_mode === "ai"
                               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-amber-200 bg-amber-50 text-amber-700",
+                              : "border-amber-200 bg-amber-50 text-amber-800",
                           )}
                         >
                           {stage.provenance.execution_mode === "ai" ? "AI" : "Synthetic"}
@@ -1064,7 +1060,7 @@ function ResponsePackPanel({
                   ))}
                 </dd>
               </div>
-            </div>
+            </dl>
           </div>
         ) : null}
 
@@ -1073,9 +1069,9 @@ function ResponsePackPanel({
           <div className="border border-gray-200 rounded-md bg-white overflow-hidden">
             <div className="bg-gray-50 border-b border-gray-100 px-3 py-2 flex items-center justify-between">
               <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold flex items-center gap-1.5">
-                <Lightning size={12} className="text-gray-400" /> Staged Actions
+                <Lightning size={12} className="text-gray-500" /> Staged Actions
               </span>
-              <span className="text-[10px] font-mono text-gray-400">
+              <span className="text-[10px] font-mono text-gray-600">
                 {approved ? stagedActionsStatusLabel(slackAction) : "awaiting approval"}
               </span>
             </div>
@@ -1083,7 +1079,7 @@ function ResponsePackPanel({
               {pack.staged_actions.map((a, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 p-2 border border-gray-200 rounded-md bg-gray-50/50 cursor-default"
+                  className="flex items-start gap-3 p-2 border border-gray-200 rounded-md bg-gray-50/50 cursor-default"
                 >
                   <span
                     className={clsx(
@@ -1097,8 +1093,8 @@ function ResponsePackPanel({
                     )}
                     {a.status === "failed" && <span className="w-1.5 h-1.5 rounded-full bg-red-500" />}
                   </span>
-                  <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex min-w-0 flex-col">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <span className="text-xs font-semibold text-gray-900 truncate">
                         {a.label}
                       </span>
@@ -1111,17 +1107,17 @@ function ResponsePackPanel({
                         {a.status.replace("_", " ")}
                       </span>
                     </div>
-                    <span className="text-[10px] text-gray-500 font-mono truncate">
+                    <span className="text-[10px] text-gray-700 font-mono truncate">
                       {a.intent}
                       {a.target ? ` · ${a.target}` : ""}
                     </span>
                     {a.detail && (
-                      <span className="text-[10px] text-gray-500 leading-relaxed mt-1">
+                      <span className="text-[10px] text-gray-700 leading-relaxed mt-1">
                         {a.detail}
                       </span>
                     )}
                     {a.last_attempt_at && (
-                      <span className="text-[10px] text-gray-400 font-mono mt-1">
+                      <span className="text-[10px] text-gray-600 font-mono mt-1">
                         Last attempt {formatAttempt(a.last_attempt_at)}
                       </span>
                     )}
@@ -1138,7 +1134,7 @@ function ResponsePackPanel({
               <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold">
                 Approval History
               </span>
-              <span className="text-[10px] font-mono text-gray-400">
+              <span className="text-[10px] font-mono text-gray-600">
                 {approvalHistory.length} record{approvalHistory.length === 1 ? "" : "s"}
               </span>
             </div>
@@ -1149,7 +1145,7 @@ function ResponsePackPanel({
                   className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[10px] font-mono text-gray-500">
+                    <span className="text-[10px] font-mono text-gray-700">
                       {formatApprovalActor(approval)}
                     </span>
                     <span className="shrink-0 rounded border border-green-200 bg-green-50 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-green-700">
@@ -1159,7 +1155,7 @@ function ResponsePackPanel({
                   <div className="mt-1 text-[11px] text-gray-600 leading-relaxed">
                     Response pack crossed the reviewer approval boundary.
                   </div>
-                  <div className="mt-1 text-[10px] text-gray-400 font-mono">
+                  <div className="mt-1 text-[10px] text-gray-600 font-mono">
                     {formatAttempt(approval.approved_at)}
                   </div>
                 </div>
@@ -1174,7 +1170,7 @@ function ResponsePackPanel({
               <span className="text-[10px] font-mono uppercase text-gray-600 font-semibold">
                 Action Log
               </span>
-              <span className="text-[10px] font-mono text-gray-400">
+              <span className="text-[10px] font-mono text-gray-600">
                 {actionAttempts.length} attempt{actionAttempts.length === 1 ? "" : "s"}
               </span>
             </div>
@@ -1185,7 +1181,7 @@ function ResponsePackPanel({
                   className="rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[10px] font-mono text-gray-500">
+                    <span className="text-[10px] font-mono text-gray-700">
                       Attempt #{attempt.attempt_no}
                     </span>
                     <span
@@ -1201,11 +1197,11 @@ function ResponsePackPanel({
                     {attempt.action_label}
                   </div>
                   {attempt.detail ? (
-                    <div className="mt-1 text-[10px] text-gray-500 leading-relaxed">
+                    <div className="mt-1 text-[10px] text-gray-700 leading-relaxed">
                       {attempt.detail}
                     </div>
                   ) : null}
-                  <div className="mt-1 text-[10px] text-gray-400 font-mono">
+                  <div className="mt-1 text-[10px] text-gray-600 font-mono">
                     {formatAttempt(attempt.attempted_at)}
                     {attempt.target ? ` · ${attempt.target}` : ""}
                   </div>
@@ -1276,7 +1272,7 @@ function ResponsePackPanel({
         </button>
 
         {/* Secondary row: Export / Copy All */}
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <a
             href={`/api/runs/${run.id}/export?format=markdown`}
             className={clsx(
@@ -1295,7 +1291,7 @@ function ResponsePackPanel({
           >
             {copyAllOk ? (
               <>
-                <CheckCircle size={14} weight="fill" className="text-green-600" /> Copied
+                <CheckCircle size={14} weight="fill" className="text-green-700" /> Copied
               </>
             ) : (
               <>
@@ -1306,7 +1302,7 @@ function ResponsePackPanel({
         </div>
 
         {/* Tertiary row: Pause + back */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
           {!isTerminal ? (
             <button
               type="button"
@@ -1324,7 +1320,7 @@ function ResponsePackPanel({
               )}
             </button>
           ) : (
-            <span className="text-[10px] font-mono text-gray-400 tracking-wide">
+            <span className="text-[10px] font-mono text-gray-600 tracking-wide">
               Generated from staged triage run
             </span>
           )}

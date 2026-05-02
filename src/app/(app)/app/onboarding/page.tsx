@@ -46,8 +46,8 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-3xl items-center px-8 py-12">
-      <div className="w-full rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+    <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-3xl items-center px-4 py-8 sm:px-8 sm:py-12">
+      <div className="w-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="mb-6">
           <div className="mb-2 font-mono text-[11px] uppercase tracking-widest text-gray-500">
             Workspace Bootstrap
@@ -97,7 +97,7 @@ export default function OnboardingPage() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900 disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
           >
             {loading ? (
               <>

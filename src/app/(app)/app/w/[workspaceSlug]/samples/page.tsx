@@ -33,7 +33,7 @@ export default async function WorkspaceSamplesPage({
   const rest = samples.filter((sample) => !sample.is_golden);
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-10 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 py-6 space-y-8 sm:px-6 lg:px-8 lg:py-10">
       <div>
         <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
           Library
@@ -157,11 +157,11 @@ function SampleCard({
         ) : null}
       </div>
 
-      <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/30 flex items-center justify-between">
-        <span className="font-mono text-[10px] text-gray-400 tracking-wider">slug: {sample.slug}</span>
+      <div className="border-t border-gray-100 px-5 py-3 bg-gray-50/30 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="break-all font-mono text-[10px] text-gray-400 tracking-wider">slug: {sample.slug}</span>
         <Link
           href={`/app/w/${workspaceSlug}?sample=${sample.slug}` as never}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 hover:text-gray-950 transition-colors"
+          className="inline-flex w-full items-center justify-center gap-1.5 text-sm font-medium text-gray-900 hover:text-gray-950 transition-colors sm:w-auto sm:justify-start"
         >
           Load in New Case <ArrowRight size={12} weight="bold" />
         </Link>

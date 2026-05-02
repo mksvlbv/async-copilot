@@ -16,8 +16,8 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-        <div className="max-w-md w-full bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center">
+      <body className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10 sm:px-6">
+        <div className="max-w-md w-full bg-white border border-gray-200 rounded-xl shadow-sm p-5 text-center sm:p-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-5 h-5 bg-gray-950 rounded-sm" aria-hidden />
             <span className="font-bold tracking-tight text-lg">Async Copilot</span>
@@ -29,7 +29,7 @@ export default function GlobalError({
           {error?.digest && (
             <p className="font-mono text-[10px] text-gray-400 mb-6">digest: {error.digest}</p>
           )}
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <button
               type="button"
               onClick={reset}

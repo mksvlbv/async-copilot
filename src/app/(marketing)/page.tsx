@@ -40,10 +40,10 @@ export default function LandingPage() {
 function LandingHeader() {
   return (
     <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-sm border-b border-gray-200 transition-all duration-200">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        <Link href="/" className="flex min-w-0 items-center gap-2">
           <div className="w-5 h-5 bg-gray-950 rounded-sm" aria-hidden />
-          <span className="font-bold tracking-tight text-lg">Async Copilot</span>
+          <span className="truncate font-bold tracking-tight text-base sm:text-lg">Async Copilot</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -61,7 +61,7 @@ function LandingHeader() {
         <div className="flex items-center gap-4">
           <Link
             href="/app"
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gray-950 rounded hover:bg-gray-900 transition-colors shadow-sm"
+            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-gray-950 rounded hover:bg-gray-900 transition-colors shadow-sm sm:px-4"
           >
             Open App
           </Link>
@@ -73,13 +73,13 @@ function LandingHeader() {
 
 function LandingHero() {
   return (
-    <section className="pt-32 pb-20 px-6 relative overflow-hidden bg-grid">
+    <section className="pt-28 pb-14 px-4 relative overflow-hidden bg-grid sm:px-6 sm:pt-32 sm:pb-20">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-50" aria-hidden />
       <div className="max-w-4xl mx-auto text-center relative z-10">
-        <h1 className="text-5xl md:text-6xl lg:text-hero-lg font-semibold tracking-tight leading-[1.1] text-gray-950 mb-6">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-hero-lg font-semibold tracking-tight leading-[1.1] text-gray-950 mb-5 sm:mb-6">
           From support case to <br className="hidden md:block" /> ready reply.
         </h1>
-        <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+        <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed font-light">
           Visible staged triage for support teams under pressure. <br className="hidden md:block" />
           Messy case in, structured response pack out.
         </p>
@@ -105,13 +105,13 @@ function LandingHero() {
 
 function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 bg-white border-y border-gray-200">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-semibold tracking-tight text-gray-900">
+    <section id="how-it-works" className="py-16 bg-white border-y border-gray-200 sm:py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900">
             A clear, deterministic pipeline.
           </h2>
-          <p className="text-gray-500 mt-3 text-lg">
+          <p className="text-gray-500 mt-3 text-base sm:text-lg">
             No black boxes. Just a visible workflow built for specialists.
           </p>
         </div>
@@ -157,21 +157,21 @@ function Step({ n, dark, icon, title, copy }: { n: string; dark: boolean; icon: 
 
 function SystemTrust() {
   return (
-    <section id="system-trust" className="py-24 bg-gray-950 text-white dark-grid relative overflow-hidden">
+    <section id="system-trust" className="py-16 bg-gray-950 text-white dark-grid relative overflow-hidden sm:py-24">
       <div
         className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800/20 via-gray-950 to-gray-950"
         aria-hidden
       />
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+      <div className="max-w-7xl mx-auto px-4 relative z-10 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
           <div className="lg:col-span-4 flex flex-col justify-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] font-mono text-gray-300 w-fit mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400" /> SYSTEM TRUST
             </div>
-            <h2 className="text-3xl lg:text-4xl font-semibold tracking-tight mb-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight mb-4">
               Engineered for high-stakes environments.
             </h2>
-            <p className="text-gray-400 text-lg leading-relaxed mb-8">
+            <p className="text-gray-400 text-base sm:text-lg leading-relaxed mb-8">
               AI shouldn&apos;t be a black box when revenue or reputation is on the line. Every output is verifiable, bounded, and safe.
             </p>
           </div>
@@ -191,7 +191,7 @@ function SystemTrust() {
                     When issues exceed Tier 1 scope, the system automatically packages the context and suggests the correct engineering queue.
                   </p>
                 </div>
-                <div className="shrink-0 bg-gray-950/50 border border-white/10 rounded p-3 font-mono text-[10px] text-gray-300">
+                <div className="max-w-full overflow-x-auto bg-gray-950/50 border border-white/10 rounded p-3 font-mono text-[10px] text-gray-300 sm:shrink-0">
                   <div className="text-red-400 mb-1">STATUS: OUT_OF_SCOPE</div>
                   <div>ACTION: ESCALATE_TIER_2</div>
                   <div>QUEUE: /eng/payments</div>
@@ -217,15 +217,15 @@ function TrustCard({ icon, title, copy }: { icon: React.ReactNode; title: string
 
 function ResponsePackShowcase() {
   return (
-    <section id="output" className="py-24 bg-gray-50 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <section id="output" className="py-16 bg-gray-50 overflow-hidden sm:py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left: copy */}
           <div>
-            <h2 className="text-3xl lg:text-4xl font-semibold tracking-tight text-gray-900 mb-6">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-gray-900 mb-6">
               The Response Pack.
             </h2>
-            <p className="text-lg text-gray-500 mb-8 leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed">
               Don&apos;t just get a generated text blob. Get a complete, structured asset designed to give the support agent immediate situational awareness and a ready-to-send resolution.
             </p>
 
@@ -239,15 +239,15 @@ function ResponsePackShowcase() {
           {/* Right: floating response pack card */}
           <div className="relative">
             <div className="absolute -top-6 -right-6 w-32 h-32 bg-gray-200 rounded-full blur-3xl opacity-50" aria-hidden />
-            <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-6 relative z-10 transform lg:rotate-1 hover:rotate-0 transition-transform duration-300">
-              <div className="flex justify-between items-start mb-6">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-4 relative z-10 transform transition-transform duration-300 sm:p-6 lg:rotate-1 hover:rotate-0">
+              <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <div className="text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1">Generated Asset</div>
+                  <div className="text-[10px] font-mono text-gray-600 uppercase tracking-wider mb-1">Generated Asset</div>
                   <h4 className="font-semibold text-gray-900">Resolution Payload</h4>
                 </div>
-                <div className="bg-gray-50 border border-gray-200 px-2 py-1 rounded text-[10px] font-mono text-gray-600 flex gap-2">
+                <div className="w-fit bg-gray-50 border border-gray-200 px-2 py-1 rounded text-[10px] font-mono text-gray-600 flex gap-2">
                   <span>CONFIDENCE:</span>
-                  <span className="text-green-600 font-bold">98%</span>
+                  <span className="text-green-700 font-bold">98%</span>
                 </div>
               </div>
 
@@ -303,24 +303,24 @@ function Bullet({ title, copy }: { title: string; copy: string }) {
 
 function ClosingCta() {
   return (
-    <section className="py-32 bg-white text-center border-t border-gray-200">
-      <div className="max-w-3xl mx-auto px-6">
-        <h2 className="text-4xl font-semibold tracking-tight text-gray-900 mb-6">
+    <section className="py-20 bg-white text-center border-t border-gray-200 sm:py-32">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-gray-900 mb-6">
           Stop managing chaos. Start managing outcomes.
         </h2>
-        <p className="text-lg text-gray-500 mb-10">
+        <p className="text-base sm:text-lg text-gray-500 mb-10">
           A focused demo вЂ” open the workspace, pick a scenario, and watch the triage work.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Link
             href="/app"
-            className="px-8 py-4 text-sm font-medium text-white bg-gray-950 rounded shadow-md hover:bg-gray-900 transition-transform hover:-translate-y-0.5"
+            className="w-full px-8 py-4 text-sm font-medium text-white bg-gray-950 rounded shadow-md hover:bg-gray-900 transition-transform hover:-translate-y-0.5 sm:w-auto"
           >
             Open Demo
           </Link>
           <Link
             href={"/app/samples" as never}
-            className="px-8 py-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 transition-colors"
+            className="w-full px-8 py-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 transition-colors sm:w-auto"
           >
             Browse Scenarios
           </Link>
@@ -337,15 +337,15 @@ function LandingFooter() {
   // legal surface.
   return (
     <footer className="bg-gray-50 py-12 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+        <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
           <div className="w-4 h-4 bg-gray-400 rounded-sm" aria-hidden />
           <span className="font-semibold text-sm text-gray-600">Async Copilot</span>
           <span className="ml-2 px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 rounded">
             Portfolio demo
           </span>
         </div>
-        <div className="flex gap-6 text-sm text-gray-500">
+        <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
           <Link
             href={"/legal/privacy" as never}
             className="hover:text-gray-900 transition-colors"
@@ -361,7 +361,7 @@ function LandingFooter() {
             GitHub <span aria-hidden>↗</span>
           </a>
         </div>
-        <div className="text-sm text-gray-400">© 2026 Async Copilot</div>
+        <div className="text-sm text-gray-600">© 2026 Async Copilot</div>
       </div>
     </footer>
   );

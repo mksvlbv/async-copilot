@@ -1,0 +1,55 @@
+name: Responsive Visual QA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  responsive-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run responsive smoke, a11y, and visual checks
+        run: npm run test:responsive
+
+      - name: Upload responsive Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: responsive-playwright-report
+          path: playwright-report-responsive/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload responsive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: responsive-test-results
+          path: test-results-responsive/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload responsive snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: responsive-snapshots
+          path: tests/responsive/visual.spec.ts-snapshots/
+          if-no-files-found: ignore
+          retention-days: 14

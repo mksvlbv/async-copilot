@@ -15,9 +15,9 @@ import {
 
 export function HeroMockup() {
   return (
-    <div className="max-w-[1200px] mx-auto mt-20 relative z-10">
+    <div className="-mx-4 mt-12 overflow-x-auto px-4 py-4 relative z-10 sm:mx-auto sm:mt-20 sm:max-w-[1200px] sm:overflow-visible sm:px-0 sm:py-0">
       <div className="absolute -inset-1 bg-gray-200/50 rounded-xl blur-xl z-0" aria-hidden />
-      <div className="relative z-10 bg-white border border-gray-200 rounded-xl shadow-2xl shadow-gray-200/50 overflow-hidden flex flex-col h-[640px]">
+      <div className="relative z-10 min-w-[760px] bg-white border border-gray-200 rounded-xl shadow-2xl shadow-gray-200/50 overflow-hidden flex flex-col h-[560px] sm:min-w-0 sm:h-[640px]">
         {/* Window chrome */}
         <div className="h-12 border-b border-gray-100 bg-gray-50 flex items-center justify-between px-4 select-none">
           <div className="flex gap-2 items-center">
@@ -25,7 +25,7 @@ export function HeroMockup() {
             <div className="w-3 h-3 rounded-full bg-gray-300" />
             <div className="w-3 h-3 rounded-full bg-gray-300" />
           </div>
-          <div className="font-mono text-[11px] text-gray-400 tracking-wider">WORKSPACE / CASE-8924</div>
+            <div className="font-mono text-[11px] text-gray-600 tracking-wider whitespace-nowrap">WORKSPACE / CASE-8924</div>
           <div className="flex gap-2">
             <SidebarSimple size={16} className="text-gray-400" />
           </div>
@@ -33,18 +33,18 @@ export function HeroMockup() {
 
         <div className="flex flex-1 overflow-hidden bg-gray-50/30">
           {/* ---- Left: Case Context ---- */}
-          <div className="w-[30%] border-r border-gray-200 bg-white flex flex-col">
+          <div className="w-[30%] min-w-0 border-r border-gray-200 bg-white flex flex-col">
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <span className="text-[11px] font-mono font-medium text-gray-500 uppercase tracking-widest">Case Context</span>
+              <span className="text-[11px] font-mono font-medium text-gray-700 uppercase tracking-widest">Case Context</span>
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Raw</span>
             </div>
             <div className="p-5 overflow-y-auto mockup-scroll space-y-5">
               <div>
                 <h3 className="text-sm font-semibold text-gray-900">API Timeout on /v2/orders</h3>
                 <div className="flex gap-2 mt-1">
-                  <span className="text-[11px] text-gray-500">Acme Corp</span>
-                  <span className="text-[11px] text-gray-300">вЂў</span>
-                  <span className="text-[11px] text-gray-500">2 mins ago</span>
+                  <span className="text-[11px] text-gray-700">Acme Corp</span>
+                  <span className="text-[11px] text-gray-500">вЂў</span>
+                  <span className="text-[11px] text-gray-700">2 mins ago</span>
                 </div>
               </div>
               <div className="space-y-4">
@@ -65,7 +65,7 @@ export function HeroMockup() {
                     Please advise urgently.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
+                <div className="flex items-center gap-2 text-xs text-gray-600 font-mono">
                   <Paperclip size={14} /> 1 attachment (logs.txt)
                 </div>
               </div>
@@ -73,9 +73,9 @@ export function HeroMockup() {
           </div>
 
           {/* ---- Center: Visible Triage ---- */}
-          <div className="w-[35%] border-r border-gray-200 bg-gray-50/50 flex flex-col relative">
+          <div className="w-[35%] min-w-0 border-r border-gray-200 bg-gray-50/50 flex flex-col relative">
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-              <span className="text-[11px] font-mono font-medium text-gray-500 uppercase tracking-widest">Visible Triage</span>
+              <span className="text-[11px] font-mono font-medium text-gray-700 uppercase tracking-widest">Visible Triage</span>
               <div className="flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-950 opacity-20" />
@@ -92,11 +92,11 @@ export function HeroMockup() {
                   <div className="text-xs font-mono font-medium text-gray-900 mb-1">Parse Intent &amp; Entities</div>
                   <div className="bg-white border border-gray-200 rounded p-2.5 shadow-sm">
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div className="text-gray-500">Issue:</div>
+                      <div className="text-gray-700">Issue:</div>
                       <div className="font-medium text-gray-900">504 Gateway Timeout</div>
-                      <div className="text-gray-500">Endpoint:</div>
+                      <div className="text-gray-700">Endpoint:</div>
                       <div className="font-mono text-gray-900 bg-gray-100 px-1 rounded inline-block">/v2/orders</div>
-                      <div className="text-gray-500">Urgency:</div>
+                      <div className="text-gray-700">Urgency:</div>
                       <div className="text-red-600 font-medium">High (Checkout Blocked)</div>
                     </div>
                   </div>
@@ -121,7 +121,7 @@ export function HeroMockup() {
                 <div className="relative pl-6">
                   <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-gray-950 ring-4 ring-gray-50" />
                   <div className="text-xs font-mono font-medium text-gray-900 mb-1">Formulate Strategy</div>
-                  <div className="text-[11px] text-gray-500 leading-relaxed">
+                  <div className="text-[11px] text-gray-700 leading-relaxed">
                     Drafting acknowledgment of known incident. Linking to status page. Setting expectation for updates.
                   </div>
                 </div>
@@ -130,9 +130,9 @@ export function HeroMockup() {
           </div>
 
           {/* ---- Right: Response Pack ---- */}
-          <div className="w-[35%] bg-white flex flex-col">
+          <div className="w-[35%] min-w-0 bg-white flex flex-col">
             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <span className="text-[11px] font-mono font-medium text-gray-500 uppercase tracking-widest">Response Pack</span>
+              <span className="text-[11px] font-mono font-medium text-gray-700 uppercase tracking-widest">Response Pack</span>
               <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded border border-green-200">Ready</span>
             </div>
             <div className="p-5 overflow-y-auto mockup-scroll flex flex-col gap-4">

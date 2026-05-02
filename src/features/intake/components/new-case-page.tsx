@@ -224,26 +224,26 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-8 py-8 flex flex-col lg:flex-row gap-8 items-start">
+    <div className="max-w-[1280px] mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6 items-start sm:px-6 lg:px-8 lg:py-8 lg:gap-8">
       <form onSubmit={startTriage} className="w-full flex-1 flex flex-col lg:max-w-[800px]">
-        <div className="mb-6 flex justify-between items-end">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-1.5 py-0.5 bg-white border border-gray-200 text-gray-500 text-[10px] font-mono rounded uppercase tracking-wider shadow-sm">
+              <span className="px-1.5 py-0.5 bg-white border border-gray-200 text-gray-700 text-[10px] font-mono rounded uppercase tracking-wider shadow-sm">
                 {loadedSampleId ? "Sample Loaded" : "Manual Intake"}
               </span>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
               Start New Triage Run
             </h1>
-            <p className="text-sm text-gray-500 mt-1.5">
+            <p className="text-sm text-gray-600 mt-1.5">
               Paste raw case context below. The system will parse intent, query internal state, and generate a response pack.
             </p>
           </div>
           <button
             type="button"
             onClick={reset}
-            className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+            className="w-fit px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             <ArrowsClockwise size={12} className="text-gray-400" /> Reset
           </button>
@@ -255,24 +255,26 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
               <Field label="Customer / Account" optional>
                 <div className="relative">
                   <Buildings size={16} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
-                  <input
-                    type="text"
-                    value={customer}
-                    onChange={(event) => setCustomer(event.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-black focus:border-black transition-all placeholder-gray-400 text-gray-900"
-                    placeholder="e.g. Acme Corp"
-                  />
+                   <input
+                     type="text"
+                     value={customer}
+                     onChange={(event) => setCustomer(event.target.value)}
+                     aria-label="Customer or account"
+                     className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-black focus:border-black transition-all placeholder-gray-400 text-gray-900"
+                     placeholder="e.g. Acme Corp"
+                   />
                 </div>
               </Field>
 
               <Field label="Origin Channel">
                 <div className="relative">
                   <EnvelopeSimple size={16} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 pointer-events-none" />
-                  <select
-                    value={channel}
-                    onChange={(event) => setChannel(event.target.value as Channel)}
-                    className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-black focus:border-black transition-all appearance-none cursor-pointer text-gray-900"
-                  >
+                   <select
+                     value={channel}
+                     onChange={(event) => setChannel(event.target.value as Channel)}
+                     aria-label="Origin channel"
+                     className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-black focus:border-black transition-all appearance-none cursor-pointer text-gray-900"
+                   >
                     <option>Email</option>
                     <option>Live Chat</option>
                     <option>In-App Widget</option>
@@ -293,11 +295,12 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
                       urgency === "auto" && "bg-gray-300",
                     )}
                   />
-                  <select
-                    value={urgency}
-                    onChange={(event) => setUrgency(event.target.value as UrgencyLevel | "auto")}
-                    className="w-full pl-8 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-black focus:border-black transition-all appearance-none cursor-pointer text-gray-900"
-                  >
+                   <select
+                     value={urgency}
+                     onChange={(event) => setUrgency(event.target.value as UrgencyLevel | "auto")}
+                     aria-label="Reported urgency"
+                     className="w-full pl-8 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-md shadow-sm outline-none focus:ring-1 focus:ring-black focus:border-black transition-all appearance-none cursor-pointer text-gray-900"
+                   >
                     <option value="auto">Auto-detect</option>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -310,17 +313,17 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
           </div>
 
           <div className="p-5 flex flex-col flex-1 relative">
-            <div className="flex justify-between items-center mb-3">
+            <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
               <label className="flex items-center gap-2">
                 <span className="text-[10px] font-mono font-semibold text-gray-900 uppercase tracking-widest">
                   Raw Case Context
                 </span>
-                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded font-mono border border-gray-200">
+                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-[10px] rounded font-mono border border-gray-200">
                   REQUIRED
                 </span>
               </label>
               <div
-                className="text-xs text-gray-400 flex items-center gap-1.5 font-medium"
+                className="text-xs text-gray-600 flex items-center gap-1.5 font-medium"
                 aria-label="Attachments are intentionally out of scope for this MVP"
               >
                 <Paperclip size={12} /> Add Attachments
@@ -330,33 +333,34 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
             <textarea
               value={body}
               onChange={(event) => setBody(event.target.value)}
-              className="w-full min-h-[320px] p-4 text-sm text-gray-800 bg-gray-50/50 border border-gray-200 rounded-lg outline-none focus:bg-white focus:ring-1 focus:ring-black focus:border-black resize-y font-sans leading-relaxed shadow-inner placeholder-gray-400"
+              aria-label="Raw case context"
+              className="w-full min-h-[240px] p-4 text-sm text-gray-800 bg-gray-50/50 border border-gray-200 rounded-lg outline-none focus:bg-white focus:ring-1 focus:ring-black focus:border-black resize-y font-sans leading-relaxed shadow-inner placeholder-gray-400 sm:min-h-[320px]"
               placeholder={`Paste the full customer email thread, chat transcript, or internal notes here...\n\ne.g.\nHi Support,\nWe're getting a 504 error when trying to process payments on the new checkout flow. Started about 10 mins ago. Trace ID: req_8xZ...\nPlease advise urgently.`}
               required
             />
 
-            <div className="flex items-center justify-between mt-3 px-1">
-              <div className="flex gap-3 text-gray-400 items-center">
+            <div className="flex items-center justify-between gap-3 mt-3 px-1">
+              <div className="flex gap-3 text-gray-500 items-center">
                 <div className="flex items-center gap-1.5 text-[11px] font-mono">
-                  <CheckCircle size={12} weight="fill" className={lengthOk ? "text-green-500" : "text-gray-300"} />
-                  <span className={lengthOk ? "text-gray-500" : "text-gray-400"}>
+                  <CheckCircle size={12} weight="fill" className={lengthOk ? "text-green-600" : "text-gray-400"} />
+                  <span className={lengthOk ? "text-gray-700" : "text-gray-500"}>
                     {lengthOk ? "Length OK" : "Too short"}
                   </span>
                 </div>
               </div>
-              <div className="text-[11px] text-gray-400 font-mono tracking-wide">
+              <div className="text-[11px] text-gray-600 font-mono tracking-wide">
                 {charCount.toLocaleString()} CHARS
               </div>
             </div>
           </div>
 
-          <div className="p-5 border-t border-gray-100 bg-white flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[11px] text-gray-500 font-mono bg-gray-50 px-2.5 py-1.5 rounded border border-gray-200">
+          <div className="p-5 border-t border-gray-100 bg-white flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex w-full items-center gap-2 text-[11px] text-gray-700 font-mono bg-gray-50 px-2.5 py-1.5 rounded border border-gray-200 sm:w-auto">
               <Cpu size={12} />
               Output: Staged Triage + Draft Reply
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
               {submitError ? (
                 <span className="text-xs text-red-600 font-medium">{submitError}</span>
               ) : null}
@@ -364,7 +368,7 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
                 type="submit"
                 disabled={submitting || !lengthOk}
                 className={clsx(
-                  "px-6 py-2.5 text-sm font-medium rounded-md shadow-sm transition-all flex items-center justify-center gap-2 group focus:ring-2 focus:ring-offset-2 focus:ring-gray-900",
+                  "w-full px-6 py-2.5 text-sm font-medium rounded-md shadow-sm transition-all flex items-center justify-center gap-2 group focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 sm:w-auto",
                   submitting || !lengthOk
                     ? "bg-gray-300 text-white cursor-not-allowed"
                     : "bg-gray-950 text-white hover:bg-gray-900",
@@ -400,7 +404,7 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
               ) : null}
             </div>
             <h2 className="text-sm font-semibold text-gray-900">Import a Gmail thread</h2>
-            <p className="mt-1 text-xs leading-relaxed text-gray-500">
+            <p className="mt-1 text-xs leading-relaxed text-gray-600">
               Use the narrow real integration path: connect one workspace inbox, then materialize a Gmail thread straight into a case and run.
             </p>
           </div>
@@ -420,30 +424,31 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
             {gmailConnection ? (
               <>
                 <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-gray-700">
                     Connected Inbox
                   </div>
-                  <div className="mt-1 text-sm font-medium text-gray-900">
+                  <div className="mt-1 break-all text-sm font-medium text-gray-900">
                     {gmailConnection.gmailUserEmail}
                   </div>
                 </div>
 
                 <form className="space-y-3" onSubmit={importFromGmail}>
                   <label className="block">
-                    <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-gray-500">
+                    <span className="mb-1.5 block text-[10px] font-mono uppercase tracking-widest text-gray-700">
                       Gmail ID or Link
                     </span>
-                    <input
-                      value={gmailUrlOrId}
-                      onChange={(event) => setGmailUrlOrId(event.target.value)}
-                      placeholder="Raw Gmail thread/message id or supported link"
-                      className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-black focus:ring-1 focus:ring-black"
-                    />
+                     <input
+                       value={gmailUrlOrId}
+                       onChange={(event) => setGmailUrlOrId(event.target.value)}
+                       aria-label="Gmail ID or link"
+                        placeholder="Raw Gmail thread/message id or supported link"
+                        className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition-all placeholder:text-gray-400 focus:border-black focus:ring-1 focus:ring-black"
+                     />
                   </label>
 
-                  <div className="text-[11px] leading-relaxed text-gray-500">
+                  <div className="text-[11px] leading-relaxed text-gray-700">
                     Best reliability: paste the raw Gmail thread/message id. Some browser URLs like
-                    <span className="mx-1 font-mono text-[10px] text-gray-400">#inbox/FMfc...</span>
+                    <span className="mx-1 break-all font-mono text-[10px] text-gray-600">#inbox/FMfc...</span>
                     are not importable.
                   </div>
 
@@ -493,10 +498,10 @@ function NewCasePageInner({ workspaceSlug, currentRole, gmailConnection }: Props
         </section>
 
         <div>
-          <h2 className="text-[11px] font-mono font-semibold text-gray-500 uppercase tracking-widest mb-1">
+          <h2 className="text-[11px] font-mono font-semibold text-gray-700 uppercase tracking-widest mb-1">
             Pre-configured Scenarios
           </h2>
-          <p className="text-xs text-gray-400">Load a sample case to test the system.</p>
+          <p className="text-xs text-gray-600">Load a sample case to test the system.</p>
         </div>
 
         <div className="space-y-3">
@@ -534,10 +539,10 @@ function Field({
   return (
     <div>
       <label className="flex items-center justify-between mb-1.5">
-        <span className="text-[10px] font-mono font-medium text-gray-500 uppercase tracking-widest">
+        <span className="text-[10px] font-mono font-medium text-gray-700 uppercase tracking-widest">
           {label}
         </span>
-        {optional ? <span className="text-[10px] text-gray-400">Optional</span> : null}
+        {optional ? <span className="text-[10px] text-gray-600">Optional</span> : null}
       </label>
       {children}
     </div>
@@ -574,8 +579,8 @@ function SampleCard({
       {loaded ? (
         <div className="absolute -left-[5px] top-4 w-2.5 h-2.5 bg-gray-950 rounded-full shadow-sm" aria-hidden />
       ) : null}
-      <div className={clsx("flex justify-between items-start mb-1", loaded && "pl-2")}>
-        <div className="flex gap-1.5">
+      <div className={clsx("flex justify-between items-start gap-2 mb-1", loaded && "pl-2")}>
+        <div className="flex flex-wrap gap-1.5">
           <span
             className={clsx(
               "inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium border",
@@ -591,7 +596,7 @@ function SampleCard({
           ) : null}
         </div>
         {loaded ? (
-          <span className="text-[10px] font-mono text-gray-400">LOADED</span>
+          <span className="text-[10px] font-mono text-gray-600">LOADED</span>
         ) : (
           <ArrowRight size={12} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
@@ -599,7 +604,7 @@ function SampleCard({
       <h3 className={clsx("text-[13px] font-semibold", loaded ? "text-gray-900 pl-2" : "text-gray-700 group-hover:text-gray-900 transition-colors")}>
         {sample.name}
       </h3>
-      <p className={clsx("text-[11px] text-gray-500 leading-relaxed line-clamp-2 mt-1", loaded && "pl-2")}>
+      <p className={clsx("text-[11px] text-gray-700 leading-relaxed line-clamp-2 mt-1", loaded && "pl-2")}>
         {sample.summary}
       </p>
     </button>

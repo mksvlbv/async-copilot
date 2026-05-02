@@ -2,6 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  if (shouldBypassAuthLookup(pathname)) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -34,8 +40,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
 
   if (!user && pathname.startsWith("/app")) {
     const url = request.nextUrl.clone();
@@ -79,4 +83,14 @@ function redirectWithCookies(url: URL, sourceResponse: NextResponse) {
   });
 
   return response;
+}
+
+function shouldBypassAuthLookup(pathname: string) {
+  return (
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname.startsWith("/legal") ||
+    pathname.startsWith("/__visual") ||
+    pathname.startsWith("/auth/")
+  );
 }

@@ -5,6 +5,7 @@
 .claude/
 .openclaude/
 CLAUDE.md
+.kilo/plans/
 
 # Local scratch work
 scratch/
@@ -27,6 +28,8 @@ next-env.d.ts.bak
 # Playwright
 test-results/
 playwright-report/
+test-results-responsive/
+playwright-report-responsive/
 .playwright-mcp/
 
 # Environment files

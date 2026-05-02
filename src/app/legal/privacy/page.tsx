@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 bg-grid">
-      <div className="max-w-3xl mx-auto px-6 py-16">
+      <div className="max-w-3xl mx-auto px-4 py-10 sm:px-6 sm:py-16">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-10 transition-colors"
@@ -28,19 +28,19 @@ export default function PrivacyPage() {
           <ArrowLeft size={14} weight="bold" /> Back to landing
         </Link>
 
-        <div className="inline-flex items-center gap-2 mb-6">
+        <div className="inline-flex flex-wrap items-center gap-2 mb-6">
           <span className="px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 rounded">
             Portfolio demo
           </span>
           <span className="text-xs text-gray-400 font-mono">Updated {updated}</span>
         </div>
 
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900 mb-6 sm:text-3xl">
           Privacy Notice
         </h1>
 
         <div className="prose prose-gray max-w-none text-gray-700 space-y-6">
-          <p className="text-lg text-gray-600 leading-relaxed">
+          <p className="text-base text-gray-600 leading-relaxed sm:text-lg">
             <strong>Async Copilot</strong> is a non-commercial portfolio
             demonstration of a visible, human-in-the-loop support-triage
             workflow. It is not offered as a product, and there is no user

@@ -19,7 +19,7 @@ export default async function AppLayout({
   ]);
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-dvh min-h-dvh flex flex-col bg-white overflow-hidden">
       <AppHeader memberships={memberships} currentUserEmail={user?.email ?? null} />
       <main className="flex-1 overflow-y-auto bg-gray-50/50">{children}</main>
     </div>

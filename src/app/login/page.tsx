@@ -58,8 +58,8 @@ function LoginPageInner() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 bg-grid px-6 py-16 text-gray-900">
-      <div className="mx-auto flex max-w-5xl flex-col gap-12 lg:flex-row lg:items-center lg:justify-between">
+    <main className="min-h-screen bg-gray-50 bg-grid px-4 py-10 text-gray-900 sm:px-6 sm:py-16">
+      <div className="mx-auto flex max-w-5xl flex-col gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
         <section className="max-w-xl">
           <div className="mb-5 inline-flex items-center gap-2">
             <div className="h-5 w-5 rounded-sm bg-gray-950" aria-hidden />
@@ -68,7 +68,7 @@ function LoginPageInner() {
           <div className="mb-4 font-mono text-[11px] uppercase tracking-widest text-gray-500">
             Workspace Access
           </div>
-          <h1 className="text-4xl font-semibold tracking-tight text-gray-950">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-950 sm:text-4xl">
             Sign in to the triage workspace.
           </h1>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-gray-500">
@@ -76,7 +76,7 @@ function LoginPageInner() {
           </p>
         </section>
 
-        <section className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900">Email magic link</h2>
             <p className="mt-1 text-sm text-gray-500">
@@ -129,8 +129,8 @@ function LoginPageInner() {
             </button>
           </form>
 
-          <div className="mt-6 text-xs text-gray-400">
-            Need context first? <Link href="/" className="text-gray-600 hover:text-gray-900 hover:underline">Return to overview</Link>.
+          <div className="mt-6 text-xs text-gray-500">
+            Need context first? <Link href="/" className="text-gray-700 underline decoration-gray-500 underline-offset-4 hover:text-gray-900">Return to overview</Link>.
           </div>
         </section>
       </div>

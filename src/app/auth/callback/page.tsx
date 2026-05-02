@@ -82,8 +82,8 @@ function AuthCallbackResolver() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 px-6 py-16 flex items-center justify-center">
-        <div className="w-full max-w-md rounded-xl border border-red-200 bg-white p-6 shadow-sm">
+      <main className="min-h-screen bg-gray-50 px-4 py-10 flex items-center justify-center sm:px-6 sm:py-16">
+        <div className="w-full max-w-md rounded-xl border border-red-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="font-mono text-[11px] uppercase tracking-widest text-red-600">
             Auth Error
           </div>
@@ -94,7 +94,7 @@ function AuthCallbackResolver() {
           <button
             type="button"
             onClick={() => router.replace("/login")}
-            className="mt-5 inline-flex items-center justify-center rounded-md bg-gray-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-900"
+            className="mt-5 inline-flex w-full items-center justify-center rounded-md bg-gray-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-900 sm:w-auto"
           >
             Return to Login
           </button>
@@ -108,8 +108,8 @@ function AuthCallbackResolver() {
 
 function AuthCallbackFallback() {
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-16 flex items-center justify-center">
-      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-sm text-center">
+    <main className="min-h-screen bg-gray-50 px-4 py-10 flex items-center justify-center sm:px-6 sm:py-16">
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-5 shadow-sm text-center sm:p-6">
         <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
           Completing Sign-in
         </div>
